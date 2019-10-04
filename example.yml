@@ -63,23 +63,6 @@ modbusClient:
           pause: 1s # ms, s, m, h
 
 
-
-
-
-#  // Bit access
-#  ReadDiscreteInputs = 2
-#  ReadCoils          = 1
-#  WriteSingleCoil    = 5
-#  WriteMultipleCoils = 15
-#
-#  // 16-bit access
-#  ReadInputRegisters         = 4
-#  ReadHoldingRegisters       = 3
-#  WriteSingleRegister        = 6
-#  WriteMultipleRegisters     = 16
-#  ReadWriteMultipleRegisters = 23
-#  MaskWriteRegister          = 22
-#  ReadFIFOQueue              = 24
 #  IllegalFunction                    = 1
 #  IllegalDataAddress                 = 2
 #  IllegalDataValue                   = 3

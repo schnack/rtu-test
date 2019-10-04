@@ -1,3 +1,3 @@
 package unit
 
-type Groups []*MudbusTest
+type Groups []*ModbusTest
