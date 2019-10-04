@@ -97,10 +97,15 @@ func (mt *ModbusTest) WriteMultipleCoils(client modbus.Client) error {
 	} else {
 		// TODO если пустой то высчитывать автоматически
 	}
-	b, err := mt.GetWriteByte()
-	if err != nil {
-		return fmt.Errorf("%s", err)
+	// TODO тут нужно правильно обрабатывать бинарные данные
+	buff := new(bytes.Buffer)
+	for _, val := range mt.Write {
+		v, err := val.Write()
+		if err != nil {
+			return err
+		}
+		buff.Write(v)
 	}
-	mt.ResultByte, mt.ResultError = client.WriteMultipleCoils(*mt.Address, q, b)
+	mt.ResultByte, mt.ResultError = client.WriteMultipleCoils(*mt.Address, q, buff.Bytes())
 	return nil
 }

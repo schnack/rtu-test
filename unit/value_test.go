@@ -129,7 +129,7 @@ func TestValue_WriteFloat64(t *testing.T) {
 func TestValue_WriteBoolTrue(t *testing.T) {
 	var v bool = true
 	b, err := (&Value{Bool: &v}).Write()
-	if err := gotest.Expect(b).Eq([]byte{255, 0}); err != nil {
+	if err := gotest.Expect(b).Eq([]byte{1}); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(err).Eq(nil); err != nil {
@@ -140,7 +140,7 @@ func TestValue_WriteBoolTrue(t *testing.T) {
 func TestValue_WriteBoolFalse(t *testing.T) {
 	var v bool = false
 	b, err := (&Value{Bool: &v}).Write()
-	if err := gotest.Expect(b).Eq([]byte{0, 0}); err != nil {
+	if err := gotest.Expect(b).Eq([]byte{0}); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(err).Eq(nil); err != nil {

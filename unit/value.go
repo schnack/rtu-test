@@ -131,11 +131,7 @@ func (v *Value) Write() ([]byte, error) {
 			return nil, err
 		}
 	case v.Bool != nil:
-		var x uint16 = 0x0000
-		if *v.Bool {
-			x = 0xff00
-		}
-		if err := binary.Write(buf, binary.BigEndian, x); err != nil {
+		if err := binary.Write(buf, binary.BigEndian, v.Bool); err != nil {
 			return nil, err
 		}
 	case v.String != nil:
