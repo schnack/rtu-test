@@ -1,0 +1,91 @@
+---
+version: 1.0.0
+
+name: Device
+description: ""
+
+port: /dev/ttyUSB0
+boundRate: 115200
+dataBits: 8
+parity: N # Parity: N - None, E - Even, O - Odd (default E)
+stopBits: 2
+timeout: 5
+
+logs: true # false path-to-file
+
+modbusClient:
+  slaveId: 0x01
+
+  tests:
+
+    groupName:
+      - name: Multi Write test #!
+        before:
+          message: "print before message"
+          pause: 1s # ms, s, m, h
+
+        function: 0xf #!  multi write MultiWrite
+        address: 0x0001 #! 1
+        quantity: 0x0003 # 3
+
+        write:
+          - name: "param1"
+            int64: 127
+          - name: "param2"
+            uint8: 255
+          - name: "param3"
+            byte: 0x00 0x01 0x02
+          - name: "param4"
+            byte: 0x03 0x04 0x05
+          - name: "param5"
+            bool: true
+
+        expected:
+          - name: "param1"
+            minInt32: 0b00000001
+            maxInt32: 0xff
+          - name: "param2"
+            minInt8: 1
+            maxInt8: 4
+          - name: "param3"
+            minFloat32: 1.45
+            maxFloat32: 1.54
+
+        expectedError: 0x03 #  Illegal data value
+        success:
+          message: "print success message"
+          pause: 2s # ms, s, m, h
+        error:
+          message: "print error message"
+          pause: 2s # ms, s, m, h
+        after:
+          message: "print after message"
+          pause: 1s # ms, s, m, h
+
+
+
+
+
+#  // Bit access
+#  ReadDiscreteInputs = 2
+#  ReadCoils          = 1
+#  WriteSingleCoil    = 5
+#  WriteMultipleCoils = 15
+#
+#  // 16-bit access
+#  ReadInputRegisters         = 4
+#  ReadHoldingRegisters       = 3
+#  WriteSingleRegister        = 6
+#  WriteMultipleRegisters     = 16
+#  ReadWriteMultipleRegisters = 23
+#  MaskWriteRegister          = 22
+#  ReadFIFOQueue              = 24
+#  IllegalFunction                    = 1
+#  IllegalDataAddress                 = 2
+#  IllegalDataValue                   = 3
+#  ServerDeviceFailure                = 4
+#  Acknowledge                        = 5
+#  ServerDeviceBusy                   = 6
+#  MemoryParityError                  = 8
+#  GatewayPathUnavailable             = 10
+#  GatewayTargetDeviceFailedToRespond = 11
