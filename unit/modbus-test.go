@@ -99,7 +99,21 @@ func (mt *ModbusTest) WriteMultipleCoils(client modbus.Client) error {
 	}
 	// TODO тут нужно правильно обрабатывать бинарные данные
 	buff := new(bytes.Buffer)
+	i := 0
+	var b uint8 = 0
 	for _, val := range mt.Write {
+		if val.Type() == Bool {
+			b = b | (1 << i)
+			i++
+		} else {
+			i = 7
+		}
+
+		if i == 7 {
+			buff.Write([]byte{b})
+			b = 0
+			i = 0
+		}
 		v, err := val.Write()
 		if err != nil {
 			return err
