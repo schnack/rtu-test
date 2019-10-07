@@ -2,6 +2,7 @@ package unit
 
 import (
 	"bytes"
+	"encoding/binary"
 	"fmt"
 	"github.com/goburrow/modbus"
 	"log"
@@ -41,6 +42,7 @@ func (mt *ModbusTest) Exec(client modbus.Client) (err error) {
 		err = mt.ReadDiscreteInputs(client)
 	case "readcoils", "1":
 	case "writesinglecoil", "5":
+		err = mt.WriteSingleCoil(client)
 	case "writemultiplecoils", "15":
 	case "readinputregisters", "4":
 	case "readholdingregisters", "3":
@@ -58,6 +60,65 @@ func (mt *ModbusTest) Exec(client modbus.Client) (err error) {
 	mt.Success.Print()
 
 	mt.After.Print()
+	return nil
+}
+
+// TODO возвращать ошибку
+func (mt *ModbusTest) GetExceptError() error {
+	/* expectError := strings.TrimPrefix(mt.ExpectedError, "0x")
+	if expectError == "" {
+		return nil
+	}
+
+	out, err := strconv.ParseUint(expectError, 16, 8)
+	if err != nil {
+		log.Fatalf("error test '%s' ExpectError: %s", u.Name, err)
+	}
+	return &modbus.ModbusError{FunctionCode: u.GetFunction() | 0x80, ExceptionCode: byte(out)}
+	*/
+	return nil
+}
+
+func (mt *ModbusTest) WriteSingleCoil(client modbus.Client) error {
+	if mt.Address == nil {
+		return fmt.Errorf("address is nil")
+	}
+	if len(mt.Write) <= 0 {
+		return fmt.Errorf("there is no data to write")
+	}
+
+	var v uint16 = 0
+	switch mt.Write[0].Type() {
+	case Bool:
+		if *mt.Write[0].Bool {
+			v = 0xff00
+		} else {
+			v = 0x0000
+		}
+	case Byte:
+		b, err := mt.Write[0].Write()
+		if err != nil {
+			return fmt.Errorf("%s", err)
+		}
+		if byteToEq(b, []byte{0xff, 0x00}) {
+			v = 0xff00
+		} else if byteToEq(b, []byte{0x00, 0x00}) {
+			v = 0x0000
+		} else {
+			return fmt.Errorf("data error. Only supported 0xff00 0x0000")
+		}
+	default:
+		return fmt.Errorf("invalid data type for record")
+	}
+
+	res, err := client.WriteSingleCoil(*mt.Address, v)
+	// TODO проверка ошибки
+	if err != nil {
+		return fmt.Errorf("%s", err)
+	}
+	if v == binary.BigEndian.Uint16(res) {
+		return fmt.Errorf("wrong answer received")
+	}
 	return nil
 }
 
@@ -122,4 +183,16 @@ func (mt *ModbusTest) WriteMultipleCoils(client modbus.Client) error {
 	}
 	mt.ResultByte, mt.ResultError = client.WriteMultipleCoils(*mt.Address, q, buff.Bytes())
 	return nil
+}
+
+func byteToEq(b1, b2 []byte) bool {
+	if len(b1) != len(b2) {
+		return false
+	}
+	for i := range b1 {
+		if b1[i] != b2[i] {
+			return false
+		}
+	}
+	return true
 }
