@@ -52,6 +52,7 @@ modbusClient:
             maxFloat32: 1.54
 
         expectedError: 0x03 #  Illegal data value
+        expectedTime: 1s
         success:
           message: "print success message"
           pause: 2s # ms, s, m, h

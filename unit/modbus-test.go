@@ -1,13 +1,13 @@
 package unit
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 	"github.com/goburrow/modbus"
 	"log"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type ModbusTest struct {
@@ -18,11 +18,13 @@ type ModbusTest struct {
 	Quantity      *uint16       `yaml:"quantity"`
 	Write         []Value       `yaml:"write"`
 	Expected      []Value       `yaml:"expected"`
-	ExpectedError ExpectedError `yaml:"expectedError"`
+	ExpectedError string        `yaml:"expectedError"`
+	ExpectedTime  string        `yaml:"expectedTime"`
 	Success       Message       `yaml:"success"`
 	Error         Message       `yaml:"error"`
 	After         Message       `yaml:"after"`
 	ResultByte    []byte        `yaml:"-"`
+	ResultTime    time.Duration `yaml:"-"`
 	ResultError   error         `yaml:"-"`
 }
 
@@ -41,12 +43,16 @@ func (mt *ModbusTest) Exec(client modbus.Client) (err error) {
 	case "readdiscreteinputs", "2":
 		err = mt.ReadDiscreteInputs(client)
 	case "readcoils", "1":
+		err = mt.ReadCoils(client)
 	case "writesinglecoil", "5":
 		err = mt.WriteSingleCoil(client)
 	case "writemultiplecoils", "15":
 	case "readinputregisters", "4":
+		err = mt.ReadInputRegisters(client)
 	case "readholdingregisters", "3":
+		err = mt.ReadHoldingRegisters(client)
 	case "writesingleregister", "6":
+		err = mt.WriteSingleRegister(client)
 	case "writemultipleregisters", "16":
 	case "readwritemultipleregisters", "23":
 	case "maskwriteregister", "22":
@@ -63,19 +69,55 @@ func (mt *ModbusTest) Exec(client modbus.Client) (err error) {
 	return nil
 }
 
-// TODO возвращать ошибку
-func (mt *ModbusTest) GetExceptError() error {
-	/* expectError := strings.TrimPrefix(mt.ExpectedError, "0x")
-	if expectError == "" {
-		return nil
+func (mt *ModbusTest) ReadCoils(client modbus.Client) error {
+	if mt.Address == nil {
+		return fmt.Errorf("address is nil")
 	}
+	if mt.Quantity == nil {
+		return fmt.Errorf("quantity is nil")
+	}
+	startTime := time.Now()
+	mt.ResultByte, mt.ResultError = client.ReadCoils(*mt.Address, *mt.Quantity)
+	mt.ResultTime = time.Since(startTime)
+	return nil
+}
 
-	out, err := strconv.ParseUint(expectError, 16, 8)
-	if err != nil {
-		log.Fatalf("error test '%s' ExpectError: %s", u.Name, err)
+func (mt *ModbusTest) ReadDiscreteInputs(client modbus.Client) error {
+	if mt.Address == nil {
+		return fmt.Errorf("address is nil")
 	}
-	return &modbus.ModbusError{FunctionCode: u.GetFunction() | 0x80, ExceptionCode: byte(out)}
-	*/
+	if mt.Quantity == nil {
+		return fmt.Errorf("quantity is nil")
+	}
+	startTime := time.Now()
+	mt.ResultByte, mt.ResultError = client.ReadDiscreteInputs(*mt.Address, *mt.Quantity)
+	mt.ResultTime = time.Since(startTime)
+	return nil
+}
+
+func (mt *ModbusTest) ReadHoldingRegisters(client modbus.Client) error {
+	if mt.Address == nil {
+		return fmt.Errorf("address is nil")
+	}
+	if mt.Quantity == nil {
+		return fmt.Errorf("quantity is nil")
+	}
+	startTime := time.Now()
+	mt.ResultByte, mt.ResultError = client.ReadHoldingRegisters(*mt.Address, *mt.Quantity)
+	mt.ResultTime = time.Since(startTime)
+	return nil
+}
+
+func (mt *ModbusTest) ReadInputRegisters(client modbus.Client) error {
+	if mt.Address == nil {
+		return fmt.Errorf("address is nil")
+	}
+	if mt.Quantity == nil {
+		return fmt.Errorf("quantity is nil")
+	}
+	startTime := time.Now()
+	mt.ResultByte, mt.ResultError = client.ReadInputRegisters(*mt.Address, *mt.Quantity)
+	mt.ResultTime = time.Since(startTime)
 	return nil
 }
 
@@ -111,77 +153,59 @@ func (mt *ModbusTest) WriteSingleCoil(client modbus.Client) error {
 		return fmt.Errorf("invalid data type for record")
 	}
 
-	res, err := client.WriteSingleCoil(*mt.Address, v)
-	// TODO проверка ошибки
-	if err != nil {
-		return fmt.Errorf("%s", err)
-	}
-	if v == binary.BigEndian.Uint16(res) {
-		return fmt.Errorf("wrong answer received")
-	}
+	startTime := time.Now()
+	mt.ResultByte, mt.ResultError = client.WriteSingleCoil(*mt.Address, v)
+	mt.ResultTime = time.Since(startTime)
 	return nil
 }
 
-func (mt *ModbusTest) GetWriteByte() ([]byte, error) {
-	buff := new(bytes.Buffer)
-	for _, val := range mt.Write {
-		v, err := val.Write()
-		if err != nil {
-			return nil, err
-		}
-		buff.Write(v)
-	}
-	return buff.Bytes(), nil
-}
-
-func (mt *ModbusTest) ReadDiscreteInputs(client modbus.Client) error {
+func (mt *ModbusTest) WriteSingleRegister(client modbus.Client) error {
 	if mt.Address == nil {
 		return fmt.Errorf("address is nil")
 	}
-	var q uint16
-	if mt.Quantity != nil {
-		q = *mt.Quantity
-	} else {
-		// TODO если пустой то высчитывать автоматически
+	if len(mt.Write) <= 0 {
+		return fmt.Errorf("there is no data to write")
 	}
-	mt.ResultByte, mt.ResultError = client.ReadDiscreteInputs(*mt.Address, q)
-	return nil
-}
 
-func (mt *ModbusTest) WriteMultipleCoils(client modbus.Client) error {
-	if mt.Address == nil {
-		return fmt.Errorf("address is nil")
-	}
-	var q uint16
-	if mt.Quantity != nil {
-		q = *mt.Quantity
-	} else {
-		// TODO если пустой то высчитывать автоматически
-	}
-	// TODO тут нужно правильно обрабатывать бинарные данные
-	buff := new(bytes.Buffer)
-	i := 0
-	var b uint8 = 0
-	for _, val := range mt.Write {
-		if val.Type() == Bool {
-			b = b | (1 << i)
+	var v uint16
+	var vBytes []byte
+	var i int
+	var vByte uint8
+	for _, w := range mt.Write {
+		switch w.Type() {
+		case Bool:
+			if *w.Bool {
+				vByte = vByte | 1<<i
+			}
 			i++
-		} else {
-			i = 7
+			if i > 7 {
+				vBytes = append(vBytes, vByte)
+				vByte = 0
+				i = 0
+			}
+		case Uint16, Int16, Int8, Uint8, Byte, String:
+			if i != 0 {
+				return fmt.Errorf("data error. the length of the binary type must be 8")
+			}
+
+			b, err := w.Write()
+			if err != nil {
+				return fmt.Errorf("%s", err)
+			}
+			vBytes = append(vBytes, b...)
+		default:
+			return fmt.Errorf("data error. Only supported Uint16, Int16, Int8, Uint8, Byte, String, Bool")
 		}
 
-		if i == 7 {
-			buff.Write([]byte{b})
-			b = 0
-			i = 0
+		if len(vBytes) >= 2 {
+			v = binary.BigEndian.Uint16(vBytes[:2])
+			break
 		}
-		v, err := val.Write()
-		if err != nil {
-			return err
-		}
-		buff.Write(v)
 	}
-	mt.ResultByte, mt.ResultError = client.WriteMultipleCoils(*mt.Address, q, buff.Bytes())
+
+	startTime := time.Now()
+	mt.ResultByte, mt.ResultError = client.WriteSingleRegister(*mt.Address, v)
+	mt.ResultTime = time.Since(startTime)
 	return nil
 }
 
