@@ -10,6 +10,20 @@ import (
 	"time"
 )
 
+type ModbusFunction int
+
+const (
+	NilFunction            = ModbusFunction(0)
+	ReadCoils              = ModbusFunction(1)
+	ReadDiscreteInputs     = ModbusFunction(2)
+	ReadHoldingRegisters   = ModbusFunction(3)
+	ReadInputRegisters     = ModbusFunction(4)
+	WriteSingleCoil        = ModbusFunction(5)
+	WriteSingleRegister    = ModbusFunction(6)
+	WriteMultipleCoils     = ModbusFunction(15)
+	WriteMultipleRegisters = ModbusFunction(16)
+)
+
 type ModbusTest struct {
 	Name          string        `yaml:"name"`
 	Before        Message       `yaml:"before"`
@@ -33,30 +47,21 @@ func (mt *ModbusTest) Exec(client modbus.Client) (err error) {
 
 	mt.Before.Print()
 
-	mfunc := strings.ReplaceAll(strings.ToLower(mt.Function), " ", "")
-	if strings.HasPrefix(mfunc, "0x") {
-		if a, err := strconv.ParseInt(strings.TrimPrefix(mfunc, "0x"), 16, 8); err == nil {
-			mfunc = strconv.Itoa(int(a))
-		}
-	}
-	switch mfunc {
-	case "readdiscreteinputs", "2":
-		err = mt.ReadDiscreteInputs(client)
-	case "readcoils", "1":
-		err = mt.ReadCoils(client)
-	case "writesinglecoil", "5":
-		err = mt.WriteSingleCoil(client)
-	case "writemultiplecoils", "15":
-	case "readinputregisters", "4":
-		err = mt.ReadInputRegisters(client)
-	case "readholdingregisters", "3":
-		err = mt.ReadHoldingRegisters(client)
-	case "writesingleregister", "6":
-		err = mt.WriteSingleRegister(client)
-	case "writemultipleregisters", "16":
-	case "readwritemultipleregisters", "23":
-	case "maskwriteregister", "22":
-	case "readfifqqueue", "24":
+	switch mt.getFunction() {
+	case ReadDiscreteInputs:
+		err = mt.readDiscreteInputs(client)
+	case ReadCoils:
+		err = mt.readCoils(client)
+	case WriteSingleCoil:
+		err = mt.writeSingleCoil(client)
+	case WriteMultipleCoils:
+	case ReadInputRegisters:
+		err = mt.readInputRegisters(client)
+	case ReadHoldingRegisters:
+		err = mt.readHoldingRegisters(client)
+	case WriteSingleRegister:
+		err = mt.writeSingleRegister(client)
+	case WriteMultipleRegisters:
 	default:
 		return fmt.Errorf("function not found")
 	}
@@ -69,59 +74,84 @@ func (mt *ModbusTest) Exec(client modbus.Client) (err error) {
 	return nil
 }
 
-func (mt *ModbusTest) ReadCoils(client modbus.Client) error {
+func (mt *ModbusTest) getQuantity() (uint16, error) {
+	if mt.Quantity != nil {
+		return *mt.Quantity, nil
+		// TODO Возвращать ошибку если количество записываемых или считываемых данных не совпадает
+	}
+
+	switch mt.getFunction() {
+	case ReadDiscreteInputs, ReadCoils:
+		// TODO
+	case WriteSingleCoil:
+		// TODO
+	case WriteMultipleCoils:
+		// TODO
+	case ReadInputRegisters, ReadHoldingRegisters:
+		// TODO
+	case WriteMultipleRegisters:
+		// TODO
+	}
+	return 0, fmt.Errorf("quantity is nil")
+}
+
+func (mt *ModbusTest) readCoils(client modbus.Client) error {
 	if mt.Address == nil {
 		return fmt.Errorf("address is nil")
 	}
-	if mt.Quantity == nil {
-		return fmt.Errorf("quantity is nil")
+	quantity, err := mt.getQuantity()
+	if err != nil {
+		return fmt.Errorf("%s", err)
 	}
 	startTime := time.Now()
-	mt.ResultByte, mt.ResultError = client.ReadCoils(*mt.Address, *mt.Quantity)
+	mt.ResultByte, mt.ResultError = client.ReadCoils(*mt.Address, quantity)
 	mt.ResultTime = time.Since(startTime)
 	return nil
 }
 
-func (mt *ModbusTest) ReadDiscreteInputs(client modbus.Client) error {
+func (mt *ModbusTest) readDiscreteInputs(client modbus.Client) error {
 	if mt.Address == nil {
 		return fmt.Errorf("address is nil")
 	}
-	if mt.Quantity == nil {
-		return fmt.Errorf("quantity is nil")
+	quantity, err := mt.getQuantity()
+	if err != nil {
+		return fmt.Errorf("%s", err)
 	}
 	startTime := time.Now()
-	mt.ResultByte, mt.ResultError = client.ReadDiscreteInputs(*mt.Address, *mt.Quantity)
+	mt.ResultByte, mt.ResultError = client.ReadDiscreteInputs(*mt.Address, quantity)
 	mt.ResultTime = time.Since(startTime)
 	return nil
 }
 
-func (mt *ModbusTest) ReadHoldingRegisters(client modbus.Client) error {
+func (mt *ModbusTest) readHoldingRegisters(client modbus.Client) error {
 	if mt.Address == nil {
 		return fmt.Errorf("address is nil")
 	}
-	if mt.Quantity == nil {
-		return fmt.Errorf("quantity is nil")
+	quantity, err := mt.getQuantity()
+	if err != nil {
+		return fmt.Errorf("%s", err)
 	}
 	startTime := time.Now()
-	mt.ResultByte, mt.ResultError = client.ReadHoldingRegisters(*mt.Address, *mt.Quantity)
+	mt.ResultByte, mt.ResultError = client.ReadHoldingRegisters(*mt.Address, quantity)
 	mt.ResultTime = time.Since(startTime)
 	return nil
 }
 
-func (mt *ModbusTest) ReadInputRegisters(client modbus.Client) error {
+func (mt *ModbusTest) readInputRegisters(client modbus.Client) error {
 	if mt.Address == nil {
 		return fmt.Errorf("address is nil")
 	}
-	if mt.Quantity == nil {
-		return fmt.Errorf("quantity is nil")
+	quantity, err := mt.getQuantity()
+	if err != nil {
+		return fmt.Errorf("%s", err)
 	}
 	startTime := time.Now()
-	mt.ResultByte, mt.ResultError = client.ReadInputRegisters(*mt.Address, *mt.Quantity)
+	mt.ResultByte, mt.ResultError = client.ReadInputRegisters(*mt.Address, quantity)
 	mt.ResultTime = time.Since(startTime)
 	return nil
 }
 
-func (mt *ModbusTest) WriteSingleCoil(client modbus.Client) error {
+func (mt *ModbusTest) writeSingleCoil(client modbus.Client) error {
 	if mt.Address == nil {
 		return fmt.Errorf("address is nil")
 	}
@@ -159,7 +189,7 @@ func (mt *ModbusTest) WriteSingleCoil(client modbus.Client) error {
 	return nil
 }
 
-func (mt *ModbusTest) WriteSingleRegister(client modbus.Client) error {
+func (mt *ModbusTest) writeSingleRegister(client modbus.Client) error {
 	if mt.Address == nil {
 		return fmt.Errorf("address is nil")
 	}
@@ -219,4 +249,33 @@ func byteToEq(b1, b2 []byte) bool {
 		}
 	}
 	return true
+}
+
+func (mt *ModbusTest) getFunction() ModbusFunction {
+	mFunc := strings.ReplaceAll(strings.ToLower(mt.Function), " ", "")
+	if strings.HasPrefix(mFunc, "0x") {
+		if a, err := strconv.ParseInt(strings.TrimPrefix(mFunc, "0x"), 16, 8); err == nil {
+			mFunc = strconv.Itoa(int(a))
+		}
+	}
+	switch mFunc {
+	case "readdiscreteinputs", "2":
+		return ReadDiscreteInputs
+	case "readcoils", "1":
+		return ReadCoils
+	case "writesinglecoil", "5":
+		return WriteSingleCoil
+	case "writemultiplecoils", "15":
+		return WriteMultipleCoils
+	case "readinputregisters", "4":
+		return ReadInputRegisters
+	case "readholdingregisters", "3":
+		return ReadHoldingRegisters
+	case "writesingleregister", "6":
+		return WriteSingleRegister
+	case "writemultipleregisters", "16":
+		return WriteMultipleRegisters
+	default:
+		return NilFunction
+	}
 }
