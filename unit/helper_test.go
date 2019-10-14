@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-func TestMessage_parsePauseNs(t *testing.T) {
-	d, tp := (&Message{Pause: "1 ns"}).parsePause()
+func Test_parsePauseNs(t *testing.T) {
+	d, tp := parseDuration("1 ns")
 	if err := gotest.Expect(d).Eq(time.Duration(1)); err != nil {
 		t.Error(err)
 	}
@@ -17,8 +17,8 @@ func TestMessage_parsePauseNs(t *testing.T) {
 	}
 }
 
-func TestMessage_parsePauseUs(t *testing.T) {
-	d, tp := (&Message{Pause: "1 us"}).parsePause()
+func Test_parsePauseUs(t *testing.T) {
+	d, tp := parseDuration("1 us")
 	if err := gotest.Expect(d).Eq(time.Duration(1) * time.Microsecond); err != nil {
 		t.Error(err)
 	}
@@ -28,8 +28,8 @@ func TestMessage_parsePauseUs(t *testing.T) {
 	}
 }
 
-func TestMessage_parsePauseMs(t *testing.T) {
-	d, tp := (&Message{Pause: "1 ms"}).parsePause()
+func Test_parsePauseMs(t *testing.T) {
+	d, tp := parseDuration("1 ms")
 	if err := gotest.Expect(d).Eq(time.Duration(1) * time.Millisecond); err != nil {
 		t.Error(err)
 	}
@@ -39,8 +39,8 @@ func TestMessage_parsePauseMs(t *testing.T) {
 	}
 }
 
-func TestMessage_parsePauseS(t *testing.T) {
-	d, tp := (&Message{Pause: "1 s"}).parsePause()
+func Test_parsePauseS(t *testing.T) {
+	d, tp := parseDuration("1 s")
 	if err := gotest.Expect(d).Eq(time.Duration(1) * time.Second); err != nil {
 		t.Error(err)
 	}
@@ -50,8 +50,8 @@ func TestMessage_parsePauseS(t *testing.T) {
 	}
 }
 
-func TestMessage_parsePauseM(t *testing.T) {
-	d, tp := (&Message{Pause: "1 m"}).parsePause()
+func Test_parsePauseM(t *testing.T) {
+	d, tp := parseDuration("1 m")
 	if err := gotest.Expect(d).Eq(time.Duration(1) * time.Minute); err != nil {
 		t.Error(err)
 	}
@@ -61,8 +61,8 @@ func TestMessage_parsePauseM(t *testing.T) {
 	}
 }
 
-func TestMessage_parsePauseH(t *testing.T) {
-	d, tp := (&Message{Pause: "1 h"}).parsePause()
+func Test_parsePauseH(t *testing.T) {
+	d, tp := parseDuration("1 h")
 	if err := gotest.Expect(d).Eq(time.Duration(1) * time.Hour); err != nil {
 		t.Error(err)
 	}
@@ -72,8 +72,8 @@ func TestMessage_parsePauseH(t *testing.T) {
 	}
 }
 
-func TestMessage_parsePause(t *testing.T) {
-	d, tp := (&Message{Pause: "1"}).parsePause()
+func Test_parsePause(t *testing.T) {
+	d, tp := parseDuration("1")
 	if err := gotest.Expect(d).Eq(time.Duration(1) * time.Second); err != nil {
 		t.Error(err)
 	}
@@ -83,8 +83,8 @@ func TestMessage_parsePause(t *testing.T) {
 	}
 }
 
-func TestMessage_parsePauseEnter(t *testing.T) {
-	d, tp := (&Message{Pause: "enter"}).parsePause()
+func Test_parsePauseEnter(t *testing.T) {
+	d, tp := parseDuration("enter")
 	if err := gotest.Expect(d).Eq(time.Duration(-1)); err != nil {
 		t.Error(err)
 	}

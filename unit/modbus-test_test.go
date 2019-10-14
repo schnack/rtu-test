@@ -8,20 +8,16 @@ import (
 func TestModbusTest_getQuantity(t *testing.T) {
 
 	var quantity uint16 = 10
-	mQuantity, err := (&ModbusTest{Function: "ReadCoils", Quantity: &quantity}).getQuantity()
-	if err := gotest.Expect(mQuantity).Eq(uint16(10)); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(err).Eq(nil); err != nil {
+	if err := gotest.Expect((&ModbusTest{Function: "ReadCoils", Quantity: &quantity}).getQuantity()).Eq(uint16(10)); err != nil {
 		t.Error(err)
 	}
 
 	var param1 int64 = 2
-	mQuantity, err = (&ModbusTest{Function: "ReadCoils", Expected: []Value{{Int64: &param1}}}).getQuantity()
-	if err := gotest.Expect(mQuantity).Eq(uint16(64)); err != nil {
+	if err := gotest.Expect((&ModbusTest{Function: "ReadCoils", Expected: []Value{{Int64: &param1}}}).getQuantity()).Eq(uint16(64)); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(err).Eq(nil); err != nil {
+
+	if err := gotest.Expect((&ModbusTest{Function: "ReadInputRegisters", Expected: []Value{{Int64: &param1}}}).getQuantity()).Eq(uint16(4)); err != nil {
 		t.Error(err)
 	}
 

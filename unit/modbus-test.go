@@ -74,37 +74,32 @@ func (mt *ModbusTest) Exec(client modbus.Client) (err error) {
 	return nil
 }
 
-func (mt *ModbusTest) getQuantity() (uint16, error) {
+func (mt *ModbusTest) getQuantity() uint16 {
+
 	if mt.Quantity != nil {
-		return *mt.Quantity, nil
-		// TODO Возвращать ошибку если количество записываемых или считываемых данных не совпадает
+		return *mt.Quantity
 	}
 
+	// If it is not explicitly specified then we try to determine automatically
 	switch mt.getFunction() {
 	case ReadDiscreteInputs, ReadCoils:
-		// TODO
-	case WriteSingleCoil:
-		// TODO
+		return countBit(mt.Expected, false)
 	case WriteMultipleCoils:
-		// TODO
+		return countBit(mt.Write, false)
 	case ReadInputRegisters, ReadHoldingRegisters:
-		// TODO
+		return countBit(mt.Expected, true)
 	case WriteMultipleRegisters:
-		// TODO
+		return countBit(mt.Write, true)
 	}
-	return 0, fmt.Errorf("quantity is nil")
+	return 0
 }
 
 func (mt *ModbusTest) readCoils(client modbus.Client) error {
 	if mt.Address == nil {
 		return fmt.Errorf("address is nil")
 	}
-	quantity, err := mt.getQuantity()
-	if err != nil {
-		return fmt.Errorf("%s", err)
-	}
 	startTime := time.Now()
-	mt.ResultByte, mt.ResultError = client.ReadCoils(*mt.Address, quantity)
+	mt.ResultByte, mt.ResultError = client.ReadCoils(*mt.Address, mt.getQuantity())
 	mt.ResultTime = time.Since(startTime)
 	return nil
 }
@@ -113,12 +108,8 @@ func (mt *ModbusTest) readDiscreteInputs(client modbus.Client) error {
 	if mt.Address == nil {
 		return fmt.Errorf("address is nil")
 	}
-	quantity, err := mt.getQuantity()
-	if err != nil {
-		return fmt.Errorf("%s", err)
-	}
 	startTime := time.Now()
-	mt.ResultByte, mt.ResultError = client.ReadDiscreteInputs(*mt.Address, quantity)
+	mt.ResultByte, mt.ResultError = client.ReadDiscreteInputs(*mt.Address, mt.getQuantity())
 	mt.ResultTime = time.Since(startTime)
 	return nil
 }
@@ -127,12 +118,8 @@ func (mt *ModbusTest) readHoldingRegisters(client modbus.Client) error {
 	if mt.Address == nil {
 		return fmt.Errorf("address is nil")
 	}
-	quantity, err := mt.getQuantity()
-	if err != nil {
-		return fmt.Errorf("%s", err)
-	}
 	startTime := time.Now()
-	mt.ResultByte, mt.ResultError = client.ReadHoldingRegisters(*mt.Address, quantity)
+	mt.ResultByte, mt.ResultError = client.ReadHoldingRegisters(*mt.Address, mt.getQuantity())
 	mt.ResultTime = time.Since(startTime)
 	return nil
 }
@@ -141,12 +128,8 @@ func (mt *ModbusTest) readInputRegisters(client modbus.Client) error {
 	if mt.Address == nil {
 		return fmt.Errorf("address is nil")
 	}
-	quantity, err := mt.getQuantity()
-	if err != nil {
-		return fmt.Errorf("%s", err)
-	}
 	startTime := time.Now()
-	mt.ResultByte, mt.ResultError = client.ReadInputRegisters(*mt.Address, quantity)
+	mt.ResultByte, mt.ResultError = client.ReadInputRegisters(*mt.Address, mt.getQuantity())
 	mt.ResultTime = time.Since(startTime)
 	return nil
 }
@@ -237,18 +220,6 @@ func (mt *ModbusTest) writeSingleRegister(client modbus.Client) error {
 	mt.ResultByte, mt.ResultError = client.WriteSingleRegister(*mt.Address, v)
 	mt.ResultTime = time.Since(startTime)
 	return nil
-}
-
-func byteToEq(b1, b2 []byte) bool {
-	if len(b1) != len(b2) {
-		return false
-	}
-	for i := range b1 {
-		if b1[i] != b2[i] {
-			return false
-		}
-	}
-	return true
 }
 
 func (mt *ModbusTest) getFunction() ModbusFunction {
