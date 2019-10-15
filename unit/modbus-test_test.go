@@ -5,6 +5,30 @@ import (
 	"testing"
 )
 
+func TestModbusTest_getWriteData(t *testing.T) {
+	var param1 = true
+	var param2 uint8 = 1
+	var param3 uint16 = 1
+	var param4 uint32 = 1
+	var param5 uint64 = 1
+	modbus := &ModbusTest{}
+	modbus.Write = []Value{
+		{Bool: &param1},
+		{Uint8: &param2},
+		{Uint16: &param3},
+		{Uint32: &param4},
+		{Uint64: &param5},
+	}
+	data, err := modbus.getWriteData()
+	if err := gotest.Expect(data).Eq([]byte{1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1}); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(err).Eq(nil); err != nil {
+		t.Error(err)
+	}
+
+}
+
 func TestModbusTest_getQuantity(t *testing.T) {
 
 	var quantity uint16 = 10

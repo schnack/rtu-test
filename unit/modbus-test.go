@@ -176,12 +176,20 @@ func (mt *ModbusTest) writeSingleRegister(client modbus.Client) error {
 	if mt.Address == nil {
 		return fmt.Errorf("address is nil")
 	}
-	if len(mt.Write) <= 0 {
-		return fmt.Errorf("there is no data to write")
-	}
 
-	var v uint16
-	var vBytes []byte
+	data, err := mt.getWriteData()
+	if err != nil {
+		return fmt.Errorf("invalid data type for record")
+	}
+	v := binary.BigEndian.Uint16(data[:2])
+
+	startTime := time.Now()
+	mt.ResultByte, mt.ResultError = client.WriteSingleRegister(*mt.Address, v)
+	mt.ResultTime = time.Since(startTime)
+	return nil
+}
+
+func (mt *ModbusTest) getWriteData() (data []byte, err error) {
 	var i int
 	var vByte uint8
 	for _, w := range mt.Write {
@@ -192,34 +200,29 @@ func (mt *ModbusTest) writeSingleRegister(client modbus.Client) error {
 			}
 			i++
 			if i > 7 {
-				vBytes = append(vBytes, vByte)
+				data = append(data, vByte)
 				vByte = 0
 				i = 0
 			}
-		case Uint16, Int16, Int8, Uint8, Byte, String:
+		default:
 			if i != 0 {
-				return fmt.Errorf("data error. the length of the binary type must be 8")
+				data = append(data, vByte)
+				vByte = 0
+				i = 0
 			}
-
 			b, err := w.Write()
 			if err != nil {
-				return fmt.Errorf("%s", err)
+				return data, err
 			}
-			vBytes = append(vBytes, b...)
-		default:
-			return fmt.Errorf("data error. Only supported Uint16, Int16, Int8, Uint8, Byte, String, Bool")
-		}
-
-		if len(vBytes) >= 2 {
-			v = binary.BigEndian.Uint16(vBytes[:2])
-			break
+			data = append(data, b...)
 		}
 	}
-
-	startTime := time.Now()
-	mt.ResultByte, mt.ResultError = client.WriteSingleRegister(*mt.Address, v)
-	mt.ResultTime = time.Since(startTime)
-	return nil
+	if i != 0 {
+		data = append(data, vByte)
+		vByte = 0
+		i = 0
+	}
+	return
 }
 
 func (mt *ModbusTest) getFunction() ModbusFunction {
