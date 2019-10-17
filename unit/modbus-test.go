@@ -55,6 +55,7 @@ func (mt *ModbusTest) Exec(client modbus.Client) (err error) {
 	case WriteSingleCoil:
 		err = mt.writeSingleCoil(client)
 	case WriteMultipleCoils:
+		err = mt.writeMultipleCoils(client)
 	case ReadInputRegisters:
 		err = mt.readInputRegisters(client)
 	case ReadHoldingRegisters:
@@ -62,36 +63,18 @@ func (mt *ModbusTest) Exec(client modbus.Client) (err error) {
 	case WriteSingleRegister:
 		err = mt.writeSingleRegister(client)
 	case WriteMultipleRegisters:
+		err = mt.writeMultipleRegisters(client)
 	default:
-		return fmt.Errorf("function not found")
+		err = fmt.Errorf("function not found")
 	}
 
+	// TODO verification of reference data
 	mt.Error.Print()
 
 	mt.Success.Print()
 
 	mt.After.Print()
-	return nil
-}
-
-func (mt *ModbusTest) getQuantity() uint16 {
-
-	if mt.Quantity != nil {
-		return *mt.Quantity
-	}
-
-	// If it is not explicitly specified then we try to determine automatically
-	switch mt.getFunction() {
-	case ReadDiscreteInputs, ReadCoils:
-		return countBit(mt.Expected, false)
-	case WriteMultipleCoils:
-		return countBit(mt.Write, false)
-	case ReadInputRegisters, ReadHoldingRegisters:
-		return countBit(mt.Expected, true)
-	case WriteMultipleRegisters:
-		return countBit(mt.Write, true)
-	}
-	return 0
+	return
 }
 
 func (mt *ModbusTest) readCoils(client modbus.Client) error {
@@ -143,27 +126,16 @@ func (mt *ModbusTest) writeSingleCoil(client modbus.Client) error {
 	}
 
 	var v uint16 = 0
-	switch mt.Write[0].Type() {
-	case Bool:
-		if *mt.Write[0].Bool {
+	data := mt.getWriteData()
+	if len(data) > 1 && (data[0] == 0xff || data[0] == 0x00) && data[0] == 0x00 {
+		v = binary.BigEndian.Uint16(data[:2])
+	} else if len(data) > 0 && data[0] == 0x01 || data[0] == 0x00 {
+		v = 0x0000
+		if data[0] == 0x01 {
 			v = 0xff00
-		} else {
-			v = 0x0000
 		}
-	case Byte:
-		b, err := mt.Write[0].Write()
-		if err != nil {
-			return fmt.Errorf("%s", err)
-		}
-		if byteToEq(b, []byte{0xff, 0x00}) {
-			v = 0xff00
-		} else if byteToEq(b, []byte{0x00, 0x00}) {
-			v = 0x0000
-		} else {
-			return fmt.Errorf("data error. Only supported 0xff00 0x0000")
-		}
-	default:
-		return fmt.Errorf("invalid data type for record")
+	} else {
+		return fmt.Errorf("data error. Only supported 1, 0, 0xff00, 0x0000")
 	}
 
 	startTime := time.Now()
@@ -177,8 +149,8 @@ func (mt *ModbusTest) writeSingleRegister(client modbus.Client) error {
 		return fmt.Errorf("address is nil")
 	}
 
-	data, err := mt.getWriteData()
-	if err != nil {
+	data := mt.getWriteData()
+	if len(data) < 2 {
 		return fmt.Errorf("invalid data type for record")
 	}
 	v := binary.BigEndian.Uint16(data[:2])
@@ -189,40 +161,26 @@ func (mt *ModbusTest) writeSingleRegister(client modbus.Client) error {
 	return nil
 }
 
-func (mt *ModbusTest) getWriteData() (data []byte, err error) {
-	var i int
-	var vByte uint8
-	for _, w := range mt.Write {
-		switch w.Type() {
-		case Bool:
-			if *w.Bool {
-				vByte = vByte | 1<<i
-			}
-			i++
-			if i > 7 {
-				data = append(data, vByte)
-				vByte = 0
-				i = 0
-			}
-		default:
-			if i != 0 {
-				data = append(data, vByte)
-				vByte = 0
-				i = 0
-			}
-			b, err := w.Write()
-			if err != nil {
-				return data, err
-			}
-			data = append(data, b...)
-		}
+func (mt *ModbusTest) writeMultipleCoils(client modbus.Client) error {
+	if mt.Address == nil {
+		return fmt.Errorf("address is nil")
 	}
-	if i != 0 {
-		data = append(data, vByte)
-		vByte = 0
-		i = 0
+
+	startTime := time.Now()
+	mt.ResultByte, mt.ResultError = client.WriteMultipleCoils(*mt.Address, mt.getQuantity(), mt.getWriteData())
+	mt.ResultTime = time.Since(startTime)
+	return nil
+}
+
+func (mt *ModbusTest) writeMultipleRegisters(client modbus.Client) error {
+	if mt.Address == nil {
+		return fmt.Errorf("address is nil")
 	}
-	return
+
+	startTime := time.Now()
+	mt.ResultByte, mt.ResultError = client.WriteMultipleRegisters(*mt.Address, mt.getQuantity(), mt.getWriteData())
+	mt.ResultTime = time.Since(startTime)
+	return nil
 }
 
 func (mt *ModbusTest) getFunction() ModbusFunction {
@@ -252,4 +210,40 @@ func (mt *ModbusTest) getFunction() ModbusFunction {
 	default:
 		return NilFunction
 	}
+}
+
+func (mt *ModbusTest) getQuantity() uint16 {
+
+	if mt.Quantity != nil {
+		return *mt.Quantity
+	}
+
+	// If it is not explicitly specified then we try to determine automatically
+	switch mt.getFunction() {
+	case ReadDiscreteInputs, ReadCoils:
+		if bits, err := countBit(mt.Expected, false); err == nil {
+			return bits
+		}
+	case WriteMultipleCoils:
+		if bits, err := countBit(mt.Write, false); err == nil {
+			return bits
+		}
+	case ReadInputRegisters, ReadHoldingRegisters:
+		if bits, err := countBit(mt.Expected, true); err == nil {
+			return bits
+		}
+	case WriteMultipleRegisters:
+		if bits, err := countBit(mt.Write, true); err == nil {
+			return bits
+		}
+	}
+	return 0
+}
+
+func (mt *ModbusTest) getWriteData() []byte {
+	data, err := valueToByte(mt.Write)
+	if err != nil {
+		return nil
+	}
+	return data
 }

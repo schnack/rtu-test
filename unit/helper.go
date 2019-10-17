@@ -1,12 +1,13 @@
 package unit
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
 )
 
-func countBit(v []Value, is16bit bool) (bits uint16) {
+func countBit(v []Value, is16bit bool) (bits uint16, err error) {
 	for _, w := range v {
 		if w.Type() == Bool {
 			bits++
@@ -16,7 +17,7 @@ func countBit(v []Value, is16bit bool) (bits uint16) {
 			}
 			byteData, err := w.Write()
 			if err != nil {
-				return 0
+				return 0, fmt.Errorf("%s", err)
 			}
 			bits += 8 * uint16(len(byteData))
 		}
@@ -25,10 +26,46 @@ func countBit(v []Value, is16bit bool) (bits uint16) {
 		if bits%16 != 0 {
 			bits += 16 - bits%16
 		}
-		return bits / 16
+		return bits / 16, nil
 	} else {
-		return bits
+		return bits, nil
 	}
+}
+
+func valueToByte(v []Value) (data []byte, err error) {
+	var i int
+	var vByte uint8
+	for _, w := range v {
+		switch w.Type() {
+		case Bool:
+			if *w.Bool {
+				vByte = vByte | 1<<i
+			}
+			i++
+			if i > 7 {
+				data = append(data, vByte)
+				vByte = 0
+				i = 0
+			}
+		default:
+			if i != 0 {
+				data = append(data, vByte)
+				vByte = 0
+				i = 0
+			}
+			b, err := w.Write()
+			if err != nil {
+				return data, err
+			}
+			data = append(data, b...)
+		}
+	}
+	if i != 0 {
+		data = append(data, vByte)
+		vByte = 0
+		i = 0
+	}
+	return
 }
 
 // byteToEq - byte-by-byte comparison
