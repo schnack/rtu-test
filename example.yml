@@ -62,14 +62,3 @@ modbusClient:
         after:
           message: "print after message"
           pause: 1s # ms, s, m, h
-
-
-#  IllegalFunction                    = 1
-#  IllegalDataAddress                 = 2
-#  IllegalDataValue                   = 3
-#  ServerDeviceFailure                = 4
-#  Acknowledge                        = 5
-#  ServerDeviceBusy                   = 6
-#  MemoryParityError                  = 8
-#  GatewayPathUnavailable             = 10
-#  GatewayTargetDeviceFailedToRespond = 11

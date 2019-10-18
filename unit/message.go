@@ -13,16 +13,17 @@ type Message struct {
 
 func (m *Message) Print() {
 	log.Println(m.Message)
-	d, t := parseDuration(m.Pause)
+	d := parseDuration(m.Pause)
 	if d < 0 {
 		log.Println("Press ENTER to continue...")
+		var t string
 		_, _ = fmt.Scanln(&t)
 	} else {
-		log.Printf("Pause %d%s\n", d, t)
+		log.Printf("Pause %s\n", d.String())
 		time.Sleep(d)
 	}
 }
 
-func (m *Message) parsePause() (time.Duration, string) {
+func (m *Message) parsePause() time.Duration {
 	return parseDuration(m.Pause)
 }

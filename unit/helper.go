@@ -81,56 +81,60 @@ func byteToEq(b1, b2 []byte) bool {
 	return true
 }
 
-func parseDuration(d string) (time.Duration, string) {
+func parseDuration(d string) time.Duration {
 	switch {
+	case d == "":
+		return time.Duration(0)
 	case strings.HasSuffix(d, "ns"):
 		s := strings.TrimSpace(strings.TrimSuffix(d, "ns"))
 		t, err := strconv.Atoi(s)
 		if err != nil {
-			return time.Duration(-1), ""
+			return time.Duration(-1)
 		}
-		return time.Duration(t), "ns"
+		return time.Duration(t)
+
 	case strings.HasSuffix(d, "us"):
 		s := strings.TrimSpace(strings.TrimSuffix(d, "us"))
 		t, err := strconv.Atoi(s)
 		if err != nil {
-			return time.Duration(-1), ""
+			return time.Duration(-1)
 		}
-		return time.Duration(t) * time.Microsecond, "us"
+		return time.Duration(t) * time.Microsecond
+
 	case strings.HasSuffix(d, "ms"):
 		s := strings.TrimSpace(strings.TrimSuffix(d, "ms"))
 		t, err := strconv.Atoi(s)
 		if err != nil {
-			return time.Duration(-1), ""
+			return time.Duration(-1)
 		}
-		return time.Duration(t) * time.Millisecond, "ms"
+		return time.Duration(t) * time.Millisecond
 	case strings.HasSuffix(d, "s"):
 		s := strings.TrimSpace(strings.TrimSuffix(d, "s"))
 		t, err := strconv.Atoi(s)
 		if err != nil {
-			return time.Duration(-1), ""
+			return time.Duration(-1)
 		}
-		return time.Duration(t) * time.Second, "s"
+		return time.Duration(t) * time.Second
 	case strings.HasSuffix(d, "m"):
 		s := strings.TrimSpace(strings.TrimSuffix(d, "m"))
 		t, err := strconv.Atoi(s)
 		if err != nil {
-			return time.Duration(-1), ""
+			return time.Duration(-1)
 		}
-		return time.Duration(t) * time.Minute, "m"
+		return time.Duration(t) * time.Minute
 	case strings.HasSuffix(d, "h"):
 		s := strings.TrimSpace(strings.TrimSuffix(d, "h"))
 		t, err := strconv.Atoi(s)
 		if err != nil {
-			return time.Duration(-1), ""
+			return time.Duration(-1)
 		}
-		return time.Duration(t) * time.Hour, "h"
+		return time.Duration(t) * time.Hour
 	default:
 		s := strings.TrimSpace(d)
 		t, err := strconv.Atoi(s)
 		if err != nil {
-			return time.Duration(-1), ""
+			return time.Duration(-1)
 		}
-		return time.Duration(t) * time.Second, "s"
+		return time.Duration(t) * time.Second
 	}
 }

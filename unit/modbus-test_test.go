@@ -1,9 +1,53 @@
 package unit
 
 import (
+	"fmt"
 	"github.com/schnack/gotest"
 	"testing"
+	"time"
 )
+
+func TestModbusTest_CheckDuration(t *testing.T) {
+	modbus := &ModbusTest{
+		ExpectedTime: "1s",
+		ResultTime:   1 * time.Second,
+	}
+	if err := gotest.Expect(modbus.CheckDuration()).Eq(nil); err != nil {
+		t.Error(err)
+	}
+
+	modbus.ResultTime = 2 * time.Second
+	if err := gotest.Expect(modbus.CheckDuration()).Eq(fmt.Errorf("\nexpected: 1s\n     got: 2s\n")); err != nil {
+		t.Error(err)
+	}
+
+}
+
+func TestModbusTest_CheckError(t *testing.T) {
+	modbus := &ModbusTest{
+		ExpectedError: "",
+		ResultError:   nil,
+	}
+	if err := gotest.Expect(modbus.CheckError()).Eq(nil); err != nil {
+		t.Error(err)
+	}
+
+	modbus.ResultError = fmt.Errorf("test error")
+	if err := gotest.Expect(modbus.CheckError()).Eq(fmt.Errorf("\nexpected:\n     got: test error\n")); err != nil {
+		t.Error(err)
+	}
+
+	modbus.ExpectedError = "0x01"
+	if err := gotest.Expect(modbus.CheckError()).Eq(fmt.Errorf("\nexpected: 0x01\n     got: test error\n")); err != nil {
+		t.Error(err)
+	}
+
+	modbus.Function = "0x01"
+	if err := gotest.Expect(modbus.CheckError()).Eq(fmt.Errorf("\nexpected: modbus: exception '1' (illegal function), function '1'\n     got: test error\n")); err != nil {
+		t.Error(err)
+	}
+
+}
 
 func TestModbusTest_ExecReadCoils(t *testing.T) {
 	var Address uint16 = 0

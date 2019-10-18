@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/goburrow/modbus"
-	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -14,14 +13,14 @@ type ModbusFunction int
 
 const (
 	NilFunction            = ModbusFunction(0)
-	ReadCoils              = ModbusFunction(1)
-	ReadDiscreteInputs     = ModbusFunction(2)
-	ReadHoldingRegisters   = ModbusFunction(3)
-	ReadInputRegisters     = ModbusFunction(4)
-	WriteSingleCoil        = ModbusFunction(5)
-	WriteSingleRegister    = ModbusFunction(6)
-	WriteMultipleCoils     = ModbusFunction(15)
-	WriteMultipleRegisters = ModbusFunction(16)
+	ReadCoils              = ModbusFunction(modbus.FuncCodeReadCoils)
+	ReadDiscreteInputs     = ModbusFunction(modbus.FuncCodeReadDiscreteInputs)
+	ReadHoldingRegisters   = ModbusFunction(modbus.FuncCodeReadHoldingRegisters)
+	ReadInputRegisters     = ModbusFunction(modbus.FuncCodeReadInputRegisters)
+	WriteSingleCoil        = ModbusFunction(modbus.FuncCodeWriteSingleCoil)
+	WriteSingleRegister    = ModbusFunction(modbus.FuncCodeWriteSingleRegister)
+	WriteMultipleCoils     = ModbusFunction(modbus.FuncCodeWriteMultipleCoils)
+	WriteMultipleRegisters = ModbusFunction(modbus.FuncCodeWriteMultipleRegisters)
 )
 
 type ModbusTest struct {
@@ -42,11 +41,69 @@ type ModbusTest struct {
 	ResultError   error         `yaml:"-"`
 }
 
+func (mt *ModbusTest) CheckData() error {
+	switch mt.getFunction() {
+	case ReadCoils, ReadDiscreteInputs, ReadHoldingRegisters, ReadInputRegisters:
+		// TODO
+	case WriteSingleCoil, WriteSingleRegister, WriteMultipleCoils, WriteMultipleRegisters:
+		// TODO
+	}
+	return nil
+}
+
+func (mt *ModbusTest) CheckDuration() error {
+	expectTime := parseDuration(mt.ExpectedTime)
+	if mt.ResultTime > expectTime {
+		return fmt.Errorf("\nexpected: %s\n     got: %s\n", expectTime.String(), mt.ResultTime.String())
+	}
+	return nil
+}
+
+func (mt *ModbusTest) CheckError() error {
+	if mt.ExpectedError == "" && mt.ResultError == nil {
+		return nil
+	} else if mt.ExpectedError == "" && mt.ResultError != nil {
+		return fmt.Errorf("\nexpected:\n     got: %s\n", mt.ResultError.Error())
+	}
+
+	errorText := mt.ExpectedError
+	if mt.getFunction() != NilFunction {
+		modbusError := strings.ReplaceAll(strings.ToLower(mt.ExpectedError), " ", "")
+		if strings.HasPrefix(modbusError, "0x") {
+			if a, err := strconv.ParseInt(strings.TrimPrefix(modbusError, "0x"), 16, 8); err == nil {
+				modbusError = strconv.Itoa(int(a))
+			}
+		}
+		switch modbusError {
+		case "illegalfunction", "1":
+			errorText = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 1}).Error()
+		case "illegaldataaddress", "2":
+			errorText = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 2}).Error()
+		case "illegaldatavalue", "3":
+			errorText = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 3}).Error()
+		case "serverdevicefailure", "4":
+			errorText = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 4}).Error()
+		case "acknowledge", "5":
+			errorText = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 5}).Error()
+		case "serverdevicebusy", "6":
+			errorText = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 6}).Error()
+		case "memoryparityerror", "8":
+			errorText = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 8}).Error()
+		case "gatewaypathunavailable", "10":
+			errorText = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 10}).Error()
+		case "gatewaytargetdevicefailedtorespond", "11":
+			errorText = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 11}).Error()
+		}
+	}
+
+	if mt.ResultError.Error() != errorText {
+		return fmt.Errorf("\nexpected: %s\n     got: %s\n", errorText, mt.ResultError.Error())
+	}
+
+	return nil
+}
+
 func (mt *ModbusTest) Exec(client modbus.Client) (err error) {
-	log.Printf("Run %s", mt.Name)
-
-	mt.Before.Print()
-
 	switch mt.getFunction() {
 	case ReadDiscreteInputs:
 		err = mt.readDiscreteInputs(client)
@@ -67,13 +124,6 @@ func (mt *ModbusTest) Exec(client modbus.Client) (err error) {
 	default:
 		err = fmt.Errorf("function not found")
 	}
-
-	// TODO verification of reference data
-	mt.Error.Print()
-
-	mt.Success.Print()
-
-	mt.After.Print()
 	return
 }
 
