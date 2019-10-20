@@ -6,6 +6,23 @@ import (
 	"time"
 )
 
+func Test_dataSingleCoil(t *testing.T) {
+	if err := gotest.Expect(dataSingleCoil([]byte{0x01})).Eq([]byte{0xff, 0x00}); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(dataSingleCoil([]byte{0x00})).Eq([]byte{0x00, 0x00}); err != nil {
+		t.Error(err)
+	}
+
+	if err := gotest.Expect(dataSingleCoil([]byte{0xff, 0x00})).Eq([]byte{0xff, 0x00}); err != nil {
+		t.Error(err)
+	}
+
+	if err := gotest.Expect(dataSingleCoil([]byte{0x00, 0x00})).Eq([]byte{0x00, 0x00}); err != nil {
+		t.Error(err)
+	}
+}
+
 func Test_countBit(t *testing.T) {
 
 	var param1 int64 = 2

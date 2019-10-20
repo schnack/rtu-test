@@ -7,6 +7,20 @@ import (
 	"time"
 )
 
+func dataSingleCoil(data []byte) []byte {
+	if len(data) > 1 && (data[0] == 0xff || data[0] == 0x00) && data[1] == 0x00 {
+		return data[:2]
+	} else if len(data) > 0 && data[0] == 0x01 || data[0] == 0x00 {
+		if data[0] == 0x01 {
+			return []byte{0xff, 0x00}
+		} else {
+			return []byte{0x00, 0x00}
+		}
+	} else {
+		return nil
+	}
+}
+
 func countBit(v []Value, is16bit bool) (bits uint16, err error) {
 	for _, w := range v {
 		if w.Type() == Bool {

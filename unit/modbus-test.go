@@ -45,8 +45,21 @@ func (mt *ModbusTest) CheckData() error {
 	switch mt.getFunction() {
 	case ReadCoils, ReadDiscreteInputs, ReadHoldingRegisters, ReadInputRegisters:
 		// TODO
-	case WriteSingleCoil, WriteSingleRegister, WriteMultipleCoils, WriteMultipleRegisters:
-		// TODO
+	case WriteSingleCoil:
+		data := dataSingleCoil(mt.getWriteData())
+		if !byteToEq(data, mt.ResultByte) {
+			return fmt.Errorf("\nexpected data: %b\n     got data: %b\n", data, mt.ResultByte)
+		}
+	case WriteSingleRegister:
+		data := mt.getWriteData()
+		if !byteToEq(data[:2], mt.ResultByte) {
+			return fmt.Errorf("\nexpected data: %b\n     got data: %b\n", data, mt.ResultByte)
+		}
+	case WriteMultipleCoils, WriteMultipleRegisters:
+		resultQuantity := binary.BigEndian.Uint16(mt.ResultByte)
+		if mt.getQuantity() != resultQuantity {
+			return fmt.Errorf("\nexpected quantity: %d\n     got quantity: %d\n", mt.getQuantity(), resultQuantity)
+		}
 	}
 	return nil
 }
@@ -175,18 +188,11 @@ func (mt *ModbusTest) writeSingleCoil(client modbus.Client) error {
 		return fmt.Errorf("there is no data to write")
 	}
 
-	var v uint16 = 0
-	data := mt.getWriteData()
-	if len(data) > 1 && (data[0] == 0xff || data[0] == 0x00) && data[0] == 0x00 {
-		v = binary.BigEndian.Uint16(data[:2])
-	} else if len(data) > 0 && data[0] == 0x01 || data[0] == 0x00 {
-		v = 0x0000
-		if data[0] == 0x01 {
-			v = 0xff00
-		}
-	} else {
+	data := dataSingleCoil(mt.getWriteData())
+	if len(data) != 2 {
 		return fmt.Errorf("data error. Only supported 1, 0, 0xff00, 0x0000")
 	}
+	v := binary.BigEndian.Uint16(data[:2])
 
 	startTime := time.Now()
 	mt.ResultByte, mt.ResultError = client.WriteSingleCoil(*mt.Address, v)

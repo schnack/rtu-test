@@ -7,6 +7,70 @@ import (
 	"time"
 )
 
+func TestModbusTest_CheckDataWriteMultiple(t *testing.T) {
+	var quantity uint16 = 2
+	var param1 = false
+	var param2 uint8 = 0x01
+	modbus := &ModbusTest{
+		Quantity: &quantity,
+		Function: "WriteMultipleCoils",
+		Write: []Value{
+			{Name: "param1", Bool: &param1},
+			{Name: "param2", Uint8: &param2},
+		},
+		ResultByte: []byte{0x00, 0x02},
+	}
+	if err := gotest.Expect(modbus.CheckData()).Eq(nil); err != nil {
+		t.Error(err)
+	}
+
+	quantity = 3
+	if err := gotest.Expect(modbus.CheckData()).Eq(fmt.Errorf("\nexpected quantity: 3\n     got quantity: 2\n")); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestModbusTest_CheckDataWriteSingleRegister(t *testing.T) {
+	var param1 = false
+	var param2 uint8 = 0x01
+	modbus := &ModbusTest{
+		Function: "WriteSingleRegister",
+		Write: []Value{
+			{Name: "param1", Bool: &param1},
+			{Name: "param2", Uint8: &param2},
+		},
+		ResultByte: []byte{0x00, 0x02},
+	}
+	if err := gotest.Expect(modbus.CheckData()).Eq(fmt.Errorf("\nexpected data: [0 1]\n     got data: [0 10]\n")); err != nil {
+		t.Error(err)
+	}
+
+	param2 = 2
+	if err := gotest.Expect(modbus.CheckData()).Eq(nil); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestModbusTest_CheckDataWriteSingleCoil(t *testing.T) {
+	var param1 = true
+	modbus := &ModbusTest{
+		Function: "WriteSingleCoil",
+		Write: []Value{
+			{Name: "param1", Bool: &param1},
+		},
+		ResultByte: []byte{0xFF, 0x00},
+	}
+
+	if err := gotest.Expect(modbus.CheckData()).Eq(nil); err != nil {
+		t.Error(err)
+	}
+
+	param1 = false
+	if err := gotest.Expect(modbus.CheckData()).Eq(fmt.Errorf("\nexpected data: [0 0]\n     got data: [11111111 0]\n")); err != nil {
+		t.Error(err)
+	}
+}
+
 func TestModbusTest_CheckDuration(t *testing.T) {
 	modbus := &ModbusTest{
 		ExpectedTime: "1s",
