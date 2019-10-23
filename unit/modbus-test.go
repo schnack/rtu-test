@@ -41,42 +41,51 @@ type ModbusTest struct {
 	ResultError   error         `yaml:"-"`
 }
 
-func (mt *ModbusTest) CheckData() error {
+func (mt *ModbusTest) CheckData() Report {
+	report := Report{Pass: true, Type: Byte, Got: mt.ResultByte}
 	switch mt.getFunction() {
 	case ReadCoils, ReadDiscreteInputs, ReadHoldingRegisters, ReadInputRegisters:
-		// TODO
+		for _, _ = range mt.Expected {
+			// TODO
+		}
+
 	case WriteSingleCoil:
-		data := dataSingleCoil(mt.getWriteData())
-		if !byteToEq(data, mt.ResultByte) {
-			return fmt.Errorf("\nexpected data: %b\n     got data: %b\n", data, mt.ResultByte)
+		report.Expected = dataSingleCoil(mt.getWriteData())
+		if !byteToEq(report.Expected, report.Got) {
+			report.Pass = false
 		}
 	case WriteSingleRegister:
-		data := mt.getWriteData()
-		if !byteToEq(data[:2], mt.ResultByte) {
-			return fmt.Errorf("\nexpected data: %b\n     got data: %b\n", data, mt.ResultByte)
+		report.Expected = mt.getWriteData()
+		if !byteToEq(report.Expected[:2], report.Got) {
+			report.Pass = false
 		}
 	case WriteMultipleCoils, WriteMultipleRegisters:
-		resultQuantity := binary.BigEndian.Uint16(mt.ResultByte)
+		report.Type = Uint16
+		report.Expected = make([]byte, 2)
+		binary.BigEndian.PutUint16(report.Expected, mt.getQuantity())
+		resultQuantity := binary.BigEndian.Uint16(report.Got)
+
 		if mt.getQuantity() != resultQuantity {
-			return fmt.Errorf("\nexpected quantity: %d\n     got quantity: %d\n", mt.getQuantity(), resultQuantity)
+			report.Pass = false
 		}
 	}
-	return nil
+	return report
 }
 
-func (mt *ModbusTest) CheckDuration() error {
+func (mt *ModbusTest) CheckDuration() Report {
 	expectTime := parseDuration(mt.ExpectedTime)
+	report := Report{Name: "Execution time", Type: String, Expected: []byte(expectTime.String()), Got: []byte(mt.ResultTime.String()), Pass: true}
+
 	if mt.ResultTime > expectTime {
-		return fmt.Errorf("\nexpected: %s\n     got: %s\n", expectTime.String(), mt.ResultTime.String())
+		report.Pass = false
 	}
-	return nil
+	return report
 }
 
-func (mt *ModbusTest) CheckError() error {
-	if mt.ExpectedError == "" && mt.ResultError == nil {
-		return nil
-	} else if mt.ExpectedError == "" && mt.ResultError != nil {
-		return fmt.Errorf("\nexpected:\n     got: %s\n", mt.ResultError.Error())
+func (mt *ModbusTest) CheckError() Report {
+	report := Report{Name: "ModBus error", Type: String}
+	if mt.ResultError != nil {
+		report.Got = []byte(mt.ResultError.Error())
 	}
 
 	errorText := mt.ExpectedError
@@ -108,12 +117,11 @@ func (mt *ModbusTest) CheckError() error {
 			errorText = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 11}).Error()
 		}
 	}
+	report.Expected = []byte(errorText)
 
-	if mt.ResultError.Error() != errorText {
-		return fmt.Errorf("\nexpected: %s\n     got: %s\n", errorText, mt.ResultError.Error())
-	}
+	report.Pass = string(report.Expected) == string(report.Got)
 
-	return nil
+	return report
 }
 
 func (mt *ModbusTest) Exec(client modbus.Client) (err error) {
