@@ -269,7 +269,7 @@ func TestValue_TypeByte(t *testing.T) {
 
 func TestValue_parseStringByte(t *testing.T) {
 	var v string = "0x01 0x0001 0x000002"
-	b, err := (&Value{Byte: &v}).parseStringByte(v)
+	b, err := (&Value{Byte: &v}).GetByte(v)
 	if err := gotest.Expect(b).Eq([]byte{1, 0, 1, 0, 0, 2}); err != nil {
 		t.Error(err)
 	}

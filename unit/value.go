@@ -137,7 +137,7 @@ func (v *Value) Write() ([]byte, error) {
 	case v.String != nil:
 		buf.WriteString(*v.String)
 	case v.Byte != nil:
-		b, err := v.parseStringByte(*v.Byte)
+		b, err := v.GetByte()
 		if err != nil {
 			return nil, err
 		}
@@ -201,7 +201,7 @@ func (v *Value) Type() TypeValue {
 	}
 }
 
-func (v *Value) parseStringByte(s string) ([]byte, error) {
+func (v *Value) GetByte() ([]byte, error) {
 	buf := new(bytes.Buffer)
 	byteClear := strings.ReplaceAll(strings.ReplaceAll(*v.Byte, " ", ""), "0x", "")
 	for i, _ := range byteClear {
