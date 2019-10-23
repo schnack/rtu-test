@@ -41,8 +41,7 @@ type ModbusTest struct {
 	ResultError   error         `yaml:"-"`
 }
 
-func (mt *ModbusTest) CheckData() Report {
-	report := Report{Pass: true, Type: Byte, Got: mt.ResultByte}
+func (mt *ModbusTest) CheckData() (reports []Report) {
 	switch mt.getFunction() {
 	case ReadCoils, ReadDiscreteInputs, ReadHoldingRegisters, ReadInputRegisters:
 		for _, _ = range mt.Expected {
@@ -50,26 +49,30 @@ func (mt *ModbusTest) CheckData() Report {
 		}
 
 	case WriteSingleCoil:
+		report := Report{Pass: true, Type: Byte, Got: mt.ResultByte}
 		report.Expected = dataSingleCoil(mt.getWriteData())
 		if !byteToEq(report.Expected, report.Got) {
 			report.Pass = false
 		}
+		reports = append(reports, report)
 	case WriteSingleRegister:
+		report := Report{Pass: true, Type: Byte, Got: mt.ResultByte}
 		report.Expected = mt.getWriteData()
 		if !byteToEq(report.Expected[:2], report.Got) {
 			report.Pass = false
 		}
+		reports = append(reports, report)
 	case WriteMultipleCoils, WriteMultipleRegisters:
-		report.Type = Uint16
-		report.Expected = make([]byte, 2)
+		report := Report{Pass: true, Type: Uint16, Got: mt.ResultByte, Expected: make([]byte, 2)}
 		binary.BigEndian.PutUint16(report.Expected, mt.getQuantity())
 		resultQuantity := binary.BigEndian.Uint16(report.Got)
 
 		if mt.getQuantity() != resultQuantity {
 			report.Pass = false
 		}
+		reports = append(reports, report)
 	}
-	return report
+	return
 }
 
 func (mt *ModbusTest) CheckDuration() Report {

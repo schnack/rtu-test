@@ -20,24 +20,24 @@ func TestModbusTest_CheckDataWriteMultiple(t *testing.T) {
 		},
 		ResultByte: []byte{0x00, 0x02},
 	}
-	if err := gotest.Expect(modbus.CheckData().Pass).Eq(true); err != nil {
+	if err := gotest.Expect(modbus.CheckData()[0].Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(modbus.CheckData().Expected).Eq([]byte{0, 2}); err != nil {
+	if err := gotest.Expect(modbus.CheckData()[0].Expected).Eq([]byte{0, 2}); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(modbus.CheckData().Got).Eq([]byte{0, 2}); err != nil {
+	if err := gotest.Expect(modbus.CheckData()[0].Got).Eq([]byte{0, 2}); err != nil {
 		t.Error(err)
 	}
 
 	quantity = 3
-	if err := gotest.Expect(modbus.CheckData().Pass).Eq(false); err != nil {
+	if err := gotest.Expect(modbus.CheckData()[0].Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(modbus.CheckData().Expected).Eq([]byte{0, 3}); err != nil {
+	if err := gotest.Expect(modbus.CheckData()[0].Expected).Eq([]byte{0, 3}); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(modbus.CheckData().Got).Eq([]byte{0, 2}); err != nil {
+	if err := gotest.Expect(modbus.CheckData()[0].Got).Eq([]byte{0, 2}); err != nil {
 		t.Error(err)
 	}
 }
@@ -53,24 +53,24 @@ func TestModbusTest_CheckDataWriteSingleRegister(t *testing.T) {
 		},
 		ResultByte: []byte{0x00, 0x02},
 	}
-	if err := gotest.Expect(modbus.CheckData().Pass).Eq(false); err != nil {
+	if err := gotest.Expect(modbus.CheckData()[0].Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(modbus.CheckData().Expected).Eq([]byte{0, 1}); err != nil {
+	if err := gotest.Expect(modbus.CheckData()[0].Expected).Eq([]byte{0, 1}); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(modbus.CheckData().Got).Eq([]byte{0, 2}); err != nil {
+	if err := gotest.Expect(modbus.CheckData()[0].Got).Eq([]byte{0, 2}); err != nil {
 		t.Error(err)
 	}
 
 	param2 = 2
-	if err := gotest.Expect(modbus.CheckData().Pass).Eq(true); err != nil {
+	if err := gotest.Expect(modbus.CheckData()[0].Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(modbus.CheckData().Expected).Eq([]byte{0, 2}); err != nil {
+	if err := gotest.Expect(modbus.CheckData()[0].Expected).Eq([]byte{0, 2}); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(modbus.CheckData().Got).Eq([]byte{0, 2}); err != nil {
+	if err := gotest.Expect(modbus.CheckData()[0].Got).Eq([]byte{0, 2}); err != nil {
 		t.Error(err)
 	}
 }
@@ -85,24 +85,24 @@ func TestModbusTest_CheckDataWriteSingleCoil(t *testing.T) {
 		ResultByte: []byte{0xFF, 0x00},
 	}
 
-	if err := gotest.Expect(modbus.CheckData().Pass).Eq(true); err != nil {
+	if err := gotest.Expect(modbus.CheckData()[0].Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(modbus.CheckData().Expected).Eq([]byte{255, 0}); err != nil {
+	if err := gotest.Expect(modbus.CheckData()[0].Expected).Eq([]byte{255, 0}); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(modbus.CheckData().Got).Eq([]byte{255, 0}); err != nil {
+	if err := gotest.Expect(modbus.CheckData()[0].Got).Eq([]byte{255, 0}); err != nil {
 		t.Error(err)
 	}
 
 	param1 = false
-	if err := gotest.Expect(modbus.CheckData().Pass).Eq(false); err != nil {
+	if err := gotest.Expect(modbus.CheckData()[0].Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(modbus.CheckData().Expected).Eq([]byte{0, 0}); err != nil {
+	if err := gotest.Expect(modbus.CheckData()[0].Expected).Eq([]byte{0, 0}); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(modbus.CheckData().Got).Eq([]byte{255, 0}); err != nil {
+	if err := gotest.Expect(modbus.CheckData()[0].Got).Eq([]byte{255, 0}); err != nil {
 		t.Error(err)
 	}
 }
