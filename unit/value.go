@@ -290,6 +290,7 @@ func (v *Value) Check(raw []byte, currentBit int) (report Report, offsetBit int)
 			report.Pass = false
 		}
 	case Bool:
+		// TODO Если не полный байт то на других типах дополняем нулями
 		if *v.Bool {
 			report.Expected = []byte{1}
 		} else {
