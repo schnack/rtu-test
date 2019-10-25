@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 )
@@ -87,6 +88,233 @@ type Value struct {
 	Byte *string `yaml:"byte"`
 }
 
+func (v *Value) Check(raw []byte, currentBit int) (report Report, offsetBit int) {
+	report.Name = v.Name
+	report.Type = v.Type()
+	report.Pass = true
+	switch report.Type {
+	case Nil:
+		offsetBit = 0
+	case Int8:
+		report.Expected = []byte{uint8(*v.Int8)}
+		offsetBit = currentBit + 8
+		report.Got = raw[currentBit/8 : offsetBit/8]
+		got := int8(report.Got[0])
+		if got != *v.Int8 {
+			report.Pass = false
+		}
+	case Int8Range:
+		report.ExpectedMin = []byte{uint8(*v.MinInt8)}
+		report.ExpectedMax = []byte{uint8(*v.MaxInt8)}
+		offsetBit = currentBit + 8
+		report.Got = raw[currentBit/8 : offsetBit/8]
+		got := int8(report.Got[0])
+		if *v.MinInt8 > got || got > *v.MaxInt8 {
+			report.Pass = false
+		}
+	case Int16:
+		report.Expected = make([]byte, 2)
+		binary.BigEndian.PutUint16(report.Expected, uint16(*v.Int16))
+		offsetBit = currentBit + 16
+		report.Got = raw[currentBit/8 : offsetBit/8]
+		got := int16(binary.BigEndian.Uint16(report.Got))
+		if got != *v.Int16 {
+			report.Pass = false
+		}
+	case Int16Range:
+		report.ExpectedMin = make([]byte, 2)
+		binary.BigEndian.PutUint16(report.ExpectedMin, uint16(*v.MinInt16))
+		report.ExpectedMax = make([]byte, 2)
+		binary.BigEndian.PutUint16(report.ExpectedMax, uint16(*v.MaxInt16))
+		offsetBit = currentBit + 16
+		report.Got = raw[currentBit/8 : offsetBit/8]
+		got := int16(binary.BigEndian.Uint16(report.Got))
+		if *v.MinInt16 > got || got > *v.MaxInt16 {
+			report.Pass = false
+		}
+	case Int32:
+		report.Expected = make([]byte, 4)
+		binary.BigEndian.PutUint32(report.Expected, uint32(*v.Int32))
+		offsetBit = currentBit + 32
+		report.Got = raw[currentBit/8 : offsetBit/8]
+		got := int32(binary.BigEndian.Uint32(report.Got))
+		if got != *v.Int32 {
+			report.Pass = false
+		}
+	case Int32Range:
+		report.ExpectedMin = make([]byte, 4)
+		binary.BigEndian.PutUint32(report.ExpectedMin, uint32(*v.MinInt32))
+		report.ExpectedMax = make([]byte, 4)
+		binary.BigEndian.PutUint32(report.ExpectedMax, uint32(*v.MaxInt32))
+		offsetBit = currentBit + 32
+		report.Got = raw[currentBit/8 : offsetBit/8]
+		got := int32(binary.BigEndian.Uint32(report.Got))
+		if *v.MinInt32 > got || got > *v.MaxInt32 {
+			report.Pass = false
+		}
+	case Int64:
+		report.Expected = make([]byte, 8)
+		binary.BigEndian.PutUint64(report.Expected, uint64(*v.Int64))
+		offsetBit = currentBit + 64
+		report.Got = raw[currentBit/8 : offsetBit/8]
+		got := int64(binary.BigEndian.Uint64(report.Got))
+		if got != *v.Int64 {
+			report.Pass = false
+		}
+	case Int64Range:
+		report.ExpectedMin = make([]byte, 8)
+		binary.BigEndian.PutUint64(report.ExpectedMin, uint64(*v.MinInt64))
+		report.ExpectedMax = make([]byte, 8)
+		binary.BigEndian.PutUint64(report.ExpectedMax, uint64(*v.MaxInt64))
+		offsetBit = currentBit + 64
+		report.Got = raw[currentBit/8 : offsetBit/8]
+		got := int64(binary.BigEndian.Uint64(report.Got))
+		if *v.MinInt64 > got || got > *v.MaxInt64 {
+			report.Pass = false
+		}
+	case Uint8:
+		report.Expected = []byte{*v.Uint8}
+		offsetBit = currentBit + 8
+		report.Got = raw[currentBit/8 : offsetBit/8]
+		got := report.Got[0]
+		if got != *v.Uint8 {
+			report.Pass = false
+		}
+	case Uint8Range:
+		report.ExpectedMin = []byte{*v.MinUint8}
+		report.ExpectedMax = []byte{*v.MaxUint8}
+		offsetBit = currentBit + 8
+		report.Got = raw[currentBit/8 : offsetBit/8]
+		got := report.Got[0]
+		if *v.MinUint8 > got || got > *v.MaxUint8 {
+			report.Pass = false
+		}
+	case Uint16:
+		report.Expected = make([]byte, 2)
+		binary.BigEndian.PutUint16(report.Expected, *v.Uint16)
+		offsetBit = currentBit + 16
+		report.Got = raw[currentBit/8 : offsetBit/8]
+		got := binary.BigEndian.Uint16(report.Got)
+		if got != *v.Uint16 {
+			report.Pass = false
+		}
+	case Uint16Range:
+		report.ExpectedMin = make([]byte, 2)
+		binary.BigEndian.PutUint16(report.ExpectedMin, *v.MinUint16)
+		report.ExpectedMax = make([]byte, 2)
+		binary.BigEndian.PutUint16(report.ExpectedMax, *v.MaxUint16)
+		offsetBit = currentBit + 16
+		report.Got = raw[currentBit/8 : offsetBit/8]
+		got := binary.BigEndian.Uint16(report.Got)
+		if *v.MinUint16 > got || got > *v.MaxUint16 {
+			report.Pass = false
+		}
+	case Uint32:
+		report.Expected = make([]byte, 4)
+		binary.BigEndian.PutUint32(report.Expected, *v.Uint32)
+		offsetBit = currentBit + 32
+		report.Got = raw[currentBit/8 : offsetBit/8]
+		got := binary.BigEndian.Uint32(report.Got)
+		if got != *v.Uint32 {
+			report.Pass = false
+		}
+	case Uint32Range:
+		report.ExpectedMin = make([]byte, 4)
+		binary.BigEndian.PutUint32(report.ExpectedMin, *v.MinUint32)
+		report.ExpectedMax = make([]byte, 4)
+		binary.BigEndian.PutUint32(report.ExpectedMax, *v.MaxUint32)
+		offsetBit = currentBit + 32
+		report.Got = raw[currentBit/8 : offsetBit/8]
+		got := binary.BigEndian.Uint32(report.Got)
+		if *v.MinUint32 > got || got > *v.MaxUint32 {
+			report.Pass = false
+		}
+	case Uint64:
+		report.Expected = make([]byte, 8)
+		binary.BigEndian.PutUint64(report.Expected, *v.Uint64)
+		offsetBit = currentBit + 64
+		report.Got = raw[currentBit/8 : offsetBit/8]
+		got := binary.BigEndian.Uint64(report.Got)
+		if got != *v.Uint64 {
+			report.Pass = false
+		}
+	case Uint64Range:
+		report.ExpectedMin = make([]byte, 8)
+		binary.BigEndian.PutUint64(report.ExpectedMin, *v.MinUint64)
+		report.ExpectedMax = make([]byte, 8)
+		binary.BigEndian.PutUint64(report.ExpectedMax, *v.MaxUint64)
+		offsetBit = currentBit + 64
+		report.Got = raw[currentBit/8 : offsetBit/8]
+		got := binary.BigEndian.Uint64(report.Got)
+		if *v.MinUint64 > got || got > *v.MaxUint64 {
+			report.Pass = false
+		}
+	case Float32:
+		report.Expected = make([]byte, 4)
+		binary.BigEndian.PutUint32(report.Expected, math.Float32bits(*v.Float32))
+		offsetBit = currentBit + 32
+		report.Got = raw[currentBit/8 : offsetBit/8]
+		got := math.Float32frombits(binary.BigEndian.Uint32(report.Got))
+		if got != *v.Float32 {
+			report.Pass = false
+		}
+	case Float32Range:
+		report.ExpectedMin = make([]byte, 4)
+		binary.BigEndian.PutUint32(report.Expected, math.Float32bits(*v.MinFloat32))
+		report.ExpectedMax = make([]byte, 4)
+		binary.BigEndian.PutUint32(report.Expected, math.Float32bits(*v.MinFloat32))
+		offsetBit = currentBit + 32
+		report.Got = raw[currentBit/8 : offsetBit/8]
+		got := math.Float32frombits(binary.BigEndian.Uint32(report.Got))
+		if *v.MinFloat32 > got || got > *v.MaxFloat32 {
+			report.Pass = false
+		}
+	case Float64:
+		report.Expected = make([]byte, 8)
+		binary.BigEndian.PutUint64(report.Expected, math.Float64bits(*v.Float64))
+		offsetBit = currentBit + 64
+		report.Got = raw[currentBit/8 : offsetBit/8]
+		got := math.Float64frombits(binary.BigEndian.Uint64(report.Got))
+		if got != *v.Float64 {
+			report.Pass = false
+		}
+	case Float64Range:
+		report.ExpectedMin = make([]byte, 8)
+		binary.BigEndian.PutUint64(report.Expected, math.Float64bits(*v.MinFloat64))
+		report.ExpectedMax = make([]byte, 8)
+		binary.BigEndian.PutUint64(report.Expected, math.Float64bits(*v.MinFloat64))
+		offsetBit = currentBit + 64
+		report.Got = raw[currentBit/8 : offsetBit/8]
+		got := math.Float64frombits(binary.BigEndian.Uint64(report.Got))
+		if *v.MinFloat64 > got || got > *v.MaxFloat64 {
+			report.Pass = false
+		}
+	case Bool:
+		if *v.Bool {
+			report.Expected = []byte{1}
+		} else {
+			report.Expected = []byte{0}
+		}
+		got := raw[currentBit/8]&1<<currentBit%8 != 0
+		offsetBit++
+
+		if got {
+			report.Got = []byte{1}
+		} else {
+			report.Got = []byte{0}
+		}
+
+		if got != *v.Bool {
+			report.Pass = false
+		}
+	case String:
+		// TODO
+	case Byte:
+		// TODO
+	}
+	return
+}
+
 func (v *Value) Write() ([]byte, error) {
 	buf := new(bytes.Buffer)
 	switch {
@@ -137,7 +365,7 @@ func (v *Value) Write() ([]byte, error) {
 	case v.String != nil:
 		buf.WriteString(*v.String)
 	case v.Byte != nil:
-		b, err := v.GetByte()
+		b, err := parseStringByte(*v.Byte)
 		if err != nil {
 			return nil, err
 		}
@@ -201,7 +429,7 @@ func (v *Value) Type() TypeValue {
 	}
 }
 
-func (v *Value) GetByte() ([]byte, error) {
+func (v *Value) GetByteWrite() ([]byte, error) {
 	buf := new(bytes.Buffer)
 	byteClear := strings.ReplaceAll(strings.ReplaceAll(*v.Byte, " ", ""), "0x", "")
 	for i, _ := range byteClear {

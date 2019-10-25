@@ -6,6 +6,17 @@ import (
 	"time"
 )
 
+func Test_parseStringByte(t *testing.T) {
+	var v string = "0x01 0x0001 0x000002"
+	b, err := parseStringByte(v)
+	if err := gotest.Expect(b).Eq([]byte{1, 0, 1, 0, 0, 2}); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(err).Eq(nil); err != nil {
+		t.Error(err)
+	}
+}
+
 func Test_dataSingleCoil(t *testing.T) {
 	if err := gotest.Expect(dataSingleCoil([]byte{0x01})).Eq([]byte{0xff, 0x00}); err != nil {
 		t.Error(err)

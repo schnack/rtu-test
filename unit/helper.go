@@ -1,11 +1,30 @@
 package unit
 
 import (
+	"bytes"
+	"encoding/binary"
 	"fmt"
 	"strconv"
 	"strings"
 	"time"
 )
+
+func parseStringByte(sb string) ([]byte, error) {
+	buf := new(bytes.Buffer)
+	byteClear := strings.ReplaceAll(strings.ReplaceAll(sb, " ", ""), "0x", "")
+	for i, _ := range byteClear {
+		if i%2 != 0 {
+			b, err := strconv.ParseUint(fmt.Sprintf("%c%c", byteClear[i-1], byteClear[i]), 16, 8)
+			if err != nil {
+				return nil, err
+			}
+			if err := binary.Write(buf, binary.BigEndian, uint8(b)); err != nil {
+				return nil, err
+			}
+		}
+	}
+	return buf.Bytes(), nil
+}
 
 func dataSingleCoil(data []byte) []byte {
 	if len(data) > 1 && (data[0] == 0xff || data[0] == 0x00) && data[1] == 0x00 {
