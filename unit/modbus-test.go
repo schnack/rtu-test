@@ -41,6 +41,16 @@ type ModbusTest struct {
 	ResultError   error         `yaml:"-"`
 }
 
+func (mt *ModbusTest) Check() (reports []Report) {
+	reportErr := mt.CheckError()
+	reports = append(reports, reportErr)
+	if reportErr.Pass {
+		reports = append(reports, mt.CheckData()...)
+	}
+	reports = append(reports, mt.CheckDuration())
+	return
+}
+
 func (mt *ModbusTest) CheckData() (reports []Report) {
 	switch mt.getFunction() {
 	case ReadCoils, ReadDiscreteInputs, ReadHoldingRegisters, ReadInputRegisters:

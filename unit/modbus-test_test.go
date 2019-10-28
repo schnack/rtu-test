@@ -7,6 +7,68 @@ import (
 	"time"
 )
 
+func TestModbusTest_Check(t *testing.T) {
+	var quantity uint16 = 2
+	var param1 = false
+	var param2 uint8 = 0x01
+	modbus := &ModbusTest{
+		Quantity: &quantity,
+		Function: "WriteMultipleCoils",
+		Write: []Value{
+			{Name: "param1", Bool: &param1},
+			{Name: "param2", Uint8: &param2},
+		},
+		ResultByte: []byte{0x00, 0x02},
+	}
+	if err := gotest.Expect(len(modbus.Check())).Eq(3); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestModbusTest_CheckData(t *testing.T) {
+	var quantity uint16 = 2
+	var param1 = true
+	var param2 uint8 = 0x01
+	modbus := &ModbusTest{
+		Quantity: &quantity,
+		Function: "ReadCoils",
+		Expected: []Value{
+			{Name: "param1", Bool: &param1},
+			{Name: "param2", Uint8: &param2},
+		},
+		ResultByte: []byte{0x01, 0x02},
+	}
+	checkData := modbus.CheckData()
+	if err := gotest.Expect(len(checkData)).Eq(2); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(checkData[0].Name).Eq("param1"); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(checkData[0].Pass).Eq(true); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(checkData[0].Expected).Eq([]byte{1}); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(checkData[0].Got).Eq([]byte{1}); err != nil {
+		t.Error(err)
+	}
+
+	if err := gotest.Expect(checkData[1].Name).Eq("param2"); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(checkData[1].Pass).Eq(true); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(checkData[1].Expected).Eq([]byte{1}); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(checkData[1].Got).Eq([]byte{1}); err != nil {
+		t.Error(err)
+	}
+}
+
 func TestModbusTest_CheckDataWriteMultiple(t *testing.T) {
 	var quantity uint16 = 2
 	var param1 = false
