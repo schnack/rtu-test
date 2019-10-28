@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"log"
 	"math"
-	"strconv"
-	"strings"
 )
 
 type TypeValue int
@@ -605,21 +603,4 @@ func (v *Value) Type() TypeValue {
 	default:
 		return Nil
 	}
-}
-
-func (v *Value) GetByteWrite() ([]byte, error) {
-	buf := new(bytes.Buffer)
-	byteClear := strings.ReplaceAll(strings.ReplaceAll(*v.Byte, " ", ""), "0x", "")
-	for i, _ := range byteClear {
-		if i%2 != 0 {
-			b, err := strconv.ParseUint(fmt.Sprintf("%c%c", byteClear[i-1], byteClear[i]), 16, 8)
-			if err != nil {
-				return nil, err
-			}
-			if err := binary.Write(buf, binary.BigEndian, uint8(b)); err != nil {
-				return nil, err
-			}
-		}
-	}
-	return buf.Bytes(), nil
 }
