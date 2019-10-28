@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"log"
 	"math"
 	"strconv"
 	"strings"
@@ -309,9 +310,31 @@ func (v *Value) Check(raw []byte, currentBit int) (report Report, offsetBit int)
 			report.Pass = false
 		}
 	case String:
-		// TODO
+		// TODO Если в Raw меньше, то нужно то выводить ошибку
+		report.Expected = []byte(*v.String)
+		offsetBit = currentBit + (len(report.Expected) * 8)
+		report.Got = raw[currentBit/8 : offsetBit/8]
+		if string(report.Got) != string(report.Expected) {
+			report.Pass = false
+		}
 	case Byte:
-		// TODO
+		var err error
+		report.Expected, err = parseStringByte(*v.Byte)
+		if err != nil {
+			log.Fatal(err)
+		}
+		offsetBit = currentBit + (len(report.Expected) * 8)
+		report.Got = raw[currentBit/8 : offsetBit/8]
+		if len(report.Got) != len(report.Expected) {
+			report.Pass = false
+			return
+		}
+		for i, _ := range report.Expected {
+			if report.Got[i] != report.Expected[i] {
+				report.Pass = false
+				return
+			}
+		}
 	}
 	return
 }

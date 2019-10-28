@@ -453,6 +453,88 @@ func TestValue_CheckInt64Range(t *testing.T) {
 
 }
 
+func TestValue_CheckString(t *testing.T) {
+	var param string = "hello"
+	v := Value{Name: "Test", String: &param}
+	raw := []byte{
+		104, 101, 108, 108, 111,
+		104, 101, 108, 109, 111,
+	}
+
+	report, offset := v.Check(raw, 0)
+
+	if err := gotest.Expect(offset).Eq(40); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.Expected).Eq([]byte{104, 101, 108, 108, 111}); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.Got).Eq([]byte{104, 101, 108, 108, 111}); err != nil {
+		t.Error(err)
+	}
+
+	report, offset = v.Check(raw, offset)
+	if err := gotest.Expect(offset).Eq(80); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.Expected).Eq([]byte{104, 101, 108, 108, 111}); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.Got).Eq([]byte{104, 101, 108, 109, 111}); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_CheckByte(t *testing.T) {
+	var param string = "0x01 0x0003"
+	v := Value{Name: "Test", Byte: &param}
+	raw := []byte{
+		0x01, 0x00, 0x03,
+		0x01, 0x00, 0x04,
+	}
+
+	report, offset := v.Check(raw, 0)
+
+	if err := gotest.Expect(offset).Eq(24); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.Expected).Eq([]byte{1, 0, 3}); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.Got).Eq([]byte{1, 0, 3}); err != nil {
+		t.Error(err)
+	}
+
+	report, offset = v.Check(raw, offset)
+	if err := gotest.Expect(offset).Eq(48); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.Expected).Eq([]byte{1, 0, 3}); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.Got).Eq([]byte{1, 0, 4}); err != nil {
+		t.Error(err)
+	}
+}
+
 func TestValue_Write(t *testing.T) {
 	b, err := (&Value{}).Write()
 	if err := gotest.Expect(b).IsZero(); err != nil {
