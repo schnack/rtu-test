@@ -11,32 +11,26 @@ func TestValue_CheckInt8(t *testing.T) {
 	v := Value{Name: "Test", Int8: &param}
 	raw := []byte{0x01, 0x02}
 
-	report, offset := v.Check(raw, 0)
+	offset := v.Check(raw, 0)
 
 	if err := gotest.Expect(offset).Eq(8); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.Expected).Eq([]byte{2}); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.Got).Eq([]byte{1}); err != nil {
+	if err := gotest.Expect(v.GotInt8).Eq(int8(1)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{2}); err != nil {
+	if err := gotest.Expect(v.GotInt8).Eq(int8(2)); err != nil {
 		t.Error(err)
 	}
 }
@@ -47,67 +41,58 @@ func TestValue_CheckInt8Range(t *testing.T) {
 	v := Value{Name: "Test", MinInt8: &paramMin, MaxInt8: &paramMax}
 	raw := []byte{0x01, 0x02, 0x03, 0x04, 0x05}
 
-	report, offset := v.Check(raw, 0)
+	offset := v.Check(raw, 0)
 	if err := gotest.Expect(offset).Eq(8); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.ExpectedMin).Eq([]byte{2}); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.ExpectedMax).Eq([]byte{4}); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.Got).Eq([]byte{1}); err != nil {
+	if err := gotest.Expect(v.GotInt8).Eq(int8(1)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{2}); err != nil {
+	if err := gotest.Expect(v.GotInt8).Eq(int8(2)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(24); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{3}); err != nil {
+	if err := gotest.Expect(v.GotInt8).Eq(int8(3)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{4}); err != nil {
+	if err := gotest.Expect(v.GotInt8).Eq(int8(4)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(40); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{5}); err != nil {
+	if err := gotest.Expect(v.GotInt8).Eq(int8(5)); err != nil {
 		t.Error(err)
 	}
 
@@ -118,32 +103,26 @@ func TestValue_CheckInt16(t *testing.T) {
 	v := Value{Name: "Test", Int16: &param}
 	raw := []byte{0x00, 0x01, 0x00, 0x02}
 
-	report, offset := v.Check(raw, 0)
+	offset := v.Check(raw, 0)
 
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.Expected).Eq([]byte{0, 2}); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 1}); err != nil {
+	if err := gotest.Expect(v.GotInt16).Eq(int16(1)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 2}); err != nil {
+	if err := gotest.Expect(v.GotInt16).Eq(int16(2)); err != nil {
 		t.Error(err)
 	}
 }
@@ -160,64 +139,58 @@ func TestValue_CheckInt16Range(t *testing.T) {
 		0, 5,
 	}
 
-	report, offset := v.Check(raw, 0)
+	offset := v.Check(raw, 0)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedMin).Eq([]byte{0, 2}); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.ExpectedMax).Eq([]byte{0, 4}); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 1}); err != nil {
+	if err := gotest.Expect(v.GotInt16).Eq(int16(1)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 2}); err != nil {
+	if err := gotest.Expect(v.GotInt16).Eq(int16(2)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(48); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 3}); err != nil {
+	if err := gotest.Expect(v.GotInt16).Eq(int16(3)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 4}); err != nil {
+	if err := gotest.Expect(v.GotInt16).Eq(int16(4)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(80); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 5}); err != nil {
+	if err := gotest.Expect(v.GotInt16).Eq(int16(5)); err != nil {
 		t.Error(err)
 	}
 
@@ -228,33 +201,27 @@ func TestValue_CheckInt32(t *testing.T) {
 	v := Value{Name: "Test", Int32: &param}
 	raw := []byte{0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02}
 
-	report, offset := v.Check(raw, 0)
+	offset := v.Check(raw, 0)
 
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.Expected).Eq([]byte{0, 0, 0, 2}); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 0, 0, 1}); err != nil {
+	if err := gotest.Expect(v.GotInt32).Eq(int32(1)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 0, 0, 2}); err != nil {
+	if err := gotest.Expect(v.GotInt32).Eq(int32(2)); err != nil {
 		t.Error(err)
 	}
 }
@@ -271,64 +238,58 @@ func TestValue_CheckInt32Range(t *testing.T) {
 		0, 0, 0, 5,
 	}
 
-	report, offset := v.Check(raw, 0)
+	offset := v.Check(raw, 0)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedMin).Eq([]byte{0, 0, 0, 2}); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.ExpectedMax).Eq([]byte{0, 0, 0, 4}); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 0, 0, 1}); err != nil {
+	if err := gotest.Expect(v.GotInt32).Eq(int32(1)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 0, 0, 2}); err != nil {
+	if err := gotest.Expect(v.GotInt32).Eq(int32(2)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(96); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 0, 0, 3}); err != nil {
+	if err := gotest.Expect(v.GotInt32).Eq(int32(3)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 0, 0, 4}); err != nil {
+	if err := gotest.Expect(v.GotInt32).Eq(int32(4)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(160); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 0, 0, 5}); err != nil {
+	if err := gotest.Expect(v.GotInt32).Eq(int32(5)); err != nil {
 		t.Error(err)
 	}
 
@@ -342,35 +303,26 @@ func TestValue_CheckInt64(t *testing.T) {
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
 	}
 
-	report, offset := v.Check(raw, 0)
+	offset := v.Check(raw, 0)
 
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.Expected).Eq([]byte{0, 0, 0, 0, 0, 0, 0, 2}); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 0, 0, 0, 0, 0, 0, 1}); err != nil {
+	if err := gotest.Expect(v.GotInt64).Eq(int64(1)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Expected).Eq([]byte{0, 0, 0, 0, 0, 0, 0, 2}); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 0, 0, 0, 0, 0, 0, 2}); err != nil {
+	if err := gotest.Expect(v.GotInt64).Eq(int64(2)); err != nil {
 		t.Error(err)
 	}
 }
@@ -387,67 +339,58 @@ func TestValue_CheckInt64Range(t *testing.T) {
 		0, 0, 0, 0, 0, 0, 0, 5,
 	}
 
-	report, offset := v.Check(raw, 0)
+	offset := v.Check(raw, 0)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.ExpectedMin).Eq([]byte{0, 0, 0, 0, 0, 0, 0, 2}); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.ExpectedMax).Eq([]byte{0, 0, 0, 0, 0, 0, 0, 4}); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 0, 0, 0, 0, 0, 0, 1}); err != nil {
+	if err := gotest.Expect(v.GotInt64).Eq(int64(1)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 0, 0, 0, 0, 0, 0, 2}); err != nil {
+	if err := gotest.Expect(v.GotInt64).Eq(int64(2)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(192); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 0, 0, 0, 0, 0, 0, 3}); err != nil {
+	if err := gotest.Expect(v.GotInt64).Eq(int64(3)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(256); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 0, 0, 0, 0, 0, 0, 4}); err != nil {
+	if err := gotest.Expect(v.GotInt64).Eq(int64(4)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(320); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 0, 0, 0, 0, 0, 0, 5}); err != nil {
+	if err := gotest.Expect(v.GotInt64).Eq(int64(5)); err != nil {
 		t.Error(err)
 	}
 
@@ -458,32 +401,26 @@ func TestValue_CheckUint8(t *testing.T) {
 	v := Value{Name: "Test", Uint8: &param}
 	raw := []byte{0x01, 0x02}
 
-	report, offset := v.Check(raw, 0)
+	offset := v.Check(raw, 0)
 
 	if err := gotest.Expect(offset).Eq(8); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.Expected).Eq([]byte{2}); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.Got).Eq([]byte{1}); err != nil {
+	if err := gotest.Expect(v.GotUint8).Eq(uint8(1)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{2}); err != nil {
+	if err := gotest.Expect(v.GotUint8).Eq(uint8(2)); err != nil {
 		t.Error(err)
 	}
 }
@@ -494,67 +431,58 @@ func TestValue_CheckUint8Range(t *testing.T) {
 	v := Value{Name: "Test", MinUint8: &paramMin, MaxUint8: &paramMax}
 	raw := []byte{0x01, 0x02, 0x03, 0x04, 0x05}
 
-	report, offset := v.Check(raw, 0)
+	offset := v.Check(raw, 0)
 	if err := gotest.Expect(offset).Eq(8); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.ExpectedMin).Eq([]byte{2}); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.ExpectedMax).Eq([]byte{4}); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.Got).Eq([]byte{1}); err != nil {
+	if err := gotest.Expect(v.GotUint8).Eq(uint8(1)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{2}); err != nil {
+	if err := gotest.Expect(v.GotUint8).Eq(uint8(2)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(24); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{3}); err != nil {
+	if err := gotest.Expect(v.GotUint8).Eq(uint8(3)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{4}); err != nil {
+	if err := gotest.Expect(v.GotUint8).Eq(uint8(4)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(40); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{5}); err != nil {
+	if err := gotest.Expect(v.GotUint8).Eq(uint8(5)); err != nil {
 		t.Error(err)
 	}
 
@@ -565,32 +493,26 @@ func TestValue_CheckUint16(t *testing.T) {
 	v := Value{Name: "Test", Uint16: &param}
 	raw := []byte{0x00, 0x01, 0x00, 0x02}
 
-	report, offset := v.Check(raw, 0)
+	offset := v.Check(raw, 0)
 
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.Expected).Eq([]byte{0, 2}); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 1}); err != nil {
+	if err := gotest.Expect(v.GotUint16).Eq(uint16(1)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 2}); err != nil {
+	if err := gotest.Expect(v.GotUint16).Eq(uint16(2)); err != nil {
 		t.Error(err)
 	}
 }
@@ -607,64 +529,58 @@ func TestValue_CheckUint16Range(t *testing.T) {
 		0, 5,
 	}
 
-	report, offset := v.Check(raw, 0)
+	offset := v.Check(raw, 0)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedMin).Eq([]byte{0, 2}); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.ExpectedMax).Eq([]byte{0, 4}); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 1}); err != nil {
+	if err := gotest.Expect(v.GotUint16).Eq(uint16(1)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 2}); err != nil {
+	if err := gotest.Expect(v.GotUint16).Eq(uint16(2)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(48); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 3}); err != nil {
+	if err := gotest.Expect(v.GotUint16).Eq(uint16(3)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 4}); err != nil {
+	if err := gotest.Expect(v.GotUint16).Eq(uint16(4)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(80); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 5}); err != nil {
+	if err := gotest.Expect(v.GotUint16).Eq(uint16(5)); err != nil {
 		t.Error(err)
 	}
 
@@ -675,33 +591,27 @@ func TestValue_CheckUint32(t *testing.T) {
 	v := Value{Name: "Test", Uint32: &param}
 	raw := []byte{0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x02}
 
-	report, offset := v.Check(raw, 0)
+	offset := v.Check(raw, 0)
 
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.Expected).Eq([]byte{0, 0, 0, 2}); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 0, 0, 1}); err != nil {
+	if err := gotest.Expect(v.GotUint32).Eq(uint32(1)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 0, 0, 2}); err != nil {
+	if err := gotest.Expect(v.GotUint32).Eq(uint32(2)); err != nil {
 		t.Error(err)
 	}
 }
@@ -718,64 +628,58 @@ func TestValue_CheckUint32Range(t *testing.T) {
 		0, 0, 0, 5,
 	}
 
-	report, offset := v.Check(raw, 0)
+	offset := v.Check(raw, 0)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedMin).Eq([]byte{0, 0, 0, 2}); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.ExpectedMax).Eq([]byte{0, 0, 0, 4}); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 0, 0, 1}); err != nil {
+	if err := gotest.Expect(v.GotUint32).Eq(uint32(1)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 0, 0, 2}); err != nil {
+	if err := gotest.Expect(v.GotUint32).Eq(uint32(2)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(96); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 0, 0, 3}); err != nil {
+	if err := gotest.Expect(v.GotUint32).Eq(uint32(3)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 0, 0, 4}); err != nil {
+	if err := gotest.Expect(v.GotUint32).Eq(uint32(4)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(160); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 0, 0, 5}); err != nil {
+	if err := gotest.Expect(v.GotUint32).Eq(uint32(5)); err != nil {
 		t.Error(err)
 	}
 
@@ -789,35 +693,26 @@ func TestValue_CheckUint64(t *testing.T) {
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
 	}
 
-	report, offset := v.Check(raw, 0)
+	offset := v.Check(raw, 0)
 
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.Expected).Eq([]byte{0, 0, 0, 0, 0, 0, 0, 2}); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 0, 0, 0, 0, 0, 0, 1}); err != nil {
+	if err := gotest.Expect(v.GotUint64).Eq(uint64(1)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Expected).Eq([]byte{0, 0, 0, 0, 0, 0, 0, 2}); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 0, 0, 0, 0, 0, 0, 2}); err != nil {
+	if err := gotest.Expect(v.GotUint64).Eq(uint64(2)); err != nil {
 		t.Error(err)
 	}
 }
@@ -834,67 +729,58 @@ func TestValue_CheckUint64Range(t *testing.T) {
 		0, 0, 0, 0, 0, 0, 0, 5,
 	}
 
-	report, offset := v.Check(raw, 0)
+	offset := v.Check(raw, 0)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.ExpectedMin).Eq([]byte{0, 0, 0, 0, 0, 0, 0, 2}); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.ExpectedMax).Eq([]byte{0, 0, 0, 0, 0, 0, 0, 4}); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 0, 0, 0, 0, 0, 0, 1}); err != nil {
+	if err := gotest.Expect(v.GotUint64).Eq(uint64(1)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 0, 0, 0, 0, 0, 0, 2}); err != nil {
+	if err := gotest.Expect(v.GotUint64).Eq(uint64(2)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(192); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 0, 0, 0, 0, 0, 0, 3}); err != nil {
+	if err := gotest.Expect(v.GotUint64).Eq(uint64(3)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(256); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 0, 0, 0, 0, 0, 0, 4}); err != nil {
+	if err := gotest.Expect(v.GotUint64).Eq(uint64(4)); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(320); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0, 0, 0, 0, 0, 0, 0, 5}); err != nil {
+	if err := gotest.Expect(v.GotUint64).Eq(uint64(5)); err != nil {
 		t.Error(err)
 	}
 
@@ -906,45 +792,39 @@ func TestValue_CheckBool(t *testing.T) {
 	raw := []byte{
 		0b00000101,
 	}
-	report, offset := v.Check(raw, 0)
+	offset := v.Check(raw, 0)
 
 	if err := gotest.Expect(offset).Eq(1); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.Expected).Eq([]byte{1}); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.Got).Eq([]byte{1}); err != nil {
+	if err := gotest.Expect(v.GotBool).Eq(true); err != nil {
 		t.Error(err)
 	}
 
 	param = false
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(2); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{0}); err != nil {
+	if err := gotest.Expect(v.GotBool).Eq(false); err != nil {
 		t.Error(err)
 	}
 
 	param = true
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(3); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq([]byte{1}); err != nil {
+	if err := gotest.Expect(v.GotBool).Eq(true); err != nil {
 		t.Error(err)
 	}
 
@@ -958,35 +838,26 @@ func TestValue_CheckString(t *testing.T) {
 		104, 101, 108, 109, 111,
 	}
 
-	report, offset := v.Check(raw, 0)
+	offset := v.Check(raw, 0)
 
 	if err := gotest.Expect(offset).Eq(40); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.Expected).Eq([]byte{104, 101, 108, 108, 111}); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.Got).Eq([]byte{104, 101, 108, 108, 111}); err != nil {
+	if err := gotest.Expect(v.GotString).Eq("hello"); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(80); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Expected).Eq([]byte{104, 101, 108, 108, 111}); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.Got).Eq([]byte{104, 101, 108, 109, 111}); err != nil {
+	if err := gotest.Expect(v.GotString).Eq("helmo"); err != nil {
 		t.Error(err)
 	}
 }
@@ -999,35 +870,26 @@ func TestValue_CheckByte(t *testing.T) {
 		0x01, 0x00, 0x04,
 	}
 
-	report, offset := v.Check(raw, 0)
+	offset := v.Check(raw, 0)
 
 	if err := gotest.Expect(offset).Eq(24); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.Expected).Eq([]byte{1, 0, 3}); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.Got).Eq([]byte{1, 0, 3}); err != nil {
+	if err := gotest.Expect(v.GotByte).Eq([]byte{1, 0, 3}); err != nil {
 		t.Error(err)
 	}
 
-	report, offset = v.Check(raw, offset)
+	offset = v.Check(raw, offset)
 	if err := gotest.Expect(offset).Eq(48); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
+	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Expected).Eq([]byte{1, 0, 3}); err != nil {
-		t.Error(err)
-	}
-	if err := gotest.Expect(report.Got).Eq([]byte{1, 0, 4}); err != nil {
+	if err := gotest.Expect(v.GotByte).Eq([]byte{1, 0, 4}); err != nil {
 		t.Error(err)
 	}
 }

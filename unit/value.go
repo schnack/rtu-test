@@ -85,405 +85,289 @@ type Value struct {
 	String *string `yaml:"string"`
 
 	Byte *string `yaml:"byte"`
+
+	GotInt8    int8    `yaml:"-"`
+	GotInt16   int16   `yaml:"-"`
+	GotInt32   int32   `yaml:"-"`
+	GotInt64   int64   `yaml:"-"`
+	GotUint8   uint8   `yaml:"-"`
+	GotUint16  uint16  `yaml:"-"`
+	GotUint32  uint32  `yaml:"-"`
+	GotUint64  uint64  `yaml:"-"`
+	GotFloat32 float32 `yaml:"-"`
+	GotFloat64 float64 `yaml:"-"`
+	GotBool    bool    `yaml:"-"`
+	GotString  string  `yaml:"-"`
+	GotByte    []byte  `yaml:"-"`
+
+	Pass bool `yaml:"-"`
 }
 
-func (v *Value) Check(raw []byte, currentBit int) (report Report, offsetBit int) {
-	report.Name = v.Name
-	report.Type = v.Type()
-	report.Pass = true
-	switch report.Type {
+func (v *Value) Check(raw []byte, currentBit int) (offsetBit int) {
+	v.Pass = true
+	switch v.Type() {
 	case Nil:
 		offsetBit = 0
 	case Int8:
-		report.Expected = []byte{uint8(*v.Int8)}
-
 		offsetBit = currentBit + (currentBit % 8) + 8
-
 		if len(raw) < offsetBit/8 {
-			report.Pass = false
+			v.Pass = false
 			return
 		}
 
-		report.Got = raw[currentBit/8 : offsetBit/8]
-
-		got := int8(report.Got[0])
-		if got != *v.Int8 {
-			report.Pass = false
+		v.GotInt8 = int8(raw[currentBit/8 : offsetBit/8][0])
+		if v.GotInt8 != *v.Int8 {
+			v.Pass = false
 		}
 	case Int8Range:
-		report.ExpectedMin = []byte{uint8(*v.MinInt8)}
-		report.ExpectedMax = []byte{uint8(*v.MaxInt8)}
-
 		offsetBit = currentBit + (currentBit % 8) + 8
-
 		if len(raw) < offsetBit/8 {
-			report.Pass = false
+			v.Pass = false
 			return
 		}
 
-		report.Got = raw[currentBit/8 : offsetBit/8]
-
-		got := int8(report.Got[0])
-		if *v.MinInt8 > got || got > *v.MaxInt8 {
-			report.Pass = false
+		v.GotInt8 = int8(raw[currentBit/8 : offsetBit/8][0])
+		if *v.MinInt8 > v.GotInt8 || v.GotInt8 > *v.MaxInt8 {
+			v.Pass = false
 		}
 	case Int16:
-		report.Expected = make([]byte, 2)
-		binary.BigEndian.PutUint16(report.Expected, uint16(*v.Int16))
-
 		offsetBit = currentBit + (currentBit % 8) + 16
 		if len(raw) < offsetBit/8 {
-			report.Pass = false
+			v.Pass = false
 			return
 		}
 
-		report.Got = raw[currentBit/8 : offsetBit/8]
-
-		got := int16(binary.BigEndian.Uint16(report.Got))
-		if got != *v.Int16 {
-			report.Pass = false
+		v.GotInt16 = int16(binary.BigEndian.Uint16(raw[currentBit/8 : offsetBit/8]))
+		if v.GotInt16 != *v.Int16 {
+			v.Pass = false
 		}
 	case Int16Range:
-		report.ExpectedMin = make([]byte, 2)
-		binary.BigEndian.PutUint16(report.ExpectedMin, uint16(*v.MinInt16))
-		report.ExpectedMax = make([]byte, 2)
-		binary.BigEndian.PutUint16(report.ExpectedMax, uint16(*v.MaxInt16))
-
 		offsetBit = currentBit + (currentBit % 8) + 16
 		if len(raw) < offsetBit/8 {
-			report.Pass = false
+			v.Pass = false
 			return
 		}
 
-		report.Got = raw[currentBit/8 : offsetBit/8]
-
-		got := int16(binary.BigEndian.Uint16(report.Got))
-		if *v.MinInt16 > got || got > *v.MaxInt16 {
-			report.Pass = false
+		v.GotInt16 = int16(binary.BigEndian.Uint16(raw[currentBit/8 : offsetBit/8]))
+		if *v.MinInt16 > v.GotInt16 || v.GotInt16 > *v.MaxInt16 {
+			v.Pass = false
 		}
 	case Int32:
-		report.Expected = make([]byte, 4)
-		binary.BigEndian.PutUint32(report.Expected, uint32(*v.Int32))
-
 		offsetBit = currentBit + (currentBit % 8) + 32
 		if len(raw) < offsetBit/8 {
-			report.Pass = false
+			v.Pass = false
 			return
 		}
 
-		report.Got = raw[currentBit/8 : offsetBit/8]
-
-		got := int32(binary.BigEndian.Uint32(report.Got))
-		if got != *v.Int32 {
-			report.Pass = false
+		v.GotInt32 = int32(binary.BigEndian.Uint32(raw[currentBit/8 : offsetBit/8]))
+		if v.GotInt32 != *v.Int32 {
+			v.Pass = false
 		}
 	case Int32Range:
-		report.ExpectedMin = make([]byte, 4)
-		binary.BigEndian.PutUint32(report.ExpectedMin, uint32(*v.MinInt32))
-		report.ExpectedMax = make([]byte, 4)
-		binary.BigEndian.PutUint32(report.ExpectedMax, uint32(*v.MaxInt32))
-
 		offsetBit = currentBit + (currentBit % 8) + 32
 		if len(raw) < offsetBit/8 {
-			report.Pass = false
+			v.Pass = false
 			return
 		}
 
-		report.Got = raw[currentBit/8 : offsetBit/8]
-
-		got := int32(binary.BigEndian.Uint32(report.Got))
-		if *v.MinInt32 > got || got > *v.MaxInt32 {
-			report.Pass = false
+		v.GotInt32 = int32(binary.BigEndian.Uint32(raw[currentBit/8 : offsetBit/8]))
+		if *v.MinInt32 > v.GotInt32 || v.GotInt32 > *v.MaxInt32 {
+			v.Pass = false
 		}
 	case Int64:
-		report.Expected = make([]byte, 8)
-		binary.BigEndian.PutUint64(report.Expected, uint64(*v.Int64))
-
 		offsetBit = currentBit + (currentBit % 8) + 64
 		if len(raw) < offsetBit/8 {
-			report.Pass = false
+			v.Pass = false
 			return
 		}
 
-		report.Got = raw[currentBit/8 : offsetBit/8]
-
-		got := int64(binary.BigEndian.Uint64(report.Got))
-		if got != *v.Int64 {
-			report.Pass = false
+		v.GotInt64 = int64(binary.BigEndian.Uint64(raw[currentBit/8 : offsetBit/8]))
+		if v.GotInt64 != *v.Int64 {
+			v.Pass = false
 		}
 	case Int64Range:
-		report.ExpectedMin = make([]byte, 8)
-		binary.BigEndian.PutUint64(report.ExpectedMin, uint64(*v.MinInt64))
-		report.ExpectedMax = make([]byte, 8)
-		binary.BigEndian.PutUint64(report.ExpectedMax, uint64(*v.MaxInt64))
-
 		offsetBit = currentBit + (currentBit % 8) + 64
 		if len(raw) < offsetBit/8 {
-			report.Pass = false
+			v.Pass = false
 			return
 		}
 
-		report.Got = raw[currentBit/8 : offsetBit/8]
-
-		got := int64(binary.BigEndian.Uint64(report.Got))
-		if *v.MinInt64 > got || got > *v.MaxInt64 {
-			report.Pass = false
+		v.GotInt64 = int64(binary.BigEndian.Uint64(raw[currentBit/8 : offsetBit/8]))
+		if *v.MinInt64 > v.GotInt64 || v.GotInt64 > *v.MaxInt64 {
+			v.Pass = false
 		}
 	case Uint8:
-		report.Expected = []byte{*v.Uint8}
-
 		offsetBit = currentBit + (currentBit % 8) + 8
 		if len(raw) < offsetBit/8 {
-			report.Pass = false
+			v.Pass = false
 			return
 		}
 
-		report.Got = raw[currentBit/8 : offsetBit/8]
-
-		got := report.Got[0]
-		if got != *v.Uint8 {
-			report.Pass = false
+		v.GotUint8 = raw[currentBit/8 : offsetBit/8][0]
+		if v.GotUint8 != *v.Uint8 {
+			v.Pass = false
 		}
 	case Uint8Range:
-		report.ExpectedMin = []byte{*v.MinUint8}
-		report.ExpectedMax = []byte{*v.MaxUint8}
-
 		offsetBit = currentBit + (currentBit % 8) + 8
 		if len(raw) < offsetBit/8 {
-			report.Pass = false
+			v.Pass = false
 			return
 		}
 
-		report.Got = raw[currentBit/8 : offsetBit/8]
-
-		got := report.Got[0]
-		if *v.MinUint8 > got || got > *v.MaxUint8 {
-			report.Pass = false
+		v.GotUint8 = raw[currentBit/8 : offsetBit/8][0]
+		if *v.MinUint8 > v.GotUint8 || v.GotUint8 > *v.MaxUint8 {
+			v.Pass = false
 		}
 	case Uint16:
-		report.Expected = make([]byte, 2)
-		binary.BigEndian.PutUint16(report.Expected, *v.Uint16)
-
 		offsetBit = currentBit + (currentBit % 8) + 16
 		if len(raw) < offsetBit/8 {
-			report.Pass = false
+			v.Pass = false
 			return
 		}
 
-		report.Got = raw[currentBit/8 : offsetBit/8]
-
-		got := binary.BigEndian.Uint16(report.Got)
-		if got != *v.Uint16 {
-			report.Pass = false
+		v.GotUint16 = binary.BigEndian.Uint16(raw[currentBit/8 : offsetBit/8])
+		if v.GotUint16 != *v.Uint16 {
+			v.Pass = false
 		}
 	case Uint16Range:
-		report.ExpectedMin = make([]byte, 2)
-		binary.BigEndian.PutUint16(report.ExpectedMin, *v.MinUint16)
-		report.ExpectedMax = make([]byte, 2)
-		binary.BigEndian.PutUint16(report.ExpectedMax, *v.MaxUint16)
-
 		offsetBit = currentBit + (currentBit % 8) + 16
 		if len(raw) < offsetBit/8 {
-			report.Pass = false
+			v.Pass = false
 			return
 		}
 
-		report.Got = raw[currentBit/8 : offsetBit/8]
-
-		got := binary.BigEndian.Uint16(report.Got)
-		if *v.MinUint16 > got || got > *v.MaxUint16 {
-			report.Pass = false
+		v.GotUint16 = binary.BigEndian.Uint16(raw[currentBit/8 : offsetBit/8])
+		if *v.MinUint16 > v.GotUint16 || v.GotUint16 > *v.MaxUint16 {
+			v.Pass = false
 		}
 	case Uint32:
-		report.Expected = make([]byte, 4)
-		binary.BigEndian.PutUint32(report.Expected, *v.Uint32)
-
 		offsetBit = currentBit + (currentBit % 8) + 32
 		if len(raw) < offsetBit/8 {
-			report.Pass = false
+			v.Pass = false
 			return
 		}
 
-		report.Got = raw[currentBit/8 : offsetBit/8]
-
-		got := binary.BigEndian.Uint32(report.Got)
-		if got != *v.Uint32 {
-			report.Pass = false
+		v.GotUint32 = binary.BigEndian.Uint32(raw[currentBit/8 : offsetBit/8])
+		if v.GotUint32 != *v.Uint32 {
+			v.Pass = false
 		}
 	case Uint32Range:
-		report.ExpectedMin = make([]byte, 4)
-		binary.BigEndian.PutUint32(report.ExpectedMin, *v.MinUint32)
-		report.ExpectedMax = make([]byte, 4)
-		binary.BigEndian.PutUint32(report.ExpectedMax, *v.MaxUint32)
-
 		offsetBit = currentBit + (currentBit % 8) + 32
 		if len(raw) < offsetBit/8 {
-			report.Pass = false
+			v.Pass = false
 			return
 		}
 
-		report.Got = raw[currentBit/8 : offsetBit/8]
-
-		got := binary.BigEndian.Uint32(report.Got)
-		if *v.MinUint32 > got || got > *v.MaxUint32 {
-			report.Pass = false
+		v.GotUint32 = binary.BigEndian.Uint32(raw[currentBit/8 : offsetBit/8])
+		if *v.MinUint32 > v.GotUint32 || v.GotUint32 > *v.MaxUint32 {
+			v.Pass = false
 		}
 	case Uint64:
-		report.Expected = make([]byte, 8)
-		binary.BigEndian.PutUint64(report.Expected, *v.Uint64)
-
 		offsetBit = currentBit + (currentBit % 8) + 64
 		if len(raw) < offsetBit/8 {
-			report.Pass = false
+			v.Pass = false
 			return
 		}
 
-		report.Got = raw[currentBit/8 : offsetBit/8]
-
-		got := binary.BigEndian.Uint64(report.Got)
-		if got != *v.Uint64 {
-			report.Pass = false
+		v.GotUint64 = binary.BigEndian.Uint64(raw[currentBit/8 : offsetBit/8])
+		if v.GotUint64 != *v.Uint64 {
+			v.Pass = false
 		}
 	case Uint64Range:
-		report.ExpectedMin = make([]byte, 8)
-		binary.BigEndian.PutUint64(report.ExpectedMin, *v.MinUint64)
-		report.ExpectedMax = make([]byte, 8)
-		binary.BigEndian.PutUint64(report.ExpectedMax, *v.MaxUint64)
-
 		offsetBit = currentBit + (currentBit % 8) + 64
 		if len(raw) < offsetBit/8 {
-			report.Pass = false
+			v.Pass = false
 			return
 		}
 
-		report.Got = raw[currentBit/8 : offsetBit/8]
-
-		got := binary.BigEndian.Uint64(report.Got)
-		if *v.MinUint64 > got || got > *v.MaxUint64 {
-			report.Pass = false
+		v.GotUint64 = binary.BigEndian.Uint64(raw[currentBit/8 : offsetBit/8])
+		if *v.MinUint64 > v.GotUint64 || v.GotUint64 > *v.MaxUint64 {
+			v.Pass = false
 		}
 	case Float32:
-		report.Expected = make([]byte, 4)
-		binary.BigEndian.PutUint32(report.Expected, math.Float32bits(*v.Float32))
-
 		offsetBit = currentBit + (currentBit % 8) + 32
 		if len(raw) < offsetBit/8 {
-			report.Pass = false
+			v.Pass = false
 			return
 		}
 
-		report.Got = raw[currentBit/8 : offsetBit/8]
-
-		got := math.Float32frombits(binary.BigEndian.Uint32(report.Got))
-		if got != *v.Float32 {
-			report.Pass = false
+		v.GotFloat32 = math.Float32frombits(binary.BigEndian.Uint32(raw[currentBit/8 : offsetBit/8]))
+		if v.GotFloat32 != *v.Float32 {
+			v.Pass = false
 		}
 	case Float32Range:
-		report.ExpectedMin = make([]byte, 4)
-		binary.BigEndian.PutUint32(report.Expected, math.Float32bits(*v.MinFloat32))
-		report.ExpectedMax = make([]byte, 4)
-		binary.BigEndian.PutUint32(report.Expected, math.Float32bits(*v.MinFloat32))
-
 		offsetBit = currentBit + (currentBit % 8) + 32
 		if len(raw) < offsetBit/8 {
-			report.Pass = false
+			v.Pass = false
 			return
 		}
 
-		report.Got = raw[currentBit/8 : offsetBit/8]
-
-		got := math.Float32frombits(binary.BigEndian.Uint32(report.Got))
-		if *v.MinFloat32 > got || got > *v.MaxFloat32 {
-			report.Pass = false
+		v.GotFloat32 = math.Float32frombits(binary.BigEndian.Uint32(raw[currentBit/8 : offsetBit/8]))
+		if *v.MinFloat32 > v.GotFloat32 || v.GotFloat32 > *v.MaxFloat32 {
+			v.Pass = false
 		}
 	case Float64:
-		report.Expected = make([]byte, 8)
-		binary.BigEndian.PutUint64(report.Expected, math.Float64bits(*v.Float64))
-
 		offsetBit = currentBit + (currentBit % 8) + 64
 		if len(raw) < offsetBit/8 {
-			report.Pass = false
+			v.Pass = false
 			return
 		}
 
-		report.Got = raw[currentBit/8 : offsetBit/8]
-
-		got := math.Float64frombits(binary.BigEndian.Uint64(report.Got))
-		if got != *v.Float64 {
-			report.Pass = false
+		v.GotFloat64 = math.Float64frombits(binary.BigEndian.Uint64(raw[currentBit/8 : offsetBit/8]))
+		if v.GotFloat64 != *v.Float64 {
+			v.Pass = false
 		}
 	case Float64Range:
-		report.ExpectedMin = make([]byte, 8)
-		binary.BigEndian.PutUint64(report.Expected, math.Float64bits(*v.MinFloat64))
-		report.ExpectedMax = make([]byte, 8)
-		binary.BigEndian.PutUint64(report.Expected, math.Float64bits(*v.MinFloat64))
-
 		offsetBit = currentBit + (currentBit % 8) + 64
 		if len(raw) < offsetBit/8 {
-			report.Pass = false
+			v.Pass = false
 			return
 		}
 
-		report.Got = raw[currentBit/8 : offsetBit/8]
-
-		got := math.Float64frombits(binary.BigEndian.Uint64(report.Got))
-		if *v.MinFloat64 > got || got > *v.MaxFloat64 {
-			report.Pass = false
+		v.GotFloat64 = math.Float64frombits(binary.BigEndian.Uint64(raw[currentBit/8 : offsetBit/8]))
+		if *v.MinFloat64 > v.GotFloat64 || v.GotFloat64 > *v.MaxFloat64 {
+			v.Pass = false
 		}
 	case Bool:
-		if *v.Bool {
-			report.Expected = []byte{1}
-		} else {
-			report.Expected = []byte{0}
-		}
-		got := raw[currentBit/8]&(1<<(currentBit%8)) != 0
+		v.GotBool = raw[currentBit/8]&(1<<(currentBit%8)) != 0
 		offsetBit = currentBit + 1
 
-		if got {
-			report.Got = []byte{1}
-		} else {
-			report.Got = []byte{0}
-		}
-
-		if got != *v.Bool {
-			report.Pass = false
+		if v.GotBool != *v.Bool {
+			v.Pass = false
 		}
 	case String:
-		report.Expected = []byte(*v.String)
-
-		offsetBit = currentBit + (currentBit % 8) + (len(report.Expected) * 8)
+		offsetBit = currentBit + (currentBit % 8) + (len(*v.String) * 8)
 		if len(raw) < offsetBit/8 {
-			report.Pass = false
+			v.Pass = false
 			return
 		}
 
-		report.Got = raw[currentBit/8 : offsetBit/8]
-
-		if string(report.Got) != string(report.Expected) {
-			report.Pass = false
+		v.GotString = string(raw[currentBit/8 : offsetBit/8])
+		if v.GotString != *v.String {
+			v.Pass = false
 		}
 	case Byte:
-		var err error
-		report.Expected, err = parseStringByte(*v.Byte)
+		expected, err := parseStringByte(*v.Byte)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		offsetBit = currentBit + (currentBit % 8) + (len(report.Expected) * 8)
+		offsetBit = currentBit + (currentBit % 8) + (len(expected) * 8)
 		if len(raw) < offsetBit/8 {
-			report.Pass = false
+			v.Pass = false
 			return
 		}
 
-		report.Got = raw[currentBit/8 : offsetBit/8]
+		v.GotByte = raw[currentBit/8 : offsetBit/8]
 
-		if len(report.Got) != len(report.Expected) {
-			report.Pass = false
+		if len(v.GotByte) != len(expected) {
+			v.Pass = false
 			return
 		}
-		for i, _ := range report.Expected {
-			if report.Got[i] != report.Expected[i] {
-				report.Pass = false
+
+		for i, _ := range expected {
+			if v.GotByte[i] != expected[i] {
+				v.Pass = false
 				return
 			}
 		}

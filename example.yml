@@ -3,18 +3,16 @@ version: 1.0.0
 
 name: Device
 description: ""
-
-port: /dev/ttyUSB0
-boundRate: 115200
-dataBits: 8
-parity: N # Parity: N - None, E - Even, O - Odd (default E)
-stopBits: 2
-timeout: 5
-
 logs: true # false path-to-file
 
 modbusClient:
   slaveId: 0x01
+  port: /dev/ttyUSB0
+  boundRate: 115200
+  dataBits: 8
+  parity: N # Parity: N - None, E - Even, O - Odd (default E)
+  stopBits: 2
+  timeout: 5s
 
   tests:
 

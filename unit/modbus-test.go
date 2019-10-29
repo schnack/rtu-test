@@ -41,69 +41,55 @@ type ModbusTest struct {
 	ResultError   error         `yaml:"-"`
 }
 
-func (mt *ModbusTest) Check() (reports []Report) {
-	reportErr := mt.CheckError()
-	reports = append(reports, reportErr)
-	if reportErr.Pass {
-		reports = append(reports, mt.CheckData()...)
+func (mt *ModbusTest) Check() bool {
+	if mt.CheckError() && mt.CheckData() && mt.CheckDuration() {
+		return true
 	}
-	reports = append(reports, mt.CheckDuration())
-	return
+	return false
 }
 
-func (mt *ModbusTest) CheckData() (reports []Report) {
+func (mt *ModbusTest) CheckData() bool {
 	switch mt.getFunction() {
 	case ReadCoils, ReadDiscreteInputs, ReadHoldingRegisters, ReadInputRegisters:
 		countBit := 0
+		pass := true
 		for _, v := range mt.Expected {
-			var report Report
-			report, countBit = v.Check(mt.ResultByte, countBit)
-			reports = append(reports, report)
+			countBit = v.Check(mt.ResultByte, countBit)
+			if !v.Pass {
+				pass = false
+			}
 		}
+		return pass
 	case WriteSingleCoil:
-		report := Report{Pass: true, Type: Byte, Got: mt.ResultByte}
-		report.Expected = dataSingleCoil(mt.getWriteData())
-		if !byteToEq(report.Expected, report.Got) {
-			report.Pass = false
+		if !byteToEq(dataSingleCoil(mt.getWriteData()), mt.ResultByte) {
+			return false
 		}
-		reports = append(reports, report)
 	case WriteSingleRegister:
-		report := Report{Pass: true, Type: Byte, Got: mt.ResultByte}
-		report.Expected = mt.getWriteData()
-		if !byteToEq(report.Expected[:2], report.Got) {
-			report.Pass = false
+		if !byteToEq(mt.getWriteData()[:2], mt.ResultByte) {
+			return false
 		}
-		reports = append(reports, report)
 	case WriteMultipleCoils, WriteMultipleRegisters:
-		report := Report{Pass: true, Type: Uint16, Got: mt.ResultByte, Expected: make([]byte, 2)}
-		binary.BigEndian.PutUint16(report.Expected, mt.getQuantity())
-		resultQuantity := binary.BigEndian.Uint16(report.Got)
-
-		if mt.getQuantity() != resultQuantity {
-			report.Pass = false
+		if mt.getQuantity() != binary.BigEndian.Uint16(mt.ResultByte) {
+			return false
 		}
-		reports = append(reports, report)
 	}
-	return
+	return true
 }
 
-func (mt *ModbusTest) CheckDuration() Report {
-	expectTime := parseDuration(mt.ExpectedTime)
-	report := Report{Name: "Execution time", Type: String, Expected: []byte(expectTime.String()), Got: []byte(mt.ResultTime.String()), Pass: true}
-
-	if mt.ResultTime > expectTime {
-		report.Pass = false
+func (mt *ModbusTest) CheckDuration() bool {
+	if mt.ResultTime > parseDuration(mt.ExpectedTime) {
+		return false
 	}
-	return report
+	return true
 }
 
-func (mt *ModbusTest) CheckError() Report {
-	report := Report{Name: "ModBus error", Type: String}
+func (mt *ModbusTest) CheckError() bool {
+	var got string
 	if mt.ResultError != nil {
-		report.Got = []byte(mt.ResultError.Error())
+		got = mt.ResultError.Error()
 	}
 
-	errorText := mt.ExpectedError
+	expected := mt.ExpectedError
 	if mt.getFunction() != NilFunction {
 		modbusError := strings.ReplaceAll(strings.ToLower(mt.ExpectedError), " ", "")
 		if strings.HasPrefix(modbusError, "0x") {
@@ -113,30 +99,27 @@ func (mt *ModbusTest) CheckError() Report {
 		}
 		switch modbusError {
 		case "illegalfunction", "1":
-			errorText = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 1}).Error()
+			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 1}).Error()
 		case "illegaldataaddress", "2":
-			errorText = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 2}).Error()
+			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 2}).Error()
 		case "illegaldatavalue", "3":
-			errorText = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 3}).Error()
+			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 3}).Error()
 		case "serverdevicefailure", "4":
-			errorText = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 4}).Error()
+			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 4}).Error()
 		case "acknowledge", "5":
-			errorText = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 5}).Error()
+			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 5}).Error()
 		case "serverdevicebusy", "6":
-			errorText = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 6}).Error()
+			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 6}).Error()
 		case "memoryparityerror", "8":
-			errorText = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 8}).Error()
+			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 8}).Error()
 		case "gatewaypathunavailable", "10":
-			errorText = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 10}).Error()
+			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 10}).Error()
 		case "gatewaytargetdevicefailedtorespond", "11":
-			errorText = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 11}).Error()
+			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 11}).Error()
 		}
 	}
-	report.Expected = []byte(errorText)
 
-	report.Pass = string(report.Expected) == string(report.Got)
-
-	return report
+	return expected == got
 }
 
 func (mt *ModbusTest) Exec(client modbus.Client) (err error) {

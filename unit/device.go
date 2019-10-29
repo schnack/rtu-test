@@ -10,12 +10,6 @@ type Device struct {
 	Version      string       `yaml:"version"`
 	Name         string       `yaml:"name"`
 	Description  string       `yaml:"description"`
-	Port         string       `yaml:"port"`
-	BoundRate    string       `yaml:"boundRate"`
-	DataBits     string       `yaml:"dataBits"`
-	Parity       string       `yaml:"parity"`
-	StopBits     string       `yaml:"stopBits"`
-	Timeout      string       `yaml:"timeout"`
 	Logs         string       `yaml:"logs"`
 	ModbusClient ModbusClient `yaml:"modbusClient"`
 }
