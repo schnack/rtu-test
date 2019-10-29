@@ -169,10 +169,7 @@ func TestModbusTest_ExecReadCoils(t *testing.T) {
 	}
 
 	client := NewFixtureModBusClient([]byte{0b00000011}, nil)
-
-	if err := gotest.Expect(modbus.Exec(client)).Eq(nil); err != nil {
-		t.Error(err)
-	}
+	modbus.Exec(client)
 
 	if err := gotest.Expect(modbus.ResultByte).Eq([]byte{3}); err != nil {
 		t.Error(err)
@@ -207,9 +204,7 @@ func TestModbusTest_ExecReadDiscreteInputs(t *testing.T) {
 
 	client := NewFixtureModBusClient([]byte{0b00000011}, nil)
 
-	if err := gotest.Expect(modbus.Exec(client)).Eq(nil); err != nil {
-		t.Error(err)
-	}
+	modbus.Exec(client)
 
 	if err := gotest.Expect(modbus.ResultByte).Eq([]byte{3}); err != nil {
 		t.Error(err)
@@ -244,9 +239,7 @@ func TestModbusTest_ExecReadHoldingRegisters(t *testing.T) {
 
 	client := NewFixtureModBusClient([]byte{0x01, 0x01}, nil)
 
-	if err := gotest.Expect(modbus.Exec(client)).Eq(nil); err != nil {
-		t.Error(err)
-	}
+	modbus.Exec(client)
 
 	if err := gotest.Expect(modbus.ResultByte).Eq([]byte{0x01, 0x01}); err != nil {
 		t.Error(err)
@@ -281,9 +274,7 @@ func TestModbusTest_ExecReadInputRegisters(t *testing.T) {
 
 	client := NewFixtureModBusClient([]byte{0x01, 0x01}, nil)
 
-	if err := gotest.Expect(modbus.Exec(client)).Eq(nil); err != nil {
-		t.Error(err)
-	}
+	modbus.Exec(client)
 
 	if err := gotest.Expect(modbus.ResultByte).Eq([]byte{0x01, 0x01}); err != nil {
 		t.Error(err)
@@ -320,9 +311,7 @@ func TestModbusTest_ExecWriteSingleCoil(t *testing.T) {
 
 	client := NewFixtureModBusClient([]byte{0xff, 0x00}, nil)
 
-	if err := gotest.Expect(modbus.Exec(client)).Eq(nil); err != nil {
-		t.Error(err)
-	}
+	modbus.Exec(client)
 
 	if err := gotest.Expect(modbus.ResultByte).Eq([]byte{0xff, 0x00}); err != nil {
 		t.Error(err)
@@ -365,9 +354,7 @@ func TestModbusTest_ExecWriteSingleRegister(t *testing.T) {
 
 	client := NewFixtureModBusClient([]byte{0x01, 0x01}, nil)
 
-	if err := gotest.Expect(modbus.Exec(client)).Eq(nil); err != nil {
-		t.Error(err)
-	}
+	modbus.Exec(client)
 
 	if err := gotest.Expect(modbus.ResultByte).Eq([]byte{0x01, 0x01}); err != nil {
 		t.Error(err)
@@ -412,9 +399,7 @@ func TestModbusTest_ExecWriteMultipleCoils(t *testing.T) {
 
 	client := NewFixtureModBusClient([]byte{0x01, 0x01}, nil)
 
-	if err := gotest.Expect(modbus.Exec(client)).Eq(nil); err != nil {
-		t.Error(err)
-	}
+	modbus.Exec(client)
 
 	if err := gotest.Expect(modbus.ResultByte).Eq([]byte{0x01, 0x01}); err != nil {
 		t.Error(err)
@@ -459,9 +444,7 @@ func TestModbusTest_ExecWriteMultipleRegisters(t *testing.T) {
 
 	client := NewFixtureModBusClient([]byte{0x01, 0x01}, nil)
 
-	if err := gotest.Expect(modbus.Exec(client)).Eq(nil); err != nil {
-		t.Error(err)
-	}
+	modbus.Exec(client)
 
 	if err := gotest.Expect(modbus.ResultByte).Eq([]byte{0x01, 0x01}); err != nil {
 		t.Error(err)

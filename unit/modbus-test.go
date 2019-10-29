@@ -122,126 +122,55 @@ func (mt *ModbusTest) CheckError() bool {
 	return expected == got
 }
 
-func (mt *ModbusTest) Exec(client modbus.Client) (err error) {
+func (mt *ModbusTest) Exec(client modbus.Client) {
 	switch mt.getFunction() {
 	case ReadDiscreteInputs:
-		err = mt.readDiscreteInputs(client)
+		startTime := time.Now()
+		mt.ResultByte, mt.ResultError = client.ReadDiscreteInputs(*mt.Address, mt.getQuantity())
+		mt.ResultTime = time.Since(startTime)
 	case ReadCoils:
-		err = mt.readCoils(client)
+		startTime := time.Now()
+		mt.ResultByte, mt.ResultError = client.ReadCoils(*mt.Address, mt.getQuantity())
+		mt.ResultTime = time.Since(startTime)
 	case WriteSingleCoil:
-		err = mt.writeSingleCoil(client)
+		startTime := time.Now()
+		mt.ResultByte, mt.ResultError = client.WriteSingleCoil(*mt.Address, binary.BigEndian.Uint16(dataSingleCoil(mt.getWriteData())))
+		mt.ResultTime = time.Since(startTime)
 	case WriteMultipleCoils:
-		err = mt.writeMultipleCoils(client)
+		startTime := time.Now()
+		mt.ResultByte, mt.ResultError = client.WriteMultipleCoils(*mt.Address, mt.getQuantity(), mt.getWriteData())
+		mt.ResultTime = time.Since(startTime)
 	case ReadInputRegisters:
-		err = mt.readInputRegisters(client)
+		startTime := time.Now()
+		mt.ResultByte, mt.ResultError = client.ReadInputRegisters(*mt.Address, mt.getQuantity())
+		mt.ResultTime = time.Since(startTime)
 	case ReadHoldingRegisters:
-		err = mt.readHoldingRegisters(client)
+		startTime := time.Now()
+		mt.ResultByte, mt.ResultError = client.ReadHoldingRegisters(*mt.Address, mt.getQuantity())
+		mt.ResultTime = time.Since(startTime)
 	case WriteSingleRegister:
-		err = mt.writeSingleRegister(client)
+		startTime := time.Now()
+		mt.ResultByte, mt.ResultError = client.WriteSingleRegister(*mt.Address, binary.BigEndian.Uint16(mt.getWriteData()))
+		mt.ResultTime = time.Since(startTime)
 	case WriteMultipleRegisters:
-		err = mt.writeMultipleRegisters(client)
-	default:
-		err = fmt.Errorf("function not found")
+		startTime := time.Now()
+		mt.ResultByte, mt.ResultError = client.WriteMultipleRegisters(*mt.Address, mt.getQuantity(), mt.getWriteData())
+		mt.ResultTime = time.Since(startTime)
 	}
-	return
 }
 
-func (mt *ModbusTest) readCoils(client modbus.Client) error {
+// TODO
+func (mt *ModbusTest) Validation() error {
 	if mt.Address == nil {
 		return fmt.Errorf("address is nil")
 	}
-	startTime := time.Now()
-	mt.ResultByte, mt.ResultError = client.ReadCoils(*mt.Address, mt.getQuantity())
-	mt.ResultTime = time.Since(startTime)
-	return nil
-}
-
-func (mt *ModbusTest) readDiscreteInputs(client modbus.Client) error {
-	if mt.Address == nil {
-		return fmt.Errorf("address is nil")
+	switch mt.getFunction() {
+	case ReadDiscreteInputs, WriteMultipleRegisters, ReadCoils, ReadHoldingRegisters, ReadInputRegisters, WriteMultipleCoils:
+	case WriteSingleCoil, WriteSingleRegister:
+		if len(mt.Write) <= 0 {
+			return fmt.Errorf("there is no data to write")
+		}
 	}
-	startTime := time.Now()
-	mt.ResultByte, mt.ResultError = client.ReadDiscreteInputs(*mt.Address, mt.getQuantity())
-	mt.ResultTime = time.Since(startTime)
-	return nil
-}
-
-func (mt *ModbusTest) readHoldingRegisters(client modbus.Client) error {
-	if mt.Address == nil {
-		return fmt.Errorf("address is nil")
-	}
-	startTime := time.Now()
-	mt.ResultByte, mt.ResultError = client.ReadHoldingRegisters(*mt.Address, mt.getQuantity())
-	mt.ResultTime = time.Since(startTime)
-	return nil
-}
-
-func (mt *ModbusTest) readInputRegisters(client modbus.Client) error {
-	if mt.Address == nil {
-		return fmt.Errorf("address is nil")
-	}
-	startTime := time.Now()
-	mt.ResultByte, mt.ResultError = client.ReadInputRegisters(*mt.Address, mt.getQuantity())
-	mt.ResultTime = time.Since(startTime)
-	return nil
-}
-
-func (mt *ModbusTest) writeSingleCoil(client modbus.Client) error {
-	if mt.Address == nil {
-		return fmt.Errorf("address is nil")
-	}
-	if len(mt.Write) <= 0 {
-		return fmt.Errorf("there is no data to write")
-	}
-
-	data := dataSingleCoil(mt.getWriteData())
-	if len(data) != 2 {
-		return fmt.Errorf("data error. Only supported 1, 0, 0xff00, 0x0000")
-	}
-	v := binary.BigEndian.Uint16(data[:2])
-
-	startTime := time.Now()
-	mt.ResultByte, mt.ResultError = client.WriteSingleCoil(*mt.Address, v)
-	mt.ResultTime = time.Since(startTime)
-	return nil
-}
-
-func (mt *ModbusTest) writeSingleRegister(client modbus.Client) error {
-	if mt.Address == nil {
-		return fmt.Errorf("address is nil")
-	}
-
-	data := mt.getWriteData()
-	if len(data) < 2 {
-		return fmt.Errorf("invalid data type for record")
-	}
-	v := binary.BigEndian.Uint16(data[:2])
-
-	startTime := time.Now()
-	mt.ResultByte, mt.ResultError = client.WriteSingleRegister(*mt.Address, v)
-	mt.ResultTime = time.Since(startTime)
-	return nil
-}
-
-func (mt *ModbusTest) writeMultipleCoils(client modbus.Client) error {
-	if mt.Address == nil {
-		return fmt.Errorf("address is nil")
-	}
-
-	startTime := time.Now()
-	mt.ResultByte, mt.ResultError = client.WriteMultipleCoils(*mt.Address, mt.getQuantity(), mt.getWriteData())
-	mt.ResultTime = time.Since(startTime)
-	return nil
-}
-
-func (mt *ModbusTest) writeMultipleRegisters(client modbus.Client) error {
-	if mt.Address == nil {
-		return fmt.Errorf("address is nil")
-	}
-
-	startTime := time.Now()
-	mt.ResultByte, mt.ResultError = client.WriteMultipleRegisters(*mt.Address, mt.getQuantity(), mt.getWriteData())
-	mt.ResultTime = time.Since(startTime)
 	return nil
 }
 
