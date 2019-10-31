@@ -7,4 +7,5 @@ require (
 	github.com/goburrow/modbus v0.1.0
 	github.com/goburrow/serial v0.1.0 // indirect
 	github.com/schnack/gotest v0.5.1
+	github.com/sirupsen/logrus v1.4.2
 )

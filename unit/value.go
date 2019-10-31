@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"log"
+	"github.com/sirupsen/logrus"
 	"math"
 )
 
@@ -349,7 +349,7 @@ func (v *Value) Check(raw []byte, currentBit int) (offsetBit int) {
 	case Byte:
 		expected, err := parseStringByte(*v.Byte)
 		if err != nil {
-			log.Fatal(err)
+			logrus.Fatal(err)
 		}
 
 		offsetBit = currentBit + (currentBit % 8) + (len(expected) * 8)

@@ -1,8 +1,10 @@
 package unit
 
 import (
-	"fmt"
 	"github.com/goburrow/modbus"
+	"github.com/sirupsen/logrus"
+	"log"
+	"os"
 )
 
 type ModbusClient struct {
@@ -16,7 +18,7 @@ type ModbusClient struct {
 	Tests     map[string][]ModbusTest `yaml:"tests"`
 }
 
-func (mc *ModbusClient) Run() (string, error) {
+func (mc *ModbusClient) Run() error {
 	handler := modbus.NewRTUClientHandler(mc.Port)
 	handler.BaudRate = mc.BoundRate
 	handler.DataBits = mc.DataBits
@@ -24,16 +26,17 @@ func (mc *ModbusClient) Run() (string, error) {
 	handler.StopBits = mc.StopBits
 	handler.SlaveId = mc.SlaveId
 	handler.Timeout = parseDuration(mc.Timeout)
+	handler.Logger = log.New(os.Stdout, "", 0)
 	if err := handler.Connect(); err != nil {
-		return "", err
+		return err
 	}
 	defer handler.Close()
 	client := modbus.NewClient(handler)
 
 	for group, tests := range mc.Tests {
-		fmt.Print(group)
-		for i, test := range tests {
-			fmt.Print(i)
+		logrus.Infof("GROUP %s", group)
+		for _, test := range tests {
+			logrus.Infof("TEST %s", test.Name)
 			test.Before.Print()
 			test.Exec(client)
 			if test.Check() {
@@ -45,5 +48,5 @@ func (mc *ModbusClient) Run() (string, error) {
 		}
 	}
 
-	return "", nil
+	return nil
 }

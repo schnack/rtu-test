@@ -2,7 +2,7 @@ package unit
 
 import (
 	"fmt"
-	"log"
+	"github.com/sirupsen/logrus"
 	"time"
 )
 
@@ -12,14 +12,14 @@ type Message struct {
 }
 
 func (m *Message) Print() {
-	log.Println(m.Message)
+	logrus.Info(m.Message)
 	d := parseDuration(m.Pause)
 	if d < 0 {
-		log.Println("Press ENTER to continue...")
+		logrus.Info("Press ENTER to continue...")
 		var t string
 		_, _ = fmt.Scanln(&t)
 	} else {
-		log.Printf("Pause %s\n", d.String())
+		logrus.Infof("Pause %s ...", d.String())
 		time.Sleep(d)
 	}
 }
