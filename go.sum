@@ -6,3 +6,5 @@ github.com/goburrow/serial v0.1.0 h1:v2T1SQa/dlUqQiYIT8+Cu7YolfqAi3K96UmhwYyuSrA
 github.com/goburrow/serial v0.1.0/go.mod h1:sAiqG0nRVswsm1C97xsttiYCzSLBmUZ/VSlVLZJ8haA=
 github.com/schnack/gotest v0.0.1 h1:GporKqHQi3cGeC3jFObrHXpnFVG0b/Shkc1GXUt6WdA=
 github.com/schnack/gotest v0.0.1/go.mod h1:Y/QmzUtPBdOhGrPeh0BrkdhyRRrplvqMI+G/DwvXJIY=
+github.com/schnack/gotest v0.5.1 h1:uK2ejjWTK3ZdKgELWw5wh6ncioXh8eSIDPBlSYs5F34=
+github.com/schnack/gotest v0.5.1/go.mod h1:j+/g8TKvzOvzyJ1c6ZNswv2g/9hiRq45RVC4KHPCjro=

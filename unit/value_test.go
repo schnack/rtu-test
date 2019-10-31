@@ -1,7 +1,6 @@
 package unit
 
 import (
-	"fmt"
 	"github.com/schnack/gotest"
 	"testing"
 )
@@ -896,10 +895,10 @@ func TestValue_CheckByte(t *testing.T) {
 
 func TestValue_Write(t *testing.T) {
 	b, err := (&Value{}).Write()
-	if err := gotest.Expect(b).IsZero(); err != nil {
+	if err := gotest.Expect(b).Zero(); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(err).Eq(fmt.Errorf("empty value")); err != nil {
+	if err := gotest.Expect(err).Error("empty value"); err != nil {
 		t.Error(err)
 	}
 }
@@ -910,7 +909,7 @@ func TestValue_WriteInt8(t *testing.T) {
 	if err := gotest.Expect(b).Eq([]byte{1}); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(err).Eq(nil); err != nil {
+	if err := gotest.Expect(err).Nil(); err != nil {
 		t.Error(err)
 	}
 }
@@ -921,7 +920,7 @@ func TestValue_WriteInt16(t *testing.T) {
 	if err := gotest.Expect(b).Eq([]byte{0, 1}); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(err).Eq(nil); err != nil {
+	if err := gotest.Expect(err).Nil(); err != nil {
 		t.Error(err)
 	}
 }
@@ -932,7 +931,7 @@ func TestValue_WriteInt32(t *testing.T) {
 	if err := gotest.Expect(b).Eq([]byte{0, 0, 0, 1}); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(err).Eq(nil); err != nil {
+	if err := gotest.Expect(err).Nil(); err != nil {
 		t.Error(err)
 	}
 }
@@ -943,7 +942,7 @@ func TestValue_WriteInt64(t *testing.T) {
 	if err := gotest.Expect(b).Eq([]byte{0, 0, 0, 0, 0, 0, 0, 1}); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(err).Eq(nil); err != nil {
+	if err := gotest.Expect(err).Nil(); err != nil {
 		t.Error(err)
 	}
 }
@@ -954,7 +953,7 @@ func TestValue_WriteUint8(t *testing.T) {
 	if err := gotest.Expect(b).Eq([]byte{1}); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(err).Eq(nil); err != nil {
+	if err := gotest.Expect(err).Nil(); err != nil {
 		t.Error(err)
 	}
 }
@@ -965,7 +964,7 @@ func TestValue_WriteUint16(t *testing.T) {
 	if err := gotest.Expect(b).Eq([]byte{0, 1}); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(err).Eq(nil); err != nil {
+	if err := gotest.Expect(err).Nil(); err != nil {
 		t.Error(err)
 	}
 }
@@ -976,7 +975,7 @@ func TestValue_WriteUint32(t *testing.T) {
 	if err := gotest.Expect(b).Eq([]byte{0, 0, 0, 1}); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(err).Eq(nil); err != nil {
+	if err := gotest.Expect(err).Nil(); err != nil {
 		t.Error(err)
 	}
 }
@@ -987,7 +986,7 @@ func TestValue_WriteUint64(t *testing.T) {
 	if err := gotest.Expect(b).Eq([]byte{0, 0, 0, 0, 0, 0, 0, 1}); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(err).Eq(nil); err != nil {
+	if err := gotest.Expect(err).Nil(); err != nil {
 		t.Error(err)
 	}
 }
@@ -998,7 +997,7 @@ func TestValue_WriteFloat32(t *testing.T) {
 	if err := gotest.Expect(b).Eq([]byte{63, 153, 153, 154}); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(err).Eq(nil); err != nil {
+	if err := gotest.Expect(err).Nil(); err != nil {
 		t.Error(err)
 	}
 }
@@ -1009,7 +1008,7 @@ func TestValue_WriteFloat64(t *testing.T) {
 	if err := gotest.Expect(b).Eq([]byte{63, 243, 51, 51, 51, 51, 51, 51}); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(err).Eq(nil); err != nil {
+	if err := gotest.Expect(err).Nil(); err != nil {
 		t.Error(err)
 	}
 }
@@ -1020,7 +1019,7 @@ func TestValue_WriteBoolTrue(t *testing.T) {
 	if err := gotest.Expect(b).Eq([]byte{1}); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(err).Eq(nil); err != nil {
+	if err := gotest.Expect(err).Nil(); err != nil {
 		t.Error(err)
 	}
 }
@@ -1031,7 +1030,7 @@ func TestValue_WriteBoolFalse(t *testing.T) {
 	if err := gotest.Expect(b).Eq([]byte{0}); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(err).Eq(nil); err != nil {
+	if err := gotest.Expect(err).Nil(); err != nil {
 		t.Error(err)
 	}
 }
@@ -1042,7 +1041,7 @@ func TestValue_WriteString(t *testing.T) {
 	if err := gotest.Expect(b).Eq([]byte{116, 101, 115, 116}); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(err).Eq(nil); err != nil {
+	if err := gotest.Expect(err).Nil(); err != nil {
 		t.Error(err)
 	}
 }
@@ -1053,7 +1052,7 @@ func TestValue_WriteByte(t *testing.T) {
 	if err := gotest.Expect(b).Eq([]byte{1, 0, 1, 0, 0, 2}); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(err).Eq(nil); err != nil {
+	if err := gotest.Expect(err).Nil(); err != nil {
 		t.Error(err)
 	}
 }

@@ -12,7 +12,7 @@ func Test_parseStringByte(t *testing.T) {
 	if err := gotest.Expect(b).Eq([]byte{1, 0, 1, 0, 0, 2}); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(err).Eq(nil); err != nil {
+	if err := gotest.Expect(err).Nil(); err != nil {
 		t.Error(err)
 	}
 }
@@ -41,7 +41,7 @@ func Test_countBit(t *testing.T) {
 	if err := gotest.Expect(count).Eq(uint16(64)); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(err).Eq(nil); err != nil {
+	if err := gotest.Expect(err).Nil(); err != nil {
 		t.Error(err)
 	}
 
@@ -49,7 +49,7 @@ func Test_countBit(t *testing.T) {
 	if err := gotest.Expect(count).Eq(uint16(4)); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(err).Eq(nil); err != nil {
+	if err := gotest.Expect(err).Nil(); err != nil {
 		t.Error(err)
 	}
 
@@ -72,7 +72,7 @@ func Test_valueToByte(t *testing.T) {
 	if err := gotest.Expect(data).Eq([]byte{1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1}); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(err).Eq(nil); err != nil {
+	if err := gotest.Expect(err).Nil(); err != nil {
 		t.Error(err)
 	}
 
