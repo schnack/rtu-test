@@ -119,19 +119,19 @@ type Value struct {
 
 	Byte *string `yaml:"byte"`
 
-	GotInt8    int8    `yaml:"-"`
-	GotInt16   int16   `yaml:"-"`
-	GotInt32   int32   `yaml:"-"`
-	GotInt64   int64   `yaml:"-"`
-	GotUint8   uint8   `yaml:"-"`
-	GotUint16  uint16  `yaml:"-"`
-	GotUint32  uint32  `yaml:"-"`
-	GotUint64  uint64  `yaml:"-"`
-	GotFloat32 float32 `yaml:"-"`
-	GotFloat64 float64 `yaml:"-"`
-	GotBool    bool    `yaml:"-"`
-	GotString  string  `yaml:"-"`
-	GotByte    []byte  `yaml:"-"`
+	GotInt8    *int8    `yaml:"-"`
+	GotInt16   *int16   `yaml:"-"`
+	GotInt32   *int32   `yaml:"-"`
+	GotInt64   *int64   `yaml:"-"`
+	GotUint8   *uint8   `yaml:"-"`
+	GotUint16  *uint16  `yaml:"-"`
+	GotUint32  *uint32  `yaml:"-"`
+	GotUint64  *uint64  `yaml:"-"`
+	GotFloat32 *float32 `yaml:"-"`
+	GotFloat64 *float64 `yaml:"-"`
+	GotBool    *bool    `yaml:"-"`
+	GotString  *string  `yaml:"-"`
+	GotByte    []byte   `yaml:"-"`
 
 	Pass bool `yaml:"-"`
 }
@@ -143,37 +143,77 @@ const FormatFloatRange = "(%[1]s) %[2]f..%[3]f"
 const FormatString = "(%[1]s) %[2]s"
 const FormatByte = "(%[1]s) {0x%02[2]x} [b%08[2]b]"
 const FormatBool = "(%[1]s) %[2]t"
+const FormatNil = "(nil)"
 
 func (v *Value) StringGot() string {
 	switch v.Type() {
 	case Int8:
-		return fmt.Sprintf(FormatDecimal, Int8, v.GotInt8)
+		if v.GotInt8 == nil {
+			return FormatNil
+		}
+		return fmt.Sprintf(FormatDecimal, Int8, *v.GotInt8)
 	case Int16:
-		return fmt.Sprintf(fmt.Sprintf(FormatDecimal, Int16, v.GotInt16))
+		if v.GotInt16 == nil {
+			return FormatNil
+		}
+		return fmt.Sprintf(fmt.Sprintf(FormatDecimal, Int16, *v.GotInt16))
 	case Int32:
-		return fmt.Sprintf(FormatDecimal, Int32, v.GotInt32)
+		if v.GotInt32 == nil {
+			return FormatNil
+		}
+		return fmt.Sprintf(FormatDecimal, Int32, *v.GotInt32)
 	case Int64:
-		return fmt.Sprintf(FormatDecimal, Int64, v.GotInt64)
+		if v.GotInt64 == nil {
+			return FormatNil
+		}
+		return fmt.Sprintf(FormatDecimal, Int64, *v.GotInt64)
 	case Uint8:
-		return fmt.Sprintf(FormatDecimal, Uint8, v.GotUint8)
+		if v.GotUint8 == nil {
+			return FormatNil
+		}
+		return fmt.Sprintf(FormatDecimal, Uint8, *v.GotUint8)
 	case Uint16:
-		return fmt.Sprintf(FormatDecimal, Uint16, v.GotUint16)
+		if v.GotUint16 == nil {
+			return FormatNil
+		}
+		return fmt.Sprintf(FormatDecimal, Uint16, *v.GotUint16)
 	case Uint32:
-		return fmt.Sprintf(FormatDecimal, Uint32, v.GotUint32)
+		if v.GotUint32 == nil {
+			return FormatNil
+		}
+		return fmt.Sprintf(FormatDecimal, Uint32, *v.GotUint32)
 	case Uint64:
-		return fmt.Sprintf(FormatDecimal, Uint64, v.GotUint64)
+		if v.GotUint64 == nil {
+			return FormatNil
+		}
+		return fmt.Sprintf(FormatDecimal, Uint64, *v.GotUint64)
 	case Float32:
-		return fmt.Sprintf(FormatFloat, Float32, v.GotFloat32)
+		if v.GotFloat32 == nil {
+			return FormatNil
+		}
+		return fmt.Sprintf(FormatFloat, Float32, *v.GotFloat32)
 	case Float64:
-		return fmt.Sprintf(FormatFloat, Float64, v.GotFloat64)
+		if v.GotFloat64 == nil {
+			return FormatNil
+		}
+		return fmt.Sprintf(FormatFloat, Float64, *v.GotFloat64)
 	case Bool:
-		return fmt.Sprintf(FormatBool, Bool, v.GotBool)
+		if v.GotBool == nil {
+			return FormatNil
+		}
+		return fmt.Sprintf(FormatBool, Bool, *v.GotBool)
 	case String:
-		return fmt.Sprintf(FormatString, String, v.GotString)
+		if v.GotString == nil {
+			return FormatNil
+		}
+		return fmt.Sprintf(FormatString, String, *v.GotString)
 	case Byte:
+		if v.GotByte == nil {
+			return FormatNil
+		}
 		return fmt.Sprintf(FormatByte, Byte, v.GotByte)
 	default:
-		return ""
+		return FormatNil
 	}
 }
 
@@ -247,9 +287,10 @@ func (v *Value) Check(raw []byte, currentBit int) (offsetBit int) {
 			return
 		}
 
-		v.GotInt8 = int8(raw[currentBit/8 : offsetBit/8][0])
+		got := int8(raw[currentBit/8 : offsetBit/8][0])
+		v.GotInt8 = &got
 
-		if v.GotInt8 != *v.Int8 {
+		if *v.GotInt8 != *v.Int8 {
 			v.Pass = false
 		}
 	case Int8Range:
@@ -260,13 +301,14 @@ func (v *Value) Check(raw []byte, currentBit int) (offsetBit int) {
 			return
 		}
 
-		v.GotInt8 = int8(raw[currentBit/8 : offsetBit/8][0])
+		got := int8(raw[currentBit/8 : offsetBit/8][0])
+		v.GotInt8 = &got
 
-		if v.MinInt8 != nil && *v.MinInt8 > v.GotInt8 {
+		if v.MinInt8 != nil && *v.MinInt8 > *v.GotInt8 {
 			v.Pass = false
 		}
 
-		if v.MaxInt8 != nil && v.GotInt8 > *v.MaxInt8 {
+		if v.MaxInt8 != nil && *v.GotInt8 > *v.MaxInt8 {
 			v.Pass = false
 		}
 
@@ -278,9 +320,10 @@ func (v *Value) Check(raw []byte, currentBit int) (offsetBit int) {
 			return
 		}
 
-		v.GotInt16 = int16(binary.BigEndian.Uint16(raw[currentBit/8 : offsetBit/8]))
+		got := int16(binary.BigEndian.Uint16(raw[currentBit/8 : offsetBit/8]))
+		v.GotInt16 = &got
 
-		if v.GotInt16 != *v.Int16 {
+		if *v.GotInt16 != *v.Int16 {
 			v.Pass = false
 		}
 	case Int16Range:
@@ -291,13 +334,14 @@ func (v *Value) Check(raw []byte, currentBit int) (offsetBit int) {
 			return
 		}
 
-		v.GotInt16 = int16(binary.BigEndian.Uint16(raw[currentBit/8 : offsetBit/8]))
+		got := int16(binary.BigEndian.Uint16(raw[currentBit/8 : offsetBit/8]))
+		v.GotInt16 = &got
 
-		if v.MinInt16 != nil && *v.MinInt16 > v.GotInt16 {
+		if v.MinInt16 != nil && *v.MinInt16 > *v.GotInt16 {
 			v.Pass = false
 		}
 
-		if v.MaxInt16 != nil && v.GotInt16 > *v.MaxInt16 {
+		if v.MaxInt16 != nil && *v.GotInt16 > *v.MaxInt16 {
 			v.Pass = false
 		}
 	case Int32:
@@ -308,9 +352,10 @@ func (v *Value) Check(raw []byte, currentBit int) (offsetBit int) {
 			return
 		}
 
-		v.GotInt32 = int32(binary.BigEndian.Uint32(raw[currentBit/8 : offsetBit/8]))
+		got := int32(binary.BigEndian.Uint32(raw[currentBit/8 : offsetBit/8]))
+		v.GotInt32 = &got
 
-		if v.GotInt32 != *v.Int32 {
+		if *v.GotInt32 != *v.Int32 {
 			v.Pass = false
 		}
 	case Int32Range:
@@ -321,13 +366,14 @@ func (v *Value) Check(raw []byte, currentBit int) (offsetBit int) {
 			return
 		}
 
-		v.GotInt32 = int32(binary.BigEndian.Uint32(raw[currentBit/8 : offsetBit/8]))
+		got := int32(binary.BigEndian.Uint32(raw[currentBit/8 : offsetBit/8]))
+		v.GotInt32 = &got
 
-		if v.MinInt32 != nil && *v.MinInt32 > v.GotInt32 {
+		if v.MinInt32 != nil && *v.MinInt32 > *v.GotInt32 {
 			v.Pass = false
 		}
 
-		if v.MaxInt32 != nil && v.GotInt32 > *v.MaxInt32 {
+		if v.MaxInt32 != nil && *v.GotInt32 > *v.MaxInt32 {
 			v.Pass = false
 		}
 	case Int64:
@@ -338,9 +384,10 @@ func (v *Value) Check(raw []byte, currentBit int) (offsetBit int) {
 			return
 		}
 
-		v.GotInt64 = int64(binary.BigEndian.Uint64(raw[currentBit/8 : offsetBit/8]))
+		got := int64(binary.BigEndian.Uint64(raw[currentBit/8 : offsetBit/8]))
+		v.GotInt64 = &got
 
-		if v.GotInt64 != *v.Int64 {
+		if *v.GotInt64 != *v.Int64 {
 			v.Pass = false
 		}
 	case Int64Range:
@@ -351,13 +398,14 @@ func (v *Value) Check(raw []byte, currentBit int) (offsetBit int) {
 			return
 		}
 
-		v.GotInt64 = int64(binary.BigEndian.Uint64(raw[currentBit/8 : offsetBit/8]))
+		got := int64(binary.BigEndian.Uint64(raw[currentBit/8 : offsetBit/8]))
+		v.GotInt64 = &got
 
-		if v.MinInt64 != nil && *v.MinInt64 > v.GotInt64 {
+		if v.MinInt64 != nil && *v.MinInt64 > *v.GotInt64 {
 			v.Pass = false
 		}
 
-		if v.MaxInt64 != nil && v.GotInt64 > *v.MaxInt64 {
+		if v.MaxInt64 != nil && *v.GotInt64 > *v.MaxInt64 {
 			v.Pass = false
 		}
 	case Uint8:
@@ -368,9 +416,10 @@ func (v *Value) Check(raw []byte, currentBit int) (offsetBit int) {
 			return
 		}
 
-		v.GotUint8 = raw[currentBit/8 : offsetBit/8][0]
+		got := raw[currentBit/8 : offsetBit/8][0]
+		v.GotUint8 = &got
 
-		if v.GotUint8 != *v.Uint8 {
+		if *v.GotUint8 != *v.Uint8 {
 			v.Pass = false
 		}
 	case Uint8Range:
@@ -381,13 +430,14 @@ func (v *Value) Check(raw []byte, currentBit int) (offsetBit int) {
 			return
 		}
 
-		v.GotUint8 = raw[currentBit/8 : offsetBit/8][0]
+		got := raw[currentBit/8 : offsetBit/8][0]
+		v.GotUint8 = &got
 
-		if v.MinUint8 != nil && *v.MinUint8 > v.GotUint8 {
+		if v.MinUint8 != nil && *v.MinUint8 > *v.GotUint8 {
 			v.Pass = false
 		}
 
-		if v.MaxUint8 != nil && v.GotUint8 > *v.MaxUint8 {
+		if v.MaxUint8 != nil && *v.GotUint8 > *v.MaxUint8 {
 			v.Pass = false
 		}
 	case Uint16:
@@ -398,9 +448,10 @@ func (v *Value) Check(raw []byte, currentBit int) (offsetBit int) {
 			return
 		}
 
-		v.GotUint16 = binary.BigEndian.Uint16(raw[currentBit/8 : offsetBit/8])
+		got := binary.BigEndian.Uint16(raw[currentBit/8 : offsetBit/8])
+		v.GotUint16 = &got
 
-		if v.GotUint16 != *v.Uint16 {
+		if *v.GotUint16 != *v.Uint16 {
 			v.Pass = false
 		}
 	case Uint16Range:
@@ -411,13 +462,14 @@ func (v *Value) Check(raw []byte, currentBit int) (offsetBit int) {
 			return
 		}
 
-		v.GotUint16 = binary.BigEndian.Uint16(raw[currentBit/8 : offsetBit/8])
+		got := binary.BigEndian.Uint16(raw[currentBit/8 : offsetBit/8])
+		v.GotUint16 = &got
 
-		if v.MinUint16 != nil && *v.MinUint16 > v.GotUint16 {
+		if v.MinUint16 != nil && *v.MinUint16 > *v.GotUint16 {
 			v.Pass = false
 		}
 
-		if v.MaxUint16 != nil && v.GotUint16 > *v.MaxUint16 {
+		if v.MaxUint16 != nil && *v.GotUint16 > *v.MaxUint16 {
 			v.Pass = false
 		}
 	case Uint32:
@@ -428,9 +480,10 @@ func (v *Value) Check(raw []byte, currentBit int) (offsetBit int) {
 			return
 		}
 
-		v.GotUint32 = binary.BigEndian.Uint32(raw[currentBit/8 : offsetBit/8])
+		got := binary.BigEndian.Uint32(raw[currentBit/8 : offsetBit/8])
+		v.GotUint32 = &got
 
-		if v.GotUint32 != *v.Uint32 {
+		if *v.GotUint32 != *v.Uint32 {
 			v.Pass = false
 		}
 	case Uint32Range:
@@ -441,13 +494,14 @@ func (v *Value) Check(raw []byte, currentBit int) (offsetBit int) {
 			return
 		}
 
-		v.GotUint32 = binary.BigEndian.Uint32(raw[currentBit/8 : offsetBit/8])
+		got := binary.BigEndian.Uint32(raw[currentBit/8 : offsetBit/8])
+		v.GotUint32 = &got
 
-		if v.MinUint32 != nil && *v.MinUint32 > v.GotUint32 {
+		if v.MinUint32 != nil && *v.MinUint32 > *v.GotUint32 {
 			v.Pass = false
 		}
 
-		if v.MaxUint32 != nil && v.GotUint32 > *v.MaxUint32 {
+		if v.MaxUint32 != nil && *v.GotUint32 > *v.MaxUint32 {
 			v.Pass = false
 		}
 	case Uint64:
@@ -458,9 +512,10 @@ func (v *Value) Check(raw []byte, currentBit int) (offsetBit int) {
 			return
 		}
 
-		v.GotUint64 = binary.BigEndian.Uint64(raw[currentBit/8 : offsetBit/8])
+		got := binary.BigEndian.Uint64(raw[currentBit/8 : offsetBit/8])
+		v.GotUint64 = &got
 
-		if v.GotUint64 != *v.Uint64 {
+		if *v.GotUint64 != *v.Uint64 {
 			v.Pass = false
 		}
 	case Uint64Range:
@@ -471,13 +526,14 @@ func (v *Value) Check(raw []byte, currentBit int) (offsetBit int) {
 			return
 		}
 
-		v.GotUint64 = binary.BigEndian.Uint64(raw[currentBit/8 : offsetBit/8])
+		got := binary.BigEndian.Uint64(raw[currentBit/8 : offsetBit/8])
+		v.GotUint64 = &got
 
-		if v.MinUint64 != nil && *v.MinUint64 > v.GotUint64 {
+		if v.MinUint64 != nil && *v.MinUint64 > *v.GotUint64 {
 			v.Pass = false
 		}
 
-		if v.MaxUint64 != nil && v.GotUint64 > *v.MaxUint64 {
+		if v.MaxUint64 != nil && *v.GotUint64 > *v.MaxUint64 {
 			v.Pass = false
 		}
 	case Float32:
@@ -488,9 +544,10 @@ func (v *Value) Check(raw []byte, currentBit int) (offsetBit int) {
 			return
 		}
 
-		v.GotFloat32 = math.Float32frombits(binary.BigEndian.Uint32(raw[currentBit/8 : offsetBit/8]))
+		got := math.Float32frombits(binary.BigEndian.Uint32(raw[currentBit/8 : offsetBit/8]))
+		v.GotFloat32 = &got
 
-		if v.GotFloat32 != *v.Float32 {
+		if *v.GotFloat32 != *v.Float32 {
 			v.Pass = false
 		}
 	case Float32Range:
@@ -501,13 +558,14 @@ func (v *Value) Check(raw []byte, currentBit int) (offsetBit int) {
 			return
 		}
 
-		v.GotFloat32 = math.Float32frombits(binary.BigEndian.Uint32(raw[currentBit/8 : offsetBit/8]))
+		got := math.Float32frombits(binary.BigEndian.Uint32(raw[currentBit/8 : offsetBit/8]))
+		v.GotFloat32 = &got
 
-		if v.MinFloat32 != nil && *v.MinFloat32 > v.GotFloat32 {
+		if v.MinFloat32 != nil && *v.MinFloat32 > *v.GotFloat32 {
 			v.Pass = false
 		}
 
-		if v.MaxFloat32 != nil && v.GotFloat32 > *v.MaxFloat32 {
+		if v.MaxFloat32 != nil && *v.GotFloat32 > *v.MaxFloat32 {
 			v.Pass = false
 		}
 
@@ -519,9 +577,10 @@ func (v *Value) Check(raw []byte, currentBit int) (offsetBit int) {
 			return
 		}
 
-		v.GotFloat64 = math.Float64frombits(binary.BigEndian.Uint64(raw[currentBit/8 : offsetBit/8]))
+		got := math.Float64frombits(binary.BigEndian.Uint64(raw[currentBit/8 : offsetBit/8]))
+		v.GotFloat64 = &got
 
-		if v.GotFloat64 != *v.Float64 {
+		if *v.GotFloat64 != *v.Float64 {
 			v.Pass = false
 		}
 	case Float64Range:
@@ -532,22 +591,28 @@ func (v *Value) Check(raw []byte, currentBit int) (offsetBit int) {
 			return
 		}
 
-		v.GotFloat64 = math.Float64frombits(binary.BigEndian.Uint64(raw[currentBit/8 : offsetBit/8]))
+		got := math.Float64frombits(binary.BigEndian.Uint64(raw[currentBit/8 : offsetBit/8]))
+		v.GotFloat64 = &got
 
-		if v.MinFloat64 != nil && *v.MinFloat64 > v.GotFloat64 {
+		if v.MinFloat64 != nil && *v.MinFloat64 > *v.GotFloat64 {
 			v.Pass = false
 		}
 
-		if v.MaxFloat64 != nil && v.GotFloat64 > *v.MaxFloat64 {
+		if v.MaxFloat64 != nil && *v.GotFloat64 > *v.MaxFloat64 {
 			v.Pass = false
 		}
 	case Bool:
 
-		v.GotBool = raw[currentBit/8]&(1<<(currentBit%8)) != 0
-
 		offsetBit = currentBit + 1
+		if len(raw)*8 < offsetBit {
+			v.Pass = false
+			return
+		}
 
-		if v.GotBool != *v.Bool {
+		got := raw[currentBit/8]&(1<<(currentBit%8)) != 0
+		v.GotBool = &got
+
+		if *v.GotBool != *v.Bool {
 			v.Pass = false
 		}
 	case String:
@@ -558,9 +623,10 @@ func (v *Value) Check(raw []byte, currentBit int) (offsetBit int) {
 			return
 		}
 
-		v.GotString = string(raw[currentBit/8 : offsetBit/8])
+		got := string(raw[currentBit/8 : offsetBit/8])
+		v.GotString = &got
 
-		if v.GotString != *v.String {
+		if *v.GotString != *v.String {
 			v.Pass = false
 		}
 	case Byte:

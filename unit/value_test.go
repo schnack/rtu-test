@@ -125,7 +125,7 @@ func TestValue_StringExpectedByte(t *testing.T) {
 
 func TestValue_StringGotInt8(t *testing.T) {
 	var param int8 = 2
-	v := Value{Name: "Test", Int8: &param, GotInt8: param}
+	v := Value{Name: "Test", Int8: &param, GotInt8: &param}
 
 	if err := gotest.Expect(v.StringGot()).Eq(fmt.Sprintf(FormatDecimal, Int8, param)); err != nil {
 		t.Error(err)
@@ -134,7 +134,7 @@ func TestValue_StringGotInt8(t *testing.T) {
 
 func TestValue_StringGotInt16(t *testing.T) {
 	var param int16 = 2
-	v := Value{Name: "Test", Int16: &param, GotInt16: param}
+	v := Value{Name: "Test", Int16: &param, GotInt16: &param}
 
 	if err := gotest.Expect(v.StringGot()).Eq(fmt.Sprintf(FormatDecimal, Int16, param)); err != nil {
 		t.Error(err)
@@ -143,7 +143,7 @@ func TestValue_StringGotInt16(t *testing.T) {
 
 func TestValue_StringGotInt32(t *testing.T) {
 	var param int32 = 2
-	v := Value{Name: "Test", Int32: &param, GotInt32: param}
+	v := Value{Name: "Test", Int32: &param, GotInt32: &param}
 
 	if err := gotest.Expect(v.StringGot()).Eq(fmt.Sprintf(FormatDecimal, Int32, param)); err != nil {
 		t.Error(err)
@@ -152,7 +152,7 @@ func TestValue_StringGotInt32(t *testing.T) {
 
 func TestValue_StringGotInt64(t *testing.T) {
 	var param int64 = 2
-	v := Value{Name: "Test", Int64: &param, GotInt64: param}
+	v := Value{Name: "Test", Int64: &param, GotInt64: &param}
 
 	if err := gotest.Expect(v.StringGot()).Eq(fmt.Sprintf(FormatDecimal, Int64, param)); err != nil {
 		t.Error(err)
@@ -161,7 +161,7 @@ func TestValue_StringGotInt64(t *testing.T) {
 
 func TestValue_StringGotUint8(t *testing.T) {
 	var param uint8 = 2
-	v := Value{Name: "Test", Uint8: &param, GotUint8: param}
+	v := Value{Name: "Test", Uint8: &param, GotUint8: &param}
 
 	if err := gotest.Expect(v.StringGot()).Eq(fmt.Sprintf(FormatDecimal, Uint8, param)); err != nil {
 		t.Error(err)
@@ -170,7 +170,7 @@ func TestValue_StringGotUint8(t *testing.T) {
 
 func TestValue_StringGotUint16(t *testing.T) {
 	var param uint16 = 2
-	v := Value{Name: "Test", Uint16: &param, GotUint16: param}
+	v := Value{Name: "Test", Uint16: &param, GotUint16: &param}
 
 	if err := gotest.Expect(v.StringGot()).Eq(fmt.Sprintf(FormatDecimal, Uint16, param)); err != nil {
 		t.Error(err)
@@ -179,7 +179,7 @@ func TestValue_StringGotUint16(t *testing.T) {
 
 func TestValue_StringGotUint32(t *testing.T) {
 	var param uint32 = 2
-	v := Value{Name: "Test", Uint32: &param, GotUint32: param}
+	v := Value{Name: "Test", Uint32: &param, GotUint32: &param}
 
 	if err := gotest.Expect(v.StringGot()).Eq(fmt.Sprintf(FormatDecimal, Uint32, param)); err != nil {
 		t.Error(err)
@@ -188,7 +188,7 @@ func TestValue_StringGotUint32(t *testing.T) {
 
 func TestValue_StringGotUint64(t *testing.T) {
 	var param uint64 = 2
-	v := Value{Name: "Test", Uint64: &param, GotUint64: param}
+	v := Value{Name: "Test", Uint64: &param, GotUint64: &param}
 
 	if err := gotest.Expect(v.StringGot()).Eq(fmt.Sprintf(FormatDecimal, Uint64, param)); err != nil {
 		t.Error(err)
@@ -197,7 +197,7 @@ func TestValue_StringGotUint64(t *testing.T) {
 
 func TestValue_StringGotFloat32(t *testing.T) {
 	var param float32 = 2.2
-	v := Value{Name: "Test", Float32: &param, GotFloat32: param}
+	v := Value{Name: "Test", Float32: &param, GotFloat32: &param}
 
 	if err := gotest.Expect(v.StringGot()).Eq(fmt.Sprintf(FormatFloat, Float32, param)); err != nil {
 		t.Error(err)
@@ -206,7 +206,7 @@ func TestValue_StringGotFloat32(t *testing.T) {
 
 func TestValue_StringGotFloat64(t *testing.T) {
 	var param float64 = 2.2
-	v := Value{Name: "Test", Float64: &param, GotFloat64: param}
+	v := Value{Name: "Test", Float64: &param, GotFloat64: &param}
 
 	if err := gotest.Expect(v.StringGot()).Eq(fmt.Sprintf(FormatFloat, Float64, param)); err != nil {
 		t.Error(err)
@@ -215,7 +215,7 @@ func TestValue_StringGotFloat64(t *testing.T) {
 
 func TestValue_StringGotBool(t *testing.T) {
 	var param bool = true
-	v := Value{Name: "Test", Bool: &param, GotBool: param}
+	v := Value{Name: "Test", Bool: &param, GotBool: &param}
 
 	if err := gotest.Expect(v.StringGot()).Eq(fmt.Sprintf(FormatBool, Bool, param)); err != nil {
 		t.Error(err)
@@ -224,7 +224,7 @@ func TestValue_StringGotBool(t *testing.T) {
 
 func TestValue_StringGotString(t *testing.T) {
 	var param string = "hello"
-	v := Value{Name: "Test", String: &param, GotString: param}
+	v := Value{Name: "Test", String: &param, GotString: &param}
 
 	if err := gotest.Expect(v.StringGot()).Eq(fmt.Sprintf(FormatString, String, param)); err != nil {
 		t.Error(err)
@@ -254,7 +254,7 @@ func TestValue_CheckInt8(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotInt8).Eq(int8(1)); err != nil {
+	if err := gotest.Expect(*v.GotInt8).Eq(int8(1)); err != nil {
 		t.Error(err)
 	}
 
@@ -265,7 +265,7 @@ func TestValue_CheckInt8(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotInt8).Eq(int8(2)); err != nil {
+	if err := gotest.Expect(*v.GotInt8).Eq(int8(2)); err != nil {
 		t.Error(err)
 	}
 }
@@ -283,7 +283,7 @@ func TestValue_CheckInt8Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotInt8).Eq(int8(1)); err != nil {
+	if err := gotest.Expect(*v.GotInt8).Eq(int8(1)); err != nil {
 		t.Error(err)
 	}
 
@@ -294,7 +294,7 @@ func TestValue_CheckInt8Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotInt8).Eq(int8(2)); err != nil {
+	if err := gotest.Expect(*v.GotInt8).Eq(int8(2)); err != nil {
 		t.Error(err)
 	}
 
@@ -305,7 +305,7 @@ func TestValue_CheckInt8Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotInt8).Eq(int8(3)); err != nil {
+	if err := gotest.Expect(*v.GotInt8).Eq(int8(3)); err != nil {
 		t.Error(err)
 	}
 
@@ -316,7 +316,7 @@ func TestValue_CheckInt8Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotInt8).Eq(int8(4)); err != nil {
+	if err := gotest.Expect(*v.GotInt8).Eq(int8(4)); err != nil {
 		t.Error(err)
 	}
 
@@ -327,7 +327,7 @@ func TestValue_CheckInt8Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotInt8).Eq(int8(5)); err != nil {
+	if err := gotest.Expect(*v.GotInt8).Eq(int8(5)); err != nil {
 		t.Error(err)
 	}
 
@@ -346,7 +346,7 @@ func TestValue_CheckInt16(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotInt16).Eq(int16(1)); err != nil {
+	if err := gotest.Expect(*v.GotInt16).Eq(int16(1)); err != nil {
 		t.Error(err)
 	}
 
@@ -357,7 +357,7 @@ func TestValue_CheckInt16(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotInt16).Eq(int16(2)); err != nil {
+	if err := gotest.Expect(*v.GotInt16).Eq(int16(2)); err != nil {
 		t.Error(err)
 	}
 
@@ -382,7 +382,7 @@ func TestValue_CheckInt16Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotInt16).Eq(int16(1)); err != nil {
+	if err := gotest.Expect(*v.GotInt16).Eq(int16(1)); err != nil {
 		t.Error(err)
 	}
 
@@ -393,7 +393,7 @@ func TestValue_CheckInt16Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotInt16).Eq(int16(2)); err != nil {
+	if err := gotest.Expect(*v.GotInt16).Eq(int16(2)); err != nil {
 		t.Error(err)
 	}
 
@@ -404,7 +404,7 @@ func TestValue_CheckInt16Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotInt16).Eq(int16(3)); err != nil {
+	if err := gotest.Expect(*v.GotInt16).Eq(int16(3)); err != nil {
 		t.Error(err)
 	}
 
@@ -415,7 +415,7 @@ func TestValue_CheckInt16Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotInt16).Eq(int16(4)); err != nil {
+	if err := gotest.Expect(*v.GotInt16).Eq(int16(4)); err != nil {
 		t.Error(err)
 	}
 
@@ -426,7 +426,7 @@ func TestValue_CheckInt16Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotInt16).Eq(int16(5)); err != nil {
+	if err := gotest.Expect(*v.GotInt16).Eq(int16(5)); err != nil {
 		t.Error(err)
 	}
 
@@ -445,7 +445,7 @@ func TestValue_CheckInt32(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotInt32).Eq(int32(1)); err != nil {
+	if err := gotest.Expect(*v.GotInt32).Eq(int32(1)); err != nil {
 		t.Error(err)
 	}
 
@@ -457,7 +457,7 @@ func TestValue_CheckInt32(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotInt32).Eq(int32(2)); err != nil {
+	if err := gotest.Expect(*v.GotInt32).Eq(int32(2)); err != nil {
 		t.Error(err)
 	}
 }
@@ -481,7 +481,7 @@ func TestValue_CheckInt32Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotInt32).Eq(int32(1)); err != nil {
+	if err := gotest.Expect(*v.GotInt32).Eq(int32(1)); err != nil {
 		t.Error(err)
 	}
 
@@ -492,7 +492,7 @@ func TestValue_CheckInt32Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotInt32).Eq(int32(2)); err != nil {
+	if err := gotest.Expect(*v.GotInt32).Eq(int32(2)); err != nil {
 		t.Error(err)
 	}
 
@@ -503,7 +503,7 @@ func TestValue_CheckInt32Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotInt32).Eq(int32(3)); err != nil {
+	if err := gotest.Expect(*v.GotInt32).Eq(int32(3)); err != nil {
 		t.Error(err)
 	}
 
@@ -514,7 +514,7 @@ func TestValue_CheckInt32Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotInt32).Eq(int32(4)); err != nil {
+	if err := gotest.Expect(*v.GotInt32).Eq(int32(4)); err != nil {
 		t.Error(err)
 	}
 
@@ -525,7 +525,7 @@ func TestValue_CheckInt32Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotInt32).Eq(int32(5)); err != nil {
+	if err := gotest.Expect(*v.GotInt32).Eq(int32(5)); err != nil {
 		t.Error(err)
 	}
 
@@ -547,7 +547,7 @@ func TestValue_CheckInt64(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotInt64).Eq(int64(1)); err != nil {
+	if err := gotest.Expect(*v.GotInt64).Eq(int64(1)); err != nil {
 		t.Error(err)
 	}
 
@@ -558,7 +558,7 @@ func TestValue_CheckInt64(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotInt64).Eq(int64(2)); err != nil {
+	if err := gotest.Expect(*v.GotInt64).Eq(int64(2)); err != nil {
 		t.Error(err)
 	}
 }
@@ -582,7 +582,7 @@ func TestValue_CheckInt64Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotInt64).Eq(int64(1)); err != nil {
+	if err := gotest.Expect(*v.GotInt64).Eq(int64(1)); err != nil {
 		t.Error(err)
 	}
 
@@ -593,7 +593,7 @@ func TestValue_CheckInt64Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotInt64).Eq(int64(2)); err != nil {
+	if err := gotest.Expect(*v.GotInt64).Eq(int64(2)); err != nil {
 		t.Error(err)
 	}
 
@@ -604,7 +604,7 @@ func TestValue_CheckInt64Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotInt64).Eq(int64(3)); err != nil {
+	if err := gotest.Expect(*v.GotInt64).Eq(int64(3)); err != nil {
 		t.Error(err)
 	}
 
@@ -615,7 +615,7 @@ func TestValue_CheckInt64Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotInt64).Eq(int64(4)); err != nil {
+	if err := gotest.Expect(*v.GotInt64).Eq(int64(4)); err != nil {
 		t.Error(err)
 	}
 
@@ -626,7 +626,7 @@ func TestValue_CheckInt64Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotInt64).Eq(int64(5)); err != nil {
+	if err := gotest.Expect(*v.GotInt64).Eq(int64(5)); err != nil {
 		t.Error(err)
 	}
 
@@ -645,7 +645,7 @@ func TestValue_CheckUint8(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotUint8).Eq(uint8(1)); err != nil {
+	if err := gotest.Expect(*v.GotUint8).Eq(uint8(1)); err != nil {
 		t.Error(err)
 	}
 
@@ -656,7 +656,7 @@ func TestValue_CheckUint8(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotUint8).Eq(uint8(2)); err != nil {
+	if err := gotest.Expect(*v.GotUint8).Eq(uint8(2)); err != nil {
 		t.Error(err)
 	}
 }
@@ -674,7 +674,7 @@ func TestValue_CheckUint8Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotUint8).Eq(uint8(1)); err != nil {
+	if err := gotest.Expect(*v.GotUint8).Eq(uint8(1)); err != nil {
 		t.Error(err)
 	}
 
@@ -685,7 +685,7 @@ func TestValue_CheckUint8Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotUint8).Eq(uint8(2)); err != nil {
+	if err := gotest.Expect(*v.GotUint8).Eq(uint8(2)); err != nil {
 		t.Error(err)
 	}
 
@@ -696,7 +696,7 @@ func TestValue_CheckUint8Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotUint8).Eq(uint8(3)); err != nil {
+	if err := gotest.Expect(*v.GotUint8).Eq(uint8(3)); err != nil {
 		t.Error(err)
 	}
 
@@ -707,7 +707,7 @@ func TestValue_CheckUint8Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotUint8).Eq(uint8(4)); err != nil {
+	if err := gotest.Expect(*v.GotUint8).Eq(uint8(4)); err != nil {
 		t.Error(err)
 	}
 
@@ -718,7 +718,7 @@ func TestValue_CheckUint8Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotUint8).Eq(uint8(5)); err != nil {
+	if err := gotest.Expect(*v.GotUint8).Eq(uint8(5)); err != nil {
 		t.Error(err)
 	}
 
@@ -737,7 +737,7 @@ func TestValue_CheckUint16(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotUint16).Eq(uint16(1)); err != nil {
+	if err := gotest.Expect(*v.GotUint16).Eq(uint16(1)); err != nil {
 		t.Error(err)
 	}
 
@@ -748,7 +748,7 @@ func TestValue_CheckUint16(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotUint16).Eq(uint16(2)); err != nil {
+	if err := gotest.Expect(*v.GotUint16).Eq(uint16(2)); err != nil {
 		t.Error(err)
 	}
 }
@@ -772,7 +772,7 @@ func TestValue_CheckUint16Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotUint16).Eq(uint16(1)); err != nil {
+	if err := gotest.Expect(*v.GotUint16).Eq(uint16(1)); err != nil {
 		t.Error(err)
 	}
 
@@ -783,7 +783,7 @@ func TestValue_CheckUint16Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotUint16).Eq(uint16(2)); err != nil {
+	if err := gotest.Expect(*v.GotUint16).Eq(uint16(2)); err != nil {
 		t.Error(err)
 	}
 
@@ -794,7 +794,7 @@ func TestValue_CheckUint16Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotUint16).Eq(uint16(3)); err != nil {
+	if err := gotest.Expect(*v.GotUint16).Eq(uint16(3)); err != nil {
 		t.Error(err)
 	}
 
@@ -805,7 +805,7 @@ func TestValue_CheckUint16Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotUint16).Eq(uint16(4)); err != nil {
+	if err := gotest.Expect(*v.GotUint16).Eq(uint16(4)); err != nil {
 		t.Error(err)
 	}
 
@@ -816,7 +816,7 @@ func TestValue_CheckUint16Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotUint16).Eq(uint16(5)); err != nil {
+	if err := gotest.Expect(*v.GotUint16).Eq(uint16(5)); err != nil {
 		t.Error(err)
 	}
 
@@ -835,7 +835,7 @@ func TestValue_CheckUint32(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotUint32).Eq(uint32(1)); err != nil {
+	if err := gotest.Expect(*v.GotUint32).Eq(uint32(1)); err != nil {
 		t.Error(err)
 	}
 
@@ -847,7 +847,7 @@ func TestValue_CheckUint32(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotUint32).Eq(uint32(2)); err != nil {
+	if err := gotest.Expect(*v.GotUint32).Eq(uint32(2)); err != nil {
 		t.Error(err)
 	}
 }
@@ -871,7 +871,7 @@ func TestValue_CheckUint32Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotUint32).Eq(uint32(1)); err != nil {
+	if err := gotest.Expect(*v.GotUint32).Eq(uint32(1)); err != nil {
 		t.Error(err)
 	}
 
@@ -882,7 +882,7 @@ func TestValue_CheckUint32Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotUint32).Eq(uint32(2)); err != nil {
+	if err := gotest.Expect(*v.GotUint32).Eq(uint32(2)); err != nil {
 		t.Error(err)
 	}
 
@@ -893,7 +893,7 @@ func TestValue_CheckUint32Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotUint32).Eq(uint32(3)); err != nil {
+	if err := gotest.Expect(*v.GotUint32).Eq(uint32(3)); err != nil {
 		t.Error(err)
 	}
 
@@ -904,7 +904,7 @@ func TestValue_CheckUint32Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotUint32).Eq(uint32(4)); err != nil {
+	if err := gotest.Expect(*v.GotUint32).Eq(uint32(4)); err != nil {
 		t.Error(err)
 	}
 
@@ -915,7 +915,7 @@ func TestValue_CheckUint32Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotUint32).Eq(uint32(5)); err != nil {
+	if err := gotest.Expect(*v.GotUint32).Eq(uint32(5)); err != nil {
 		t.Error(err)
 	}
 
@@ -937,7 +937,7 @@ func TestValue_CheckUint64(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotUint64).Eq(uint64(1)); err != nil {
+	if err := gotest.Expect(*v.GotUint64).Eq(uint64(1)); err != nil {
 		t.Error(err)
 	}
 
@@ -948,7 +948,7 @@ func TestValue_CheckUint64(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotUint64).Eq(uint64(2)); err != nil {
+	if err := gotest.Expect(*v.GotUint64).Eq(uint64(2)); err != nil {
 		t.Error(err)
 	}
 }
@@ -972,7 +972,7 @@ func TestValue_CheckUint64Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotUint64).Eq(uint64(1)); err != nil {
+	if err := gotest.Expect(*v.GotUint64).Eq(uint64(1)); err != nil {
 		t.Error(err)
 	}
 
@@ -983,7 +983,7 @@ func TestValue_CheckUint64Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotUint64).Eq(uint64(2)); err != nil {
+	if err := gotest.Expect(*v.GotUint64).Eq(uint64(2)); err != nil {
 		t.Error(err)
 	}
 
@@ -994,7 +994,7 @@ func TestValue_CheckUint64Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotUint64).Eq(uint64(3)); err != nil {
+	if err := gotest.Expect(*v.GotUint64).Eq(uint64(3)); err != nil {
 		t.Error(err)
 	}
 
@@ -1005,7 +1005,7 @@ func TestValue_CheckUint64Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotUint64).Eq(uint64(4)); err != nil {
+	if err := gotest.Expect(*v.GotUint64).Eq(uint64(4)); err != nil {
 		t.Error(err)
 	}
 
@@ -1016,7 +1016,7 @@ func TestValue_CheckUint64Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotUint64).Eq(uint64(5)); err != nil {
+	if err := gotest.Expect(*v.GotUint64).Eq(uint64(5)); err != nil {
 		t.Error(err)
 	}
 
@@ -1038,7 +1038,7 @@ func TestValue_CheckFloat32(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotFloat32).Eq(float32(2.3)); err != nil {
+	if err := gotest.Expect(*v.GotFloat32).Eq(float32(2.3)); err != nil {
 		t.Error(err)
 	}
 
@@ -1049,7 +1049,7 @@ func TestValue_CheckFloat32(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotFloat32).Eq(float32(2.4)); err != nil {
+	if err := gotest.Expect(*v.GotFloat32).Eq(float32(2.4)); err != nil {
 		t.Error(err)
 	}
 }
@@ -1073,7 +1073,7 @@ func TestValue_CheckFloat32Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotFloat32).Eq(float32(2.1)); err != nil {
+	if err := gotest.Expect(*v.GotFloat32).Eq(float32(2.1)); err != nil {
 		t.Error(err)
 	}
 
@@ -1084,7 +1084,7 @@ func TestValue_CheckFloat32Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotFloat32).Eq(float32(2.2)); err != nil {
+	if err := gotest.Expect(*v.GotFloat32).Eq(float32(2.2)); err != nil {
 		t.Error(err)
 	}
 
@@ -1095,7 +1095,7 @@ func TestValue_CheckFloat32Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotFloat32).Eq(float32(2.3)); err != nil {
+	if err := gotest.Expect(*v.GotFloat32).Eq(float32(2.3)); err != nil {
 		t.Error(err)
 	}
 
@@ -1106,7 +1106,7 @@ func TestValue_CheckFloat32Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotFloat32).Eq(float32(2.4)); err != nil {
+	if err := gotest.Expect(*v.GotFloat32).Eq(float32(2.4)); err != nil {
 		t.Error(err)
 	}
 
@@ -1117,7 +1117,7 @@ func TestValue_CheckFloat32Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotFloat32).Eq(float32(2.5)); err != nil {
+	if err := gotest.Expect(*v.GotFloat32).Eq(float32(2.5)); err != nil {
 		t.Error(err)
 	}
 
@@ -1139,7 +1139,7 @@ func TestValue_CheckFloat64(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotFloat64).Eq(float64(2.3)); err != nil {
+	if err := gotest.Expect(*v.GotFloat64).Eq(float64(2.3)); err != nil {
 		t.Error(err)
 	}
 
@@ -1150,7 +1150,7 @@ func TestValue_CheckFloat64(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotFloat64).Eq(float64(2.4)); err != nil {
+	if err := gotest.Expect(*v.GotFloat64).Eq(float64(2.4)); err != nil {
 		t.Error(err)
 	}
 }
@@ -1174,7 +1174,7 @@ func TestValue_CheckFloat64Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotFloat64).Eq(float64(2.1)); err != nil {
+	if err := gotest.Expect(*v.GotFloat64).Eq(float64(2.1)); err != nil {
 		t.Error(err)
 	}
 
@@ -1185,7 +1185,7 @@ func TestValue_CheckFloat64Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotFloat64).Eq(float64(2.2)); err != nil {
+	if err := gotest.Expect(*v.GotFloat64).Eq(float64(2.2)); err != nil {
 		t.Error(err)
 	}
 
@@ -1196,7 +1196,7 @@ func TestValue_CheckFloat64Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotFloat64).Eq(float64(2.3)); err != nil {
+	if err := gotest.Expect(*v.GotFloat64).Eq(float64(2.3)); err != nil {
 		t.Error(err)
 	}
 
@@ -1207,7 +1207,7 @@ func TestValue_CheckFloat64Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotFloat64).Eq(float64(2.4)); err != nil {
+	if err := gotest.Expect(*v.GotFloat64).Eq(float64(2.4)); err != nil {
 		t.Error(err)
 	}
 
@@ -1218,7 +1218,7 @@ func TestValue_CheckFloat64Range(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotFloat64).Eq(float64(2.5)); err != nil {
+	if err := gotest.Expect(*v.GotFloat64).Eq(float64(2.5)); err != nil {
 		t.Error(err)
 	}
 
@@ -1238,7 +1238,7 @@ func TestValue_CheckBool(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotBool).Eq(true); err != nil {
+	if err := gotest.Expect(*v.GotBool).Eq(true); err != nil {
 		t.Error(err)
 	}
 
@@ -1250,7 +1250,7 @@ func TestValue_CheckBool(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotBool).Eq(false); err != nil {
+	if err := gotest.Expect(*v.GotBool).Eq(false); err != nil {
 		t.Error(err)
 	}
 
@@ -1262,7 +1262,7 @@ func TestValue_CheckBool(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotBool).Eq(true); err != nil {
+	if err := gotest.Expect(*v.GotBool).Eq(true); err != nil {
 		t.Error(err)
 	}
 
@@ -1284,7 +1284,7 @@ func TestValue_CheckString(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotString).Eq("hello"); err != nil {
+	if err := gotest.Expect(*v.GotString).Eq("hello"); err != nil {
 		t.Error(err)
 	}
 
@@ -1295,7 +1295,7 @@ func TestValue_CheckString(t *testing.T) {
 	if err := gotest.Expect(v.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(v.GotString).Eq("helmo"); err != nil {
+	if err := gotest.Expect(*v.GotString).Eq("helmo"); err != nil {
 		t.Error(err)
 	}
 }

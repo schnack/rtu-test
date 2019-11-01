@@ -1,6 +1,7 @@
 package unit
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 	"github.com/goburrow/modbus"
@@ -39,6 +40,60 @@ type ModbusTest struct {
 	ResultByte    []byte        `yaml:"-"`
 	ResultTime    time.Duration `yaml:"-"`
 	ResultError   error         `yaml:"-"`
+}
+
+func (mt *ModbusTest) String() string {
+	buff := bytes.NewBufferString("\n")
+	if !mt.CheckError() {
+		buff.WriteString("Error:\n")
+		buff.WriteString(fmt.Sprintf("\texpected: %s\n", mt.StringErrorExpected()))
+		buff.WriteString(fmt.Sprintf("\t     got: %s\n", mt.StringErrorGot()))
+	}
+
+	if !mt.CheckDuration() {
+		buff.WriteString("Time:\n")
+		buff.WriteString(fmt.Sprintf("\texpected: %s\n", mt.StringTimeExpected()))
+		buff.WriteString(fmt.Sprintf("\t     got: %s\n", mt.StringTimeGot()))
+	}
+
+	if !mt.CheckData() {
+		buff.WriteString("Data\n")
+		switch mt.getFunction() {
+		case ReadDiscreteInputs, ReadCoils, ReadHoldingRegisters, ReadInputRegisters:
+			for _, v := range mt.Expected {
+				if v.Pass {
+					continue
+				}
+				buff.WriteString(fmt.Sprintf("%s:\n", v.Name))
+				buff.WriteString(fmt.Sprintf("\texpected: %s\n", v.StringExpected()))
+				buff.WriteString(fmt.Sprintf("\t     got: %s\n", v.StringGot()))
+			}
+		case WriteSingleCoil:
+			buff.WriteString(fmt.Sprintf("\texpected: 0x%04x\n", dataSingleCoil(mt.getWriteData())))
+			if mt.ResultByte == nil {
+				buff.WriteString("\t     got: \n")
+			} else {
+				buff.WriteString(fmt.Sprintf("\t     got: 0x%04x\n", mt.ResultByte))
+			}
+
+		case WriteSingleRegister:
+			buff.WriteString(fmt.Sprintf("\texpected: 0x%04x\n", mt.getWriteData()[:2]))
+			if mt.ResultByte == nil {
+				buff.WriteString("\t     got: \n")
+			} else {
+				buff.WriteString(fmt.Sprintf("\t     got: 0x%04x\n", mt.ResultByte[:2]))
+			}
+		case WriteMultipleRegisters, WriteMultipleCoils:
+			buff.WriteString(fmt.Sprintf("\texpected: 0x%04x\n", mt.getQuantity()))
+			if mt.ResultByte == nil {
+				buff.WriteString("\t     got: \n")
+			} else {
+				buff.WriteString(fmt.Sprintf("\t     got: 0x%04x\n", binary.BigEndian.Uint16(mt.ResultByte)))
+			}
+
+		}
+	}
+	return buff.String()
 }
 
 const FormatDuration = "%[1]s"
@@ -88,6 +143,9 @@ func (mt *ModbusTest) CheckData() bool {
 			return false
 		}
 	case WriteMultipleCoils, WriteMultipleRegisters:
+		if mt.ResultByte == nil {
+			return false
+		}
 		if mt.getQuantity() != binary.BigEndian.Uint16(mt.ResultByte) {
 			return false
 		}
