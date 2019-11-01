@@ -15,7 +15,7 @@ type Device struct {
 }
 
 func (d *Device) Load() error {
-	file, err := os.Open("example.yml")
+	file, err := os.Open("rue.yml")
 	if err != nil {
 		return fmt.Errorf("device load config: %s", err)
 	}
