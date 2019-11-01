@@ -41,6 +41,25 @@ type ModbusTest struct {
 	ResultError   error         `yaml:"-"`
 }
 
+const FormatDuration = "%[1]s"
+const FormatError = "%[1]s"
+
+func (mt *ModbusTest) StringTimeExpected() string {
+	return fmt.Sprintf(FormatDuration, parseDuration(mt.ExpectedTime).String())
+}
+
+func (mt *ModbusTest) StringTimeGot() string {
+	return fmt.Sprintf(FormatDuration, mt.ResultTime.String())
+}
+
+func (mt *ModbusTest) StringErrorExpected() string {
+	return fmt.Sprintf(FormatError, mt.getError())
+}
+
+func (mt *ModbusTest) StringErrorGot() string {
+	return fmt.Sprintf(FormatError, mt.ResultError.Error())
+}
+
 func (mt *ModbusTest) Check() bool {
 	if mt.CheckError() && mt.CheckData() && mt.CheckDuration() {
 		return true
@@ -88,38 +107,7 @@ func (mt *ModbusTest) CheckError() bool {
 	if mt.ResultError != nil {
 		got = mt.ResultError.Error()
 	}
-
-	expected := mt.ExpectedError
-	if mt.getFunction() != NilFunction {
-		modbusError := strings.ReplaceAll(strings.ToLower(mt.ExpectedError), " ", "")
-		if strings.HasPrefix(modbusError, "0x") {
-			if a, err := strconv.ParseInt(strings.TrimPrefix(modbusError, "0x"), 16, 8); err == nil {
-				modbusError = strconv.Itoa(int(a))
-			}
-		}
-		switch modbusError {
-		case "illegalfunction", "1":
-			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 1}).Error()
-		case "illegaldataaddress", "2":
-			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 2}).Error()
-		case "illegaldatavalue", "3":
-			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 3}).Error()
-		case "serverdevicefailure", "4":
-			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 4}).Error()
-		case "acknowledge", "5":
-			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 5}).Error()
-		case "serverdevicebusy", "6":
-			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 6}).Error()
-		case "memoryparityerror", "8":
-			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 8}).Error()
-		case "gatewaypathunavailable", "10":
-			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 10}).Error()
-		case "gatewaytargetdevicefailedtorespond", "11":
-			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 11}).Error()
-		}
-	}
-
-	return expected == got
+	return mt.getError() == got
 }
 
 func (mt *ModbusTest) Exec(client modbus.Client) {
@@ -229,6 +217,39 @@ func (mt *ModbusTest) getQuantity() uint16 {
 		}
 	}
 	return 0
+}
+
+func (mt *ModbusTest) getError() string {
+	expected := mt.ExpectedError
+	if mt.getFunction() != NilFunction {
+		modbusError := strings.ReplaceAll(strings.ToLower(mt.ExpectedError), " ", "")
+		if strings.HasPrefix(modbusError, "0x") {
+			if a, err := strconv.ParseInt(strings.TrimPrefix(modbusError, "0x"), 16, 8); err == nil {
+				modbusError = strconv.Itoa(int(a))
+			}
+		}
+		switch modbusError {
+		case "illegalfunction", "1":
+			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 1}).Error()
+		case "illegaldataaddress", "2":
+			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 2}).Error()
+		case "illegaldatavalue", "3":
+			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 3}).Error()
+		case "serverdevicefailure", "4":
+			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 4}).Error()
+		case "acknowledge", "5":
+			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 5}).Error()
+		case "serverdevicebusy", "6":
+			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 6}).Error()
+		case "memoryparityerror", "8":
+			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 8}).Error()
+		case "gatewaypathunavailable", "10":
+			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 10}).Error()
+		case "gatewaytargetdevicefailedtorespond", "11":
+			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 11}).Error()
+		}
+	}
+	return expected
 }
 
 func (mt *ModbusTest) getWriteData() []byte {

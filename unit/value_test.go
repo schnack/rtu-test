@@ -107,7 +107,7 @@ func TestValue_StringExpectedBool(t *testing.T) {
 
 func TestValue_StringExpectedString(t *testing.T) {
 	var param string = "hello"
-	v := Value{Name: "Test", Str: &param}
+	v := Value{Name: "Test", String: &param}
 
 	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatString, String, param)); err != nil {
 		t.Error(err)
@@ -224,7 +224,7 @@ func TestValue_StringGotBool(t *testing.T) {
 
 func TestValue_StringGotString(t *testing.T) {
 	var param string = "hello"
-	v := Value{Name: "Test", Str: &param, GotString: param}
+	v := Value{Name: "Test", String: &param, GotString: param}
 
 	if err := gotest.Expect(v.StringGot()).Eq(fmt.Sprintf(FormatString, String, param)); err != nil {
 		t.Error(err)
@@ -1270,7 +1270,7 @@ func TestValue_CheckBool(t *testing.T) {
 
 func TestValue_CheckString(t *testing.T) {
 	var param string = "hello"
-	v := Value{Name: "Test", Str: &param}
+	v := Value{Name: "Test", String: &param}
 	raw := []byte{
 		104, 101, 108, 108, 111,
 		104, 101, 108, 109, 111,
@@ -1476,7 +1476,7 @@ func TestValue_WriteBoolFalse(t *testing.T) {
 
 func TestValue_WriteString(t *testing.T) {
 	var v string = "test"
-	b, err := (&Value{Str: &v}).Write()
+	b, err := (&Value{String: &v}).Write()
 	if err := gotest.Expect(b).Eq([]byte{116, 101, 115, 116}); err != nil {
 		t.Error(err)
 	}
@@ -1581,7 +1581,7 @@ func TestValue_TypeBool(t *testing.T) {
 
 func TestValue_TypeString(t *testing.T) {
 	var v string = "test"
-	if err := gotest.Expect((&Value{Str: &v}).Type()).Eq(String); err != nil {
+	if err := gotest.Expect((&Value{String: &v}).Type()).Eq(String); err != nil {
 		t.Error(err)
 	}
 }

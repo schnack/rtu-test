@@ -115,7 +115,7 @@ type Value struct {
 
 	Bool *bool `yaml:"bool"`
 
-	Str *string `yaml:"string"`
+	String *string `yaml:"string"`
 
 	Byte *string `yaml:"byte"`
 
@@ -222,7 +222,7 @@ func (v *Value) StringExpected() string {
 	case Bool:
 		return fmt.Sprintf(FormatBool, Bool, *v.Bool)
 	case String:
-		return fmt.Sprintf(FormatString, String, *v.Str)
+		return fmt.Sprintf(FormatString, String, *v.String)
 	case Byte:
 		expected, err := parseStringByte(*v.Byte)
 		if err != nil {
@@ -552,7 +552,7 @@ func (v *Value) Check(raw []byte, currentBit int) (offsetBit int) {
 		}
 	case String:
 
-		offsetBit = currentBit + (currentBit % 8) + (len(*v.Str) * 8)
+		offsetBit = currentBit + (currentBit % 8) + (len(*v.String) * 8)
 		if len(raw) < offsetBit/8 {
 			v.Pass = false
 			return
@@ -560,7 +560,7 @@ func (v *Value) Check(raw []byte, currentBit int) (offsetBit int) {
 
 		v.GotString = string(raw[currentBit/8 : offsetBit/8])
 
-		if v.GotString != *v.Str {
+		if v.GotString != *v.String {
 			v.Pass = false
 		}
 	case Byte:
@@ -640,8 +640,8 @@ func (v *Value) Write() ([]byte, error) {
 		if err := binary.Write(buf, binary.BigEndian, v.Bool); err != nil {
 			return nil, err
 		}
-	case v.Str != nil:
-		buf.WriteString(*v.Str)
+	case v.String != nil:
+		buf.WriteString(*v.String)
 	case v.Byte != nil:
 		b, err := parseStringByte(*v.Byte)
 		if err != nil {
@@ -698,7 +698,7 @@ func (v *Value) Type() TypeValue {
 		return Float64Range
 	case v.Bool != nil:
 		return Bool
-	case v.Str != nil:
+	case v.String != nil:
 		return String
 	case v.Byte != nil:
 		return Byte

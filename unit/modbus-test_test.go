@@ -7,6 +7,42 @@ import (
 	"time"
 )
 
+func TestModbusTest_StringTimeExpected(t *testing.T) {
+	modbus := &ModbusTest{
+		ExpectedTime: "2s",
+	}
+	if err := gotest.Expect(modbus.StringTimeExpected()).Eq(fmt.Sprintf(FormatDuration, "2s")); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestModbusTest_StringTimeGot(t *testing.T) {
+	modbus := &ModbusTest{
+		ResultTime: 2 * time.Second,
+	}
+	if err := gotest.Expect(modbus.StringTimeGot()).Eq(fmt.Sprintf(FormatDuration, "2s")); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestModbusTest_StringErrorExpected(t *testing.T) {
+	modbus := &ModbusTest{
+		ExpectedError: "test",
+	}
+	if err := gotest.Expect(modbus.StringErrorExpected()).Eq(fmt.Sprintf(FormatError, "test")); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestModbusTest_StringErrorGot(t *testing.T) {
+	modbus := &ModbusTest{
+		ResultError: fmt.Errorf("test"),
+	}
+	if err := gotest.Expect(modbus.StringErrorGot()).Eq(fmt.Sprintf(FormatError, "test")); err != nil {
+		t.Error(err)
+	}
+}
+
 func TestModbusTest_Check(t *testing.T) {
 	var quantity uint16 = 2
 	var param1 = false
@@ -531,6 +567,18 @@ func TestModbusTest_getQuantity(t *testing.T) {
 	}
 
 	if err := gotest.Expect((&ModbusTest{Function: "ReadInputRegisters", Expected: []Value{{Int64: &param1}}}).getQuantity()).Eq(uint16(4)); err != nil {
+		t.Error(err)
+	}
+
+}
+
+func TestModbusTest_getError(t *testing.T) {
+
+	if err := gotest.Expect((&ModbusTest{Function: "ReadCoils", ExpectedError: "0x01"}).getError()).Eq("modbus: exception '1' (illegal function), function '1'"); err != nil {
+		t.Error(err)
+	}
+
+	if err := gotest.Expect((&ModbusTest{Function: "ReadCoils", ExpectedError: "test"}).getError()).Eq("test"); err != nil {
 		t.Error(err)
 	}
 

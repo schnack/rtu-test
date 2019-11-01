@@ -42,6 +42,10 @@ func (mc *ModbusClient) Run() error {
 			if test.Check() {
 				test.Success.Print()
 			} else {
+				logrus.Errorf("expected: %s", test.StringErrorExpected())
+				logrus.Errorf("     got: %s", test.StringErrorGot())
+				logrus.Errorf("expected: %s", test.StringTimeExpected())
+				logrus.Errorf("     got: %s", test.StringTimeGot())
 				test.Error.Print()
 			}
 			test.After.Print()
