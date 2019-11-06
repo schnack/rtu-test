@@ -40,6 +40,7 @@ func dataSingleCoil(data []byte) []byte {
 	}
 }
 
+// TODO expect
 func countBit(v []*Value, is16bit bool) (bits uint16, err error) {
 	for _, w := range v {
 		if w.Type() == Bool {

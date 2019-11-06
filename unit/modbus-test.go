@@ -42,55 +42,52 @@ type ModbusTest struct {
 	ResultError   error         `yaml:"-"`
 }
 
+const (
+	FormatReportError         = "\tError\n\n\t\texpected: %[1]s\n\t\t     got: %[2]s\n\n"
+	FormatReportDuration      = "\tExecution time:\n\n\t\texpected: %[1]s\n\t\t     got: %[2]s\n\n"
+	FormatReportString        = "\t%[1]s:\n\n\t\texpected: %[2]s\n\t\t     got: %[3]s\n\n"
+	FormatReport2Byte         = "\tWrite:\n\n\t\texpected: 0x%04[1]x\n\t\t     got: 0x%04[2]x\n\n"
+	FormatReport2ByteGotEmpty = "\tWrite:\n\n\t\texpected: 0x%04[1]x\n\t\t     got:\n\n"
+)
+
 func (mt *ModbusTest) String() string {
 	buff := bytes.NewBufferString("\n")
 	if !mt.CheckError() {
-		buff.WriteString("Error:\n")
-		buff.WriteString(fmt.Sprintf("\texpected: %s\n", mt.StringErrorExpected()))
-		buff.WriteString(fmt.Sprintf("\t     got: %s\n", mt.StringErrorGot()))
+		buff.WriteString(fmt.Sprintf(FormatReportError, mt.StringErrorExpected(), mt.StringErrorGot()))
 	}
 
 	if !mt.CheckDuration() {
-		buff.WriteString("Time:\n")
-		buff.WriteString(fmt.Sprintf("\texpected: %s\n", mt.StringTimeExpected()))
-		buff.WriteString(fmt.Sprintf("\t     got: %s\n", mt.StringTimeGot()))
+		buff.WriteString(fmt.Sprintf(FormatReportDuration, mt.StringTimeExpected(), mt.StringTimeGot()))
 	}
 
 	if !mt.CheckData() {
-		buff.WriteString("Data\n")
 		switch mt.getFunction() {
 		case ReadDiscreteInputs, ReadCoils, ReadHoldingRegisters, ReadInputRegisters:
 			for _, v := range mt.Expected {
 				if v.Pass {
 					continue
 				}
-				buff.WriteString(fmt.Sprintf("%s:\n", v.Name))
-				buff.WriteString(fmt.Sprintf("\texpected: %s\n", v.StringExpected()))
-				buff.WriteString(fmt.Sprintf("\t     got: %s\n", v.StringGot()))
+				buff.WriteString(fmt.Sprintf(FormatReportString, v.Name, v.StringExpected(), v.StringGot()))
 			}
 		case WriteSingleCoil:
-			buff.WriteString(fmt.Sprintf("\texpected: 0x%04x\n", dataSingleCoil(mt.getWriteData())))
 			if mt.ResultByte == nil {
-				buff.WriteString("\t     got: \n")
+				buff.WriteString(fmt.Sprintf(FormatReport2ByteGotEmpty, dataSingleCoil(mt.getWriteData())))
 			} else {
-				buff.WriteString(fmt.Sprintf("\t     got: 0x%04x\n", mt.ResultByte))
+				buff.WriteString(fmt.Sprintf(FormatReport2Byte, dataSingleCoil(mt.getWriteData()), mt.ResultByte))
 			}
 
 		case WriteSingleRegister:
-			buff.WriteString(fmt.Sprintf("\texpected: 0x%04x\n", mt.getWriteData()[:2]))
 			if mt.ResultByte == nil {
-				buff.WriteString("\t     got: \n")
+				buff.WriteString(fmt.Sprintf(FormatReport2ByteGotEmpty, mt.getWriteData()[:2]))
 			} else {
-				buff.WriteString(fmt.Sprintf("\t     got: 0x%04x\n", mt.ResultByte[:2]))
+				buff.WriteString(fmt.Sprintf(FormatReport2Byte, mt.getWriteData()[:2], mt.ResultByte[:2]))
 			}
 		case WriteMultipleRegisters, WriteMultipleCoils:
-			buff.WriteString(fmt.Sprintf("\texpected: 0x%04x\n", mt.getQuantity()))
 			if mt.ResultByte == nil {
-				buff.WriteString("\t     got: \n")
+				buff.WriteString(fmt.Sprintf(FormatReport2ByteGotEmpty, mt.getQuantity()))
 			} else {
-				buff.WriteString(fmt.Sprintf("\t     got: 0x%04x\n", binary.BigEndian.Uint16(mt.ResultByte)))
+				buff.WriteString(fmt.Sprintf(FormatReport2Byte, mt.getQuantity(), binary.BigEndian.Uint16(mt.ResultByte)))
 			}
-
 		}
 	}
 	return buff.String()
@@ -112,7 +109,10 @@ func (mt *ModbusTest) StringErrorExpected() string {
 }
 
 func (mt *ModbusTest) StringErrorGot() string {
-	return fmt.Sprintf(FormatError, mt.ResultError.Error())
+	if mt.ResultError != nil {
+		return fmt.Sprintf(FormatError, mt.ResultError.Error())
+	}
+	return ""
 }
 
 func (mt *ModbusTest) Check() bool {
@@ -154,6 +154,9 @@ func (mt *ModbusTest) CheckData() bool {
 }
 
 func (mt *ModbusTest) CheckDuration() bool {
+	if mt.ExpectedTime == "" {
+		return true
+	}
 	if mt.ResultTime > parseDuration(mt.ExpectedTime) {
 		return false
 	}
@@ -288,23 +291,23 @@ func (mt *ModbusTest) getError() string {
 		}
 		switch modbusError {
 		case "illegalfunction", "1":
-			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 1}).Error()
+			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()) | 1<<7, ExceptionCode: 1}).Error()
 		case "illegaldataaddress", "2":
-			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 2}).Error()
+			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()) | 1<<7, ExceptionCode: 2}).Error()
 		case "illegaldatavalue", "3":
-			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 3}).Error()
+			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()) | 1<<7, ExceptionCode: 3}).Error()
 		case "serverdevicefailure", "4":
-			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 4}).Error()
+			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()) | 1<<7, ExceptionCode: 4}).Error()
 		case "acknowledge", "5":
-			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 5}).Error()
+			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()) | 1<<7, ExceptionCode: 5}).Error()
 		case "serverdevicebusy", "6":
-			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 6}).Error()
+			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()) | 1<<7, ExceptionCode: 6}).Error()
 		case "memoryparityerror", "8":
-			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 8}).Error()
+			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()) | 1<<7, ExceptionCode: 8}).Error()
 		case "gatewaypathunavailable", "10":
-			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 10}).Error()
+			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()) | 1<<7, ExceptionCode: 10}).Error()
 		case "gatewaytargetdevicefailedtorespond", "11":
-			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()), ExceptionCode: 11}).Error()
+			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()) | 1<<7, ExceptionCode: 11}).Error()
 		}
 	}
 	return expected

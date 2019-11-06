@@ -147,52 +147,52 @@ const FormatNil = "(nil)"
 
 func (v *Value) StringGot() string {
 	switch v.Type() {
-	case Int8:
+	case Int8, Int8Range:
 		if v.GotInt8 == nil {
 			return FormatNil
 		}
 		return fmt.Sprintf(FormatDecimal, Int8, *v.GotInt8)
-	case Int16:
+	case Int16, Int16Range:
 		if v.GotInt16 == nil {
 			return FormatNil
 		}
 		return fmt.Sprintf(fmt.Sprintf(FormatDecimal, Int16, *v.GotInt16))
-	case Int32:
+	case Int32, Int32Range:
 		if v.GotInt32 == nil {
 			return FormatNil
 		}
 		return fmt.Sprintf(FormatDecimal, Int32, *v.GotInt32)
-	case Int64:
+	case Int64, Int64Range:
 		if v.GotInt64 == nil {
 			return FormatNil
 		}
 		return fmt.Sprintf(FormatDecimal, Int64, *v.GotInt64)
-	case Uint8:
+	case Uint8, Uint8Range:
 		if v.GotUint8 == nil {
 			return FormatNil
 		}
 		return fmt.Sprintf(FormatDecimal, Uint8, *v.GotUint8)
-	case Uint16:
+	case Uint16, Uint16Range:
 		if v.GotUint16 == nil {
 			return FormatNil
 		}
 		return fmt.Sprintf(FormatDecimal, Uint16, *v.GotUint16)
-	case Uint32:
+	case Uint32, Uint32Range:
 		if v.GotUint32 == nil {
 			return FormatNil
 		}
 		return fmt.Sprintf(FormatDecimal, Uint32, *v.GotUint32)
-	case Uint64:
+	case Uint64, Uint64Range:
 		if v.GotUint64 == nil {
 			return FormatNil
 		}
 		return fmt.Sprintf(FormatDecimal, Uint64, *v.GotUint64)
-	case Float32:
+	case Float32, Float32Range:
 		if v.GotFloat32 == nil {
 			return FormatNil
 		}
 		return fmt.Sprintf(FormatFloat, Float32, *v.GotFloat32)
-	case Float64:
+	case Float64, Float64Range:
 		if v.GotFloat64 == nil {
 			return FormatNil
 		}

@@ -12,13 +12,16 @@ type Message struct {
 }
 
 func (m *Message) Print() {
-	logrus.Info(m.Message)
+	if m.Message != "" {
+		logrus.Info(m.Message)
+	}
 	d := parseDuration(m.Pause)
 	if d < 0 {
 		logrus.Info("Press ENTER to continue...")
+		fmt.Print("\b")
 		var t string
 		_, _ = fmt.Scanln(&t)
-	} else {
+	} else if d > 0 {
 		logrus.Infof("Pause %s ...", d.String())
 		time.Sleep(d)
 	}

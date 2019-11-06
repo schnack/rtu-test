@@ -574,7 +574,7 @@ func TestModbusTest_getQuantity(t *testing.T) {
 
 func TestModbusTest_getError(t *testing.T) {
 
-	if err := gotest.Expect((&ModbusTest{Function: "ReadCoils", ExpectedError: "0x01"}).getError()).Eq("modbus: exception '1' (illegal function), function '1'"); err != nil {
+	if err := gotest.Expect((&ModbusTest{Function: "ReadCoils", ExpectedError: "0x01"}).getError()).Eq("modbus: exception '1' (illegal function), function '129'"); err != nil {
 		t.Error(err)
 	}
 
