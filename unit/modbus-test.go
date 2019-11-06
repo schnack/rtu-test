@@ -30,8 +30,8 @@ type ModbusTest struct {
 	Function      string        `yaml:"function"`
 	Address       *uint16       `yaml:"address"`
 	Quantity      *uint16       `yaml:"quantity"`
-	Write         []Value       `yaml:"write"`
-	Expected      []Value       `yaml:"expected"`
+	Write         []*Value      `yaml:"write"`
+	Expected      []*Value      `yaml:"expected"`
 	ExpectedError string        `yaml:"expectedError"`
 	ExpectedTime  string        `yaml:"expectedTime"`
 	Success       Message       `yaml:"success"`

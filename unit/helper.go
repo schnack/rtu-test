@@ -40,7 +40,7 @@ func dataSingleCoil(data []byte) []byte {
 	}
 }
 
-func countBit(v []Value, is16bit bool) (bits uint16, err error) {
+func countBit(v []*Value, is16bit bool) (bits uint16, err error) {
 	for _, w := range v {
 		if w.Type() == Bool {
 			bits++
@@ -65,7 +65,7 @@ func countBit(v []Value, is16bit bool) (bits uint16, err error) {
 	}
 }
 
-func valueToByte(v []Value) (data []byte, err error) {
+func valueToByte(v []*Value) (data []byte, err error) {
 	var i int
 	var vByte uint8
 	for _, w := range v {

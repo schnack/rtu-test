@@ -37,7 +37,7 @@ func Test_dataSingleCoil(t *testing.T) {
 func Test_countBit(t *testing.T) {
 
 	var param1 int64 = 2
-	count, err := countBit([]Value{{Int64: &param1}}, false)
+	count, err := countBit([]*Value{{Int64: &param1}}, false)
 	if err := gotest.Expect(count).Eq(uint16(64)); err != nil {
 		t.Error(err)
 	}
@@ -45,7 +45,7 @@ func Test_countBit(t *testing.T) {
 		t.Error(err)
 	}
 
-	count, err = countBit([]Value{{Int64: &param1}}, true)
+	count, err = countBit([]*Value{{Int64: &param1}}, true)
 	if err := gotest.Expect(count).Eq(uint16(4)); err != nil {
 		t.Error(err)
 	}
@@ -61,7 +61,7 @@ func Test_valueToByte(t *testing.T) {
 	var param3 uint16 = 1
 	var param4 uint32 = 1
 	var param5 uint64 = 1
-	values := []Value{
+	values := []*Value{
 		{Bool: &param1},
 		{Uint8: &param2},
 		{Uint16: &param3},

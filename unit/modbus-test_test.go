@@ -53,7 +53,7 @@ func TestModbusTest_Check(t *testing.T) {
 		Function: "WriteMultipleCoils",
 		Success:  Message{Message: "success"},
 		Error:    Message{Message: "error"},
-		Write: []Value{
+		Write: []*Value{
 			{Name: "param1", Bool: &param1},
 			{Name: "param2", Uint8: &param2},
 		},
@@ -71,7 +71,7 @@ func TestModbusTest_CheckData(t *testing.T) {
 	modbus := &ModbusTest{
 		Quantity: &quantity,
 		Function: "ReadCoils",
-		Expected: []Value{
+		Expected: []*Value{
 			{Name: "param1", Bool: &param1},
 			{Name: "param2", Uint8: &param2},
 		},
@@ -93,7 +93,7 @@ func TestModbusTest_CheckDataWriteMultiple(t *testing.T) {
 	modbus := &ModbusTest{
 		Quantity: &quantity,
 		Function: "WriteMultipleCoils",
-		Write: []Value{
+		Write: []*Value{
 			{Name: "param1", Bool: &param1},
 			{Name: "param2", Uint8: &param2},
 		},
@@ -114,7 +114,7 @@ func TestModbusTest_CheckDataWriteSingleRegister(t *testing.T) {
 	var param2 uint8 = 0x01
 	modbus := &ModbusTest{
 		Function: "WriteSingleRegister",
-		Write: []Value{
+		Write: []*Value{
 			{Name: "param1", Bool: &param1},
 			{Name: "param2", Uint8: &param2},
 		},
@@ -135,7 +135,7 @@ func TestModbusTest_CheckDataWriteSingleCoil(t *testing.T) {
 	var param1 = true
 	modbus := &ModbusTest{
 		Function: "WriteSingleCoil",
-		Write: []Value{
+		Write: []*Value{
 			{Name: "param1", Bool: &param1},
 		},
 		ResultByte: []byte{0xFF, 0x00},
@@ -340,7 +340,7 @@ func TestModbusTest_ExecWriteSingleCoil(t *testing.T) {
 		Name:     "Test",
 		Function: "Write Single Coil",
 		Address:  &Address,
-		Write: []Value{
+		Write: []*Value{
 			{Name: "param1", Bool: &param1},
 		},
 	}
@@ -382,7 +382,7 @@ func TestModbusTest_ExecWriteSingleRegister(t *testing.T) {
 		Name:     "Test",
 		Function: "Write Single Register",
 		Address:  &Address,
-		Write: []Value{
+		Write: []*Value{
 			{Name: "param1", Bool: &param1},
 			{Name: "param2", Uint8: &param2},
 		},
@@ -427,7 +427,7 @@ func TestModbusTest_ExecWriteMultipleCoils(t *testing.T) {
 		Function: "Write Multiple Coils",
 		Address:  &Address,
 		Quantity: &Quantity,
-		Write: []Value{
+		Write: []*Value{
 			{Name: "param1", Bool: &param1},
 			{Name: "param2", Uint8: &param2},
 		},
@@ -472,7 +472,7 @@ func TestModbusTest_ExecWriteMultipleRegisters(t *testing.T) {
 		Function: "Write Multiple Registers",
 		Address:  &Address,
 		Quantity: &Quantity,
-		Write: []Value{
+		Write: []*Value{
 			{Name: "param1", Bool: &param1},
 			{Name: "param2", Uint8: &param2},
 		},
@@ -562,11 +562,11 @@ func TestModbusTest_getQuantity(t *testing.T) {
 	}
 
 	var param1 int64 = 2
-	if err := gotest.Expect((&ModbusTest{Function: "ReadCoils", Expected: []Value{{Int64: &param1}}}).getQuantity()).Eq(uint16(64)); err != nil {
+	if err := gotest.Expect((&ModbusTest{Function: "ReadCoils", Expected: []*Value{{Int64: &param1}}}).getQuantity()).Eq(uint16(64)); err != nil {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect((&ModbusTest{Function: "ReadInputRegisters", Expected: []Value{{Int64: &param1}}}).getQuantity()).Eq(uint16(4)); err != nil {
+	if err := gotest.Expect((&ModbusTest{Function: "ReadInputRegisters", Expected: []*Value{{Int64: &param1}}}).getQuantity()).Eq(uint16(4)); err != nil {
 		t.Error(err)
 	}
 
@@ -591,7 +591,7 @@ func TestModbusTest_getWriteData(t *testing.T) {
 	var param4 uint32 = 1
 	var param5 uint64 = 1
 	modbus := &ModbusTest{}
-	modbus.Write = []Value{
+	modbus.Write = []*Value{
 		{Bool: &param1},
 		{Uint8: &param2},
 		{Uint16: &param3},
