@@ -26,6 +26,7 @@ const (
 
 type ModbusTest struct {
 	Name          string        `yaml:"name"`
+	Skip          string        `yaml:"skip"`
 	Before        Message       `yaml:"before"`
 	Function      string        `yaml:"function"`
 	Address       *uint16       `yaml:"address"`

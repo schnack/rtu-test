@@ -45,16 +45,20 @@ func (mc *ModbusClient) Run() error {
 		logrus.Warnf(">>> GROUP    %s", group)
 		for _, test := range tests {
 			logrus.Warnf("=== RUN      %s", test.Name)
-			test.Before.Print()
+			if test.Skip != "" {
+				logrus.Warnf("--- SKIP:    %s %s", test.Name, test.Skip)
+				continue
+			}
+			test.Before.Print(group, test)
 			test.Exec(client)
 			if test.Check() {
 				logrus.Warnf("--- PASS:    %s (%s)", test.Name, test.ResultTime)
-				test.Success.Print()
+				test.Success.Print(group, test)
 			} else {
 				logrus.Errorf("--- FAIL:    %s (%s)%s", test.Name, test.ResultTime, test.String())
-				test.Error.Print()
+				test.Error.Print(group, test)
 			}
-			test.After.Print()
+			test.After.Print(group, test)
 		}
 	}
 

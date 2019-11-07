@@ -15,11 +15,65 @@ func TestValue_StringExpectedInt8(t *testing.T) {
 	}
 }
 
+func TestValue_StringExpectedInt8Less(t *testing.T) {
+	var param int8 = 2
+	v := Value{Name: "Test", MaxInt8: &param}
+
+	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatDecimalLess, Int8, param)); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_StringExpectedInt8More(t *testing.T) {
+	var param int8 = 2
+	v := Value{Name: "Test", MinInt8: &param}
+
+	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatDecimalMore, Int8, param)); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_StringExpectedInt8Range(t *testing.T) {
+	var param int8 = 2
+	v := Value{Name: "Test", MinInt8: &param, MaxInt8: &param}
+
+	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatDecimalRange, Int8, param, param)); err != nil {
+		t.Error(err)
+	}
+}
+
 func TestValue_StringExpectedInt16(t *testing.T) {
 	var param int16 = 2
 	v := Value{Name: "Test", Int16: &param}
 
 	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatDecimal, Int16, param)); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_StringExpectedInt16Less(t *testing.T) {
+	var param int16 = 2
+	v := Value{Name: "Test", MaxInt16: &param}
+
+	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatDecimalLess, Int16, param)); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_StringExpectedInt16More(t *testing.T) {
+	var param int16 = 2
+	v := Value{Name: "Test", MinInt16: &param}
+
+	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatDecimalMore, Int16, param)); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_StringExpectedInt16Range(t *testing.T) {
+	var param int16 = 2
+	v := Value{Name: "Test", MinInt16: &param, MaxInt16: &param}
+
+	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatDecimalRange, Int16, param, param)); err != nil {
 		t.Error(err)
 	}
 }
@@ -33,11 +87,65 @@ func TestValue_StringExpectedInt32(t *testing.T) {
 	}
 }
 
+func TestValue_StringExpectedInt32Less(t *testing.T) {
+	var param int32 = 2
+	v := Value{Name: "Test", MaxInt32: &param}
+
+	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatDecimalLess, Int32, param)); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_StringExpectedInt32More(t *testing.T) {
+	var param int32 = 2
+	v := Value{Name: "Test", MinInt32: &param}
+
+	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatDecimalMore, Int32, param)); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_StringExpectedInt32Range(t *testing.T) {
+	var param int32 = 2
+	v := Value{Name: "Test", MinInt32: &param, MaxInt32: &param}
+
+	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatDecimalRange, Int32, param, param)); err != nil {
+		t.Error(err)
+	}
+}
+
 func TestValue_StringExpectedInt64(t *testing.T) {
 	var param int64 = 2
 	v := Value{Name: "Test", Int64: &param}
 
 	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatDecimal, Int64, param)); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_StringExpectedInt64Less(t *testing.T) {
+	var param int64 = 2
+	v := Value{Name: "Test", MaxInt64: &param}
+
+	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatDecimalLess, Int64, param)); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_StringExpectedInt64More(t *testing.T) {
+	var param int64 = 2
+	v := Value{Name: "Test", MinInt64: &param}
+
+	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatDecimalMore, Int64, param)); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_StringExpectedInt64Range(t *testing.T) {
+	var param int64 = 2
+	v := Value{Name: "Test", MinInt64: &param, MaxInt64: &param}
+
+	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatDecimalRange, Int64, param, param)); err != nil {
 		t.Error(err)
 	}
 }
@@ -51,11 +159,65 @@ func TestValue_StringExpectedUint8(t *testing.T) {
 	}
 }
 
+func TestValue_StringExpectedUint8Less(t *testing.T) {
+	var param uint8 = 2
+	v := Value{Name: "Test", MaxUint8: &param}
+
+	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatDecimalLess, Uint8, param)); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_StringExpectedUint8More(t *testing.T) {
+	var param uint8 = 2
+	v := Value{Name: "Test", MinUint8: &param}
+
+	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatDecimalMore, Uint8, param)); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_StringExpectedUint8Range(t *testing.T) {
+	var param uint8 = 2
+	v := Value{Name: "Test", MinUint8: &param, MaxUint8: &param}
+
+	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatDecimalRange, Uint8, param, param)); err != nil {
+		t.Error(err)
+	}
+}
+
 func TestValue_StringExpectedUint16(t *testing.T) {
 	var param uint16 = 2
 	v := Value{Name: "Test", Uint16: &param}
 
 	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatDecimal, Uint16, param)); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_StringExpectedUint16Less(t *testing.T) {
+	var param uint16 = 2
+	v := Value{Name: "Test", MaxUint16: &param}
+
+	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatDecimalLess, Uint16, param)); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_StringExpectedUint16More(t *testing.T) {
+	var param uint16 = 2
+	v := Value{Name: "Test", MinUint16: &param}
+
+	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatDecimalMore, Uint16, param)); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_StringExpectedUint16Range(t *testing.T) {
+	var param uint16 = 2
+	v := Value{Name: "Test", MinUint16: &param, MaxUint16: &param}
+
+	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatDecimalRange, Uint16, param, param)); err != nil {
 		t.Error(err)
 	}
 }
@@ -69,11 +231,65 @@ func TestValue_StringExpectedUint32(t *testing.T) {
 	}
 }
 
+func TestValue_StringExpectedUint32Less(t *testing.T) {
+	var param uint32 = 2
+	v := Value{Name: "Test", MaxUint32: &param}
+
+	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatDecimalLess, Uint32, param)); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_StringExpectedUint32More(t *testing.T) {
+	var param uint32 = 2
+	v := Value{Name: "Test", MinUint32: &param}
+
+	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatDecimalMore, Uint32, param)); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_StringExpectedUint32Range(t *testing.T) {
+	var param uint32 = 2
+	v := Value{Name: "Test", MinUint32: &param, MaxUint32: &param}
+
+	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatDecimalRange, Uint32, param, param)); err != nil {
+		t.Error(err)
+	}
+}
+
 func TestValue_StringExpectedUint64(t *testing.T) {
 	var param uint64 = 2
 	v := Value{Name: "Test", Uint64: &param}
 
 	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatDecimal, Uint64, param)); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_StringExpectedUint64Less(t *testing.T) {
+	var param uint64 = 2
+	v := Value{Name: "Test", MaxUint64: &param}
+
+	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatDecimalLess, Uint64, param)); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_StringExpectedUint64More(t *testing.T) {
+	var param uint64 = 2
+	v := Value{Name: "Test", MinUint64: &param}
+
+	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatDecimalMore, Uint64, param)); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_StringExpectedUint64Range(t *testing.T) {
+	var param uint64 = 2
+	v := Value{Name: "Test", MinUint64: &param, MaxUint64: &param}
+
+	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatDecimalRange, Uint64, param, param)); err != nil {
 		t.Error(err)
 	}
 }
@@ -87,11 +303,65 @@ func TestValue_StringExpectedFloat32(t *testing.T) {
 	}
 }
 
+func TestValue_StringExpectedFloat32Less(t *testing.T) {
+	var param float32 = 2.2
+	v := Value{Name: "Test", MaxFloat32: &param}
+
+	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatFloatLess, Float32, param)); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_StringExpectedFloat32More(t *testing.T) {
+	var param float32 = 2
+	v := Value{Name: "Test", MinFloat32: &param}
+
+	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatFloatMore, Float32, param)); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_StringExpectedFloat32Range(t *testing.T) {
+	var param float32 = 2
+	v := Value{Name: "Test", MinFloat32: &param, MaxFloat32: &param}
+
+	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatFloatRange, Float32, param, param)); err != nil {
+		t.Error(err)
+	}
+}
+
 func TestValue_StringExpectedFloat64(t *testing.T) {
 	var param float64 = 2.2
 	v := Value{Name: "Test", Float64: &param}
 
 	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatFloat, Float64, param)); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_StringExpectedFloat64Less(t *testing.T) {
+	var param float64 = 2.2
+	v := Value{Name: "Test", MaxFloat64: &param}
+
+	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatFloatLess, Float64, param)); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_StringExpectedFloat64More(t *testing.T) {
+	var param float64 = 2
+	v := Value{Name: "Test", MinFloat64: &param}
+
+	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatFloatMore, Float64, param)); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_StringExpectedFloat64Range(t *testing.T) {
+	var param float64 = 2
+	v := Value{Name: "Test", MinFloat64: &param, MaxFloat64: &param}
+
+	if err := gotest.Expect(v.StringExpected()).Eq(fmt.Sprintf(FormatFloatRange, Float64, param, param)); err != nil {
 		t.Error(err)
 	}
 }

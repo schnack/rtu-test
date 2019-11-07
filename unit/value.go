@@ -136,10 +136,15 @@ type Value struct {
 	Pass bool `yaml:"-"`
 }
 
+const FormatRange = "%s..%s"
 const FormatDecimal = "(%[1]s) %[2]d"
 const FormatDecimalRange = "(%[1]s) %[2]d..%[3]d"
+const FormatDecimalMore = "> (%[1]s) %[2]d"
+const FormatDecimalLess = "< (%[1]s)%[2]d"
 const FormatFloat = "(%[1]s) %[2]f"
 const FormatFloatRange = "(%[1]s) %[2]f..%[3]f"
+const FormatFloatMore = "> (%[1]s) %[2]f"
+const FormatFloatLess = "< (%[1]s) %[2]f"
 const FormatString = "(%[1]s) %[2]s"
 const FormatByte = "(%[1]s) {0x%02[2]x} [b%08[2]b]"
 const FormatBool = "(%[1]s) %[2]t"
@@ -222,43 +227,103 @@ func (v *Value) StringExpected() string {
 	case Int8:
 		return fmt.Sprintf(FormatDecimal, Int8, *v.Int8)
 	case Int8Range:
-		return fmt.Sprintf(FormatDecimalRange, Int8, *v.MinInt8, *v.MaxInt8)
+		if v.MinInt8 == nil {
+			return fmt.Sprintf(FormatDecimalLess, Int8, *v.MaxInt8)
+		} else if v.MaxInt8 == nil {
+			return fmt.Sprintf(FormatDecimalMore, Int8, *v.MinInt8)
+		} else {
+			return fmt.Sprintf(FormatDecimalRange, Int8, *v.MinInt8, *v.MaxInt8)
+		}
 	case Int16:
 		return fmt.Sprintf(fmt.Sprintf(FormatDecimal, Int16, *v.Int16))
 	case Int16Range:
-		return fmt.Sprintf(FormatDecimalRange, Int16, *v.MinInt16, *v.MaxInt16)
+		if v.MinInt16 == nil {
+			return fmt.Sprintf(FormatDecimalLess, Int16, *v.MaxInt16)
+		} else if v.MaxInt16 == nil {
+			return fmt.Sprintf(FormatDecimalMore, Int16, *v.MinInt16)
+		} else {
+			return fmt.Sprintf(FormatDecimalRange, Int16, *v.MinInt16, *v.MaxInt16)
+		}
 	case Int32:
 		return fmt.Sprintf(FormatDecimal, Int32, *v.Int32)
 	case Int32Range:
-		return fmt.Sprintf(FormatDecimalRange, Int32, *v.MinInt32, *v.MaxInt32)
+		if v.MinInt32 == nil {
+			return fmt.Sprintf(FormatDecimalLess, Int32, *v.MaxInt32)
+		} else if v.MaxInt32 == nil {
+			return fmt.Sprintf(FormatDecimalMore, Int32, *v.MinInt32)
+		} else {
+			return fmt.Sprintf(FormatDecimalRange, Int32, *v.MinInt32, *v.MaxInt32)
+		}
 	case Int64:
 		return fmt.Sprintf(FormatDecimal, Int64, *v.Int64)
 	case Int64Range:
-		return fmt.Sprintf(FormatDecimalRange, Int64, *v.MinInt64, *v.MaxInt64)
+		if v.MinInt64 == nil {
+			return fmt.Sprintf(FormatDecimalLess, Int64, *v.MaxInt64)
+		} else if v.MaxInt64 == nil {
+			return fmt.Sprintf(FormatDecimalMore, Int64, *v.MinInt64)
+		} else {
+			return fmt.Sprintf(FormatDecimalRange, Int64, *v.MinInt64, *v.MaxInt64)
+		}
 	case Uint8:
 		return fmt.Sprintf(FormatDecimal, Uint8, *v.Uint8)
 	case Uint8Range:
-		return fmt.Sprintf(FormatDecimalRange, Uint8, *v.MinUint8, *v.MaxUint8)
+		if v.MinUint8 == nil {
+			return fmt.Sprintf(FormatDecimalLess, Uint8, *v.MaxUint8)
+		} else if v.MaxUint8 == nil {
+			return fmt.Sprintf(FormatDecimalMore, Uint8, *v.MinUint8)
+		} else {
+			return fmt.Sprintf(FormatDecimalRange, Uint8, *v.MinUint8, *v.MaxUint8)
+		}
 	case Uint16:
 		return fmt.Sprintf(FormatDecimal, Uint16, *v.Uint16)
 	case Uint16Range:
-		return fmt.Sprintf(FormatDecimalRange, Uint16, *v.MinUint16, *v.MaxUint16)
+		if v.MinUint16 == nil {
+			return fmt.Sprintf(FormatDecimalLess, Uint16, *v.MaxUint16)
+		} else if v.MaxUint16 == nil {
+			return fmt.Sprintf(FormatDecimalMore, Uint16, *v.MinUint16)
+		} else {
+			return fmt.Sprintf(FormatDecimalRange, Uint16, *v.MinUint16, *v.MaxUint16)
+		}
 	case Uint32:
 		return fmt.Sprintf(FormatDecimal, Uint32, *v.Uint32)
 	case Uint32Range:
-		return fmt.Sprintf(FormatDecimalRange, Uint32, *v.MinUint32, *v.MaxUint32)
+		if v.MinUint32 == nil {
+			return fmt.Sprintf(FormatDecimalLess, Uint32, *v.MaxUint32)
+		} else if v.MaxUint32 == nil {
+			return fmt.Sprintf(FormatDecimalMore, Uint32, *v.MinUint32)
+		} else {
+			return fmt.Sprintf(FormatDecimalRange, Uint32, *v.MinUint32, *v.MaxUint32)
+		}
 	case Uint64:
 		return fmt.Sprintf(FormatDecimal, Uint64, *v.Uint64)
 	case Uint64Range:
-		return fmt.Sprintf(FormatDecimalRange, Uint64, *v.MinUint64, *v.MaxUint64)
+		if v.MinUint64 == nil {
+			return fmt.Sprintf(FormatDecimalLess, Uint64, *v.MaxUint64)
+		} else if v.MaxUint64 == nil {
+			return fmt.Sprintf(FormatDecimalMore, Uint64, *v.MinUint64)
+		} else {
+			return fmt.Sprintf(FormatDecimalRange, Uint64, *v.MinUint64, *v.MaxUint64)
+		}
 	case Float32:
 		return fmt.Sprintf(FormatFloat, Float32, *v.Float32)
 	case Float32Range:
-		return fmt.Sprintf(FormatFloatRange, Float32, *v.MinFloat32, *v.MaxFloat32)
+		if v.MinFloat32 == nil {
+			return fmt.Sprintf(FormatFloatLess, Float32, *v.MaxFloat32)
+		} else if v.MaxFloat32 == nil {
+			return fmt.Sprintf(FormatFloatMore, Float32, *v.MinFloat32)
+		} else {
+			return fmt.Sprintf(FormatFloatRange, Float32, *v.MinFloat32, *v.MaxFloat32)
+		}
 	case Float64:
 		return fmt.Sprintf(FormatFloat, Float64, *v.Float64)
 	case Float64Range:
-		return fmt.Sprintf(FormatFloatRange, Float64, *v.MinFloat64, *v.MaxFloat64)
+		if v.MinFloat64 == nil {
+			return fmt.Sprintf(FormatFloatLess, Float64, *v.MaxFloat64)
+		} else if v.MaxFloat64 == nil {
+			return fmt.Sprintf(FormatFloatMore, Float64, *v.MinFloat64)
+		} else {
+			return fmt.Sprintf(FormatFloatRange, Float64, *v.MinFloat64, *v.MaxFloat64)
+		}
 	case Bool:
 		return fmt.Sprintf(FormatBool, Bool, *v.Bool)
 	case String:
@@ -274,60 +339,97 @@ func (v *Value) StringExpected() string {
 	}
 }
 
-func (v *Value) Check(raw []byte, currentBit int) (offsetBit int) {
-	v.Pass = true
+func (v *Value) Check(raw []byte, currentBit int) (offsetBit int, report ReportExpected) {
+	report.Name = v.Name
+	report.Pass = true
+	report.Type = v.Type().String()
 	switch v.Type() {
 	case Nil:
 		offsetBit = 0
 	case Int8:
+		report.Expected = fmt.Sprintf("%d", *v.Int8)
+		report.ExpectedHex = fmt.Sprintf("%02x", *v.Int8)
+		report.ExpectedBin = fmt.Sprintf("%08b", *v.Int8)
 
 		offsetBit = currentBit + (currentBit % 8) + 8
 		if len(raw) < offsetBit/8 {
-			v.Pass = false
+			report.Pass = false
 			return
 		}
 
 		got := int8(raw[currentBit/8 : offsetBit/8][0])
-		v.GotInt8 = &got
+		report.Got = fmt.Sprintf("%d", got)
+		report.GotHex = fmt.Sprintf("%02x", got)
+		report.GotBin = fmt.Sprintf("%08b", got)
 
-		if *v.GotInt8 != *v.Int8 {
-			v.Pass = false
-		}
+		report.Pass = got != *v.Int8
+
 	case Int8Range:
+		var min, minHex, minBin = "", "", ""
+		if v.MinInt8 != nil {
+			min = fmt.Sprintf("%d", *v.MinInt8)
+			minHex = fmt.Sprintf("%02x", *v.MinInt8)
+			minBin = fmt.Sprintf("%08b", *v.MinInt8)
+		}
+		var max, maxHex, maxBin = "", "", ""
+		if v.MinInt8 != nil {
+			max = fmt.Sprintf("%d", *v.MaxInt8)
+			maxHex = fmt.Sprintf("%02x", *v.MaxInt8)
+			maxBin = fmt.Sprintf("%08b", *v.MaxInt8)
+		}
+		report.Expected = fmt.Sprintf(FormatRange, min, max)
+		report.ExpectedHex = fmt.Sprintf(FormatRange, minHex, maxHex)
+		report.ExpectedBin = fmt.Sprintf(FormatRange, minBin, maxBin)
 
 		offsetBit = currentBit + (currentBit % 8) + 8
 		if len(raw) < offsetBit/8 {
-			v.Pass = false
+			report.Pass = false
 			return
 		}
 
 		got := int8(raw[currentBit/8 : offsetBit/8][0])
-		v.GotInt8 = &got
+		report.Got = fmt.Sprintf("%d", got)
+		report.GotHex = fmt.Sprintf("%02x", got)
+		report.GotBin = fmt.Sprintf("%08b", got)
 
-		if v.MinInt8 != nil && *v.MinInt8 > *v.GotInt8 {
-			v.Pass = false
-		}
-
-		if v.MaxInt8 != nil && *v.GotInt8 > *v.MaxInt8 {
-			v.Pass = false
-		}
+		report.Pass = !((v.MinInt8 != nil && *v.MinInt8 > got) || (v.MaxInt8 != nil && got > *v.MaxInt8))
 
 	case Int16:
+		report.Expected = fmt.Sprintf("%d", *v.Int16)
+		report.ExpectedHex = fmt.Sprintf("%04x", *v.Int16)
+		report.ExpectedBin = fmt.Sprintf("%016b", *v.Int16)
 
 		offsetBit = currentBit + (currentBit % 8) + 16
 		if len(raw) < offsetBit/8 {
-			v.Pass = false
+			report.Pass = false
 			return
 		}
 
 		got := int16(binary.BigEndian.Uint16(raw[currentBit/8 : offsetBit/8]))
-		v.GotInt16 = &got
+		report.Got = fmt.Sprintf("%d", got)
+		report.GotHex = fmt.Sprintf("%04x", got)
+		report.GotBin = fmt.Sprintf("%016b", got)
 
-		if *v.GotInt16 != *v.Int16 {
-			v.Pass = false
-		}
+		report.Pass = got != *v.Int16
+
 	case Int16Range:
 
+		var min, minHex, minBin = "", "", ""
+		if v.MinInt16 != nil {
+			min = fmt.Sprintf("%d", *v.MinInt16)
+			minHex = fmt.Sprintf("%04x", *v.MinInt16)
+			minBin = fmt.Sprintf("%016b", *v.MinInt16)
+		}
+		var max, maxHex, maxBin = "", "", ""
+		if v.MinInt16 != nil {
+			max = fmt.Sprintf("%d", *v.MaxInt16)
+			maxHex = fmt.Sprintf("%04x", *v.MaxInt16)
+			maxBin = fmt.Sprintf("%016b", *v.MaxInt16)
+		}
+		report.Expected = fmt.Sprintf(FormatRange, min, max)
+		report.ExpectedHex = fmt.Sprintf(FormatRange, minHex, maxHex)
+		report.ExpectedBin = fmt.Sprintf(FormatRange, minBin, maxBin)
+
 		offsetBit = currentBit + (currentBit % 8) + 16
 		if len(raw) < offsetBit/8 {
 			v.Pass = false
@@ -335,15 +437,13 @@ func (v *Value) Check(raw []byte, currentBit int) (offsetBit int) {
 		}
 
 		got := int16(binary.BigEndian.Uint16(raw[currentBit/8 : offsetBit/8]))
+		report.Got = fmt.Sprintf("%d", got)
+		report.GotHex = fmt.Sprintf("%04x", got)
+		report.GotBin = fmt.Sprintf("%016b", got)
 		v.GotInt16 = &got
 
-		if v.MinInt16 != nil && *v.MinInt16 > *v.GotInt16 {
-			v.Pass = false
-		}
+		report.Pass = !((v.MinInt16 != nil && *v.MinInt16 > got) || (v.MaxInt16 != nil && got > *v.MaxInt16))
 
-		if v.MaxInt16 != nil && *v.GotInt16 > *v.MaxInt16 {
-			v.Pass = false
-		}
 	case Int32:
 
 		offsetBit = currentBit + (currentBit % 8) + 32
