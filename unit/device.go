@@ -1,11 +1,13 @@
 package unit
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/go-yaml/yaml"
 	"github.com/sirupsen/logrus"
 	"os"
 	"sync"
+	"text/template"
 )
 
 var instanceDevice *Device
@@ -40,6 +42,15 @@ func (d *Device) Display(s string) {
 	if d.Log != LogStdout {
 		fmt.Println(s)
 	}
+}
+
+func (d *Device) Render(tmpl string, data interface{}) string {
+	t := template.Must(template.New("message").Parse(tmpl))
+	buff := new(bytes.Buffer)
+	if err := t.Execute(buff, data); err != nil {
+		logrus.Fatal(err)
+	}
+	return buff.String()
 }
 
 func (d *Device) Load() error {

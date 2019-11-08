@@ -1,10 +1,10 @@
 package unit
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 	"github.com/goburrow/modbus"
+	"github.com/sirupsen/logrus"
 	"strconv"
 	"strings"
 	"time"
@@ -25,187 +25,145 @@ const (
 )
 
 type ModbusTest struct {
-	Name          string        `yaml:"name"`
-	Skip          string        `yaml:"skip"`
-	Before        Message       `yaml:"before"`
-	Function      string        `yaml:"function"`
-	Address       *uint16       `yaml:"address"`
-	Quantity      *uint16       `yaml:"quantity"`
-	Write         []*Value      `yaml:"write"`
-	Expected      []*Value      `yaml:"expected"`
-	ExpectedError string        `yaml:"expectedError"`
-	ExpectedTime  string        `yaml:"expectedTime"`
-	Success       Message       `yaml:"success"`
-	Error         Message       `yaml:"error"`
-	After         Message       `yaml:"after"`
-	ResultByte    []byte        `yaml:"-"`
-	ResultTime    time.Duration `yaml:"-"`
-	ResultError   error         `yaml:"-"`
+	Name     string   `yaml:"name"`
+	Skip     string   `yaml:"skip"`
+	Before   Message  `yaml:"before"`
+	Function string   `yaml:"function"`
+	Address  *uint16  `yaml:"address"`
+	Quantity *uint16  `yaml:"quantity"`
+	Write    []*Value `yaml:"write"`
+	Expected []*Value `yaml:"expected"`
+	Success  Message  `yaml:"success"`
+	Error    Message  `yaml:"error"`
+	After    Message  `yaml:"after"`
 }
 
-const (
-	FormatReportError         = "\tError\n\n\t\texpected: %[1]s\n\t\t     got: %[2]s\n\n"
-	FormatReportDuration      = "\tExecution time:\n\n\t\texpected: %[1]s\n\t\t     got: %[2]s\n\n"
-	FormatReportString        = "\t%[1]s:\n\n\t\texpected: %[2]s\n\t\t     got: %[3]s\n\n"
-	FormatReport2Byte         = "\tWrite:\n\n\t\texpected: 0x%04[1]x\n\t\t     got: 0x%04[2]x\n\n"
-	FormatReport2ByteGotEmpty = "\tWrite:\n\n\t\texpected: 0x%04[1]x\n\t\t     got:\n\n"
-)
-
-func (mt *ModbusTest) String() string {
-	buff := bytes.NewBufferString("\n")
-	if !mt.CheckError() {
-		buff.WriteString(fmt.Sprintf(FormatReportError, mt.StringErrorExpected(), mt.StringErrorGot()))
+func (mt *ModbusTest) Run(client modbus.Client) ReportTest {
+	if err := mt.Validation(); err != nil {
+		logrus.Fatal(err)
 	}
 
-	if !mt.CheckDuration() {
-		buff.WriteString(fmt.Sprintf(FormatReportDuration, mt.StringTimeExpected(), mt.StringTimeGot()))
+	report := ReportTest{Name: mt.Name, Pass: true, Skip: mt.Skip}
+	logrus.Warnf(Init().Render(TestRUN, report))
+	if report.Skip != "" {
+		logrus.Warnf(Init().Render(TestSKIP, report))
+		return report
 	}
+	mt.Before.Print(report)
+	mt.Exec(client, &report)
+	mt.Check(&report)
+	if report.Pass {
+		logrus.Warnf(Init().Render(TestPASS, report))
+		mt.Success.Print(report)
 
-	if !mt.CheckData() {
-		switch mt.getFunction() {
-		case ReadDiscreteInputs, ReadCoils, ReadHoldingRegisters, ReadInputRegisters:
-			for _, v := range mt.Expected {
-				if v.Pass {
-					continue
-				}
-				buff.WriteString(fmt.Sprintf(FormatReportString, v.Name, v.StringExpected(), v.StringGot()))
-			}
-		case WriteSingleCoil:
-			if mt.ResultByte == nil {
-				buff.WriteString(fmt.Sprintf(FormatReport2ByteGotEmpty, dataSingleCoil(mt.getWriteData())))
-			} else {
-				buff.WriteString(fmt.Sprintf(FormatReport2Byte, dataSingleCoil(mt.getWriteData()), mt.ResultByte))
-			}
-
-		case WriteSingleRegister:
-			if mt.ResultByte == nil {
-				buff.WriteString(fmt.Sprintf(FormatReport2ByteGotEmpty, mt.getWriteData()[:2]))
-			} else {
-				buff.WriteString(fmt.Sprintf(FormatReport2Byte, mt.getWriteData()[:2], mt.ResultByte[:2]))
-			}
-		case WriteMultipleRegisters, WriteMultipleCoils:
-			if mt.ResultByte == nil {
-				buff.WriteString(fmt.Sprintf(FormatReport2ByteGotEmpty, mt.getQuantity()))
-			} else {
-				buff.WriteString(fmt.Sprintf(FormatReport2Byte, mt.getQuantity(), binary.BigEndian.Uint16(mt.ResultByte)))
-			}
-		}
+	} else {
+		logrus.Errorf(Init().Render(TestFAIL, report))
+		mt.Error.Print(report)
 	}
-	return buff.String()
+	mt.After.Print(report)
+	return report
 }
 
-const FormatDuration = "%[1]s"
-const FormatError = "%[1]s"
-
-func (mt *ModbusTest) StringTimeExpected() string {
-	return fmt.Sprintf(FormatDuration, parseDuration(mt.ExpectedTime).String())
-}
-
-func (mt *ModbusTest) StringTimeGot() string {
-	return fmt.Sprintf(FormatDuration, mt.ResultTime.String())
-}
-
-func (mt *ModbusTest) StringErrorExpected() string {
-	return fmt.Sprintf(FormatError, mt.getError())
-}
-
-func (mt *ModbusTest) StringErrorGot() string {
-	if mt.ResultError != nil {
-		return fmt.Sprintf(FormatError, mt.ResultError.Error())
-	}
-	return ""
-}
-
-func (mt *ModbusTest) Check() bool {
-	if mt.CheckError() && mt.CheckData() && mt.CheckDuration() {
-		return true
-	}
-	return false
-}
-
-func (mt *ModbusTest) CheckData() bool {
+func (mt *ModbusTest) Check(report *ReportTest) {
 	switch mt.getFunction() {
 	case ReadCoils, ReadDiscreteInputs, ReadHoldingRegisters, ReadInputRegisters:
-		countBit := 0
-		pass := true
-		for _, v := range mt.Expected {
-			countBit = v.Check(mt.ResultByte, countBit)
-			if !v.Pass {
-				pass = false
-			}
-		}
-		return pass
+
 	case WriteSingleCoil:
-		if !byteToEq(dataSingleCoil(mt.getWriteData()), mt.ResultByte) {
-			return false
+		if !byteToEq(dataSingleCoil(valueToByte(mt.Write)), report.GotByte) {
+			report.Pass = false
 		}
 	case WriteSingleRegister:
-		if !byteToEq(mt.getWriteData()[:2], mt.ResultByte) {
-			return false
+		if !byteToEq(valueToByte(mt.Write)[:2], report.GotByte) {
+			report.Pass = false
 		}
 	case WriteMultipleCoils, WriteMultipleRegisters:
-		if mt.ResultByte == nil {
-			return false
+		if report.GotByte == nil {
+			report.Pass = false
+		} else if mt.getQuantity() != binary.BigEndian.Uint16(report.GotByte) {
+			report.Pass = false
 		}
-		if mt.getQuantity() != binary.BigEndian.Uint16(mt.ResultByte) {
-			return false
+	}
+
+	countBit := 0
+	var expected ReportExpected
+	for _, v := range mt.Expected {
+		countBit, expected = v.Check(report.GotByte, report.GotTime, report.GotError, countBit)
+		if !expected.Pass {
+			report.Pass = false
 		}
+		report.Expected = append(report.Expected, expected)
 	}
-	return true
 }
 
-func (mt *ModbusTest) CheckDuration() bool {
-	if mt.ExpectedTime == "" {
-		return true
-	}
-	if mt.ResultTime > parseDuration(mt.ExpectedTime) {
-		return false
-	}
-	return true
-}
-
-func (mt *ModbusTest) CheckError() bool {
-	var got string
-	if mt.ResultError != nil {
-		got = mt.ResultError.Error()
-	}
-	return mt.getError() == got
-}
-
-func (mt *ModbusTest) Exec(client modbus.Client) {
+func (mt *ModbusTest) Exec(client modbus.Client, report *ReportTest) {
+	var err error
 	switch mt.getFunction() {
 	case ReadDiscreteInputs:
 		startTime := time.Now()
-		mt.ResultByte, mt.ResultError = client.ReadDiscreteInputs(*mt.Address, mt.getQuantity())
-		mt.ResultTime = time.Since(startTime)
+		if report.GotByte, err = client.ReadDiscreteInputs(*mt.Address, mt.getQuantity()); err != nil {
+			report.GotError = err.Error()
+		}
+		report.GotTime = time.Since(startTime)
 	case ReadCoils:
 		startTime := time.Now()
-		mt.ResultByte, mt.ResultError = client.ReadCoils(*mt.Address, mt.getQuantity())
-		mt.ResultTime = time.Since(startTime)
+		if report.GotByte, err = client.ReadCoils(*mt.Address, mt.getQuantity()); err != nil {
+			report.GotError = err.Error()
+		}
+		report.GotTime = time.Since(startTime)
 	case WriteSingleCoil:
+		// Special case when writing single coil
+		data := binary.BigEndian.Uint16(dataSingleCoil(valueToByte(mt.Write)))
+		report.Write = append(report.Write, ReportWrite{
+			Name:    mt.Write[0].Name,
+			Type:    Bool.String(),
+			Data:    fmt.Sprintf("%t", data == 0),
+			DataHex: fmt.Sprintf("%04x", data),
+			DataBin: fmt.Sprintf("%08b", data),
+		})
 		startTime := time.Now()
-		mt.ResultByte, mt.ResultError = client.WriteSingleCoil(*mt.Address, binary.BigEndian.Uint16(dataSingleCoil(mt.getWriteData())))
-		mt.ResultTime = time.Since(startTime)
+		if report.GotByte, err = client.WriteSingleCoil(*mt.Address, data); err != nil {
+			report.GotError = err.Error()
+		}
+		report.GotTime = time.Since(startTime)
 	case WriteMultipleCoils:
+		for _, w := range mt.Write {
+			report.Write = append(report.Write, w.ReportWrite())
+		}
 		startTime := time.Now()
-		mt.ResultByte, mt.ResultError = client.WriteMultipleCoils(*mt.Address, mt.getQuantity(), mt.getWriteData())
-		mt.ResultTime = time.Since(startTime)
+		if report.GotByte, err = client.WriteMultipleCoils(*mt.Address, mt.getQuantity(), valueToByte(mt.Write)); err != nil {
+			report.GotError = err.Error()
+		}
+		report.GotTime = time.Since(startTime)
 	case ReadInputRegisters:
 		startTime := time.Now()
-		mt.ResultByte, mt.ResultError = client.ReadInputRegisters(*mt.Address, mt.getQuantity())
-		mt.ResultTime = time.Since(startTime)
+		if report.GotByte, err = client.ReadInputRegisters(*mt.Address, mt.getQuantity()); err != nil {
+			report.GotError = err.Error()
+		}
+		report.GotTime = time.Since(startTime)
 	case ReadHoldingRegisters:
 		startTime := time.Now()
-		mt.ResultByte, mt.ResultError = client.ReadHoldingRegisters(*mt.Address, mt.getQuantity())
-		mt.ResultTime = time.Since(startTime)
+		if report.GotByte, err = client.ReadHoldingRegisters(*mt.Address, mt.getQuantity()); err != nil {
+			report.GotError = err.Error()
+		}
+		report.GotTime = time.Since(startTime)
 	case WriteSingleRegister:
+		for _, w := range mt.Write {
+			report.Write = append(report.Write, w.ReportWrite())
+		}
 		startTime := time.Now()
-		mt.ResultByte, mt.ResultError = client.WriteSingleRegister(*mt.Address, binary.BigEndian.Uint16(mt.getWriteData()))
-		mt.ResultTime = time.Since(startTime)
+		if report.GotByte, err = client.WriteSingleRegister(*mt.Address, binary.BigEndian.Uint16(valueToByte(mt.Write))); err != nil {
+			report.GotError = err.Error()
+		}
+		report.GotTime = time.Since(startTime)
 	case WriteMultipleRegisters:
+		for _, w := range mt.Write {
+			report.Write = append(report.Write, w.ReportWrite())
+		}
 		startTime := time.Now()
-		mt.ResultByte, mt.ResultError = client.WriteMultipleRegisters(*mt.Address, mt.getQuantity(), mt.getWriteData())
-		mt.ResultTime = time.Since(startTime)
+		if report.GotByte, err = client.WriteMultipleRegisters(*mt.Address, mt.getQuantity(), valueToByte(mt.Write)); err != nil {
+			report.GotError = err.Error()
+		}
+		report.GotTime = time.Since(startTime)
 	}
 }
 
@@ -219,6 +177,13 @@ func (mt *ModbusTest) Validation() error {
 	case WriteSingleCoil, WriteSingleRegister:
 		if len(mt.Write) <= 0 {
 			return fmt.Errorf("there is no data to write")
+		}
+	}
+
+	// переделываем формат ошибки
+	for _, v := range mt.Expected {
+		if v.Type() == Error {
+			v.Error = mt.getError(*v.Error)
 		}
 	}
 	return nil
@@ -262,29 +227,20 @@ func (mt *ModbusTest) getQuantity() uint16 {
 	// If it is not explicitly specified then we try to determine automatically
 	switch mt.getFunction() {
 	case ReadDiscreteInputs, ReadCoils:
-		if bits, err := countBit(mt.Expected, false); err == nil {
-			return bits
-		}
+		return countBit(mt.Expected, false)
 	case WriteMultipleCoils:
-		if bits, err := countBit(mt.Write, false); err == nil {
-			return bits
-		}
+		return countBit(mt.Write, false)
 	case ReadInputRegisters, ReadHoldingRegisters:
-		if bits, err := countBit(mt.Expected, true); err == nil {
-			return bits
-		}
+		return countBit(mt.Expected, true)
 	case WriteMultipleRegisters:
-		if bits, err := countBit(mt.Write, true); err == nil {
-			return bits
-		}
+		return countBit(mt.Write, true)
 	}
 	return 0
 }
 
-func (mt *ModbusTest) getError() string {
-	expected := mt.ExpectedError
+func (mt *ModbusTest) getError(expected string) *string {
 	if mt.getFunction() != NilFunction {
-		modbusError := strings.ReplaceAll(strings.ToLower(mt.ExpectedError), " ", "")
+		modbusError := strings.ReplaceAll(strings.ToLower(expected), " ", "")
 		if strings.HasPrefix(modbusError, "0x") {
 			if a, err := strconv.ParseInt(strings.TrimPrefix(modbusError, "0x"), 16, 8); err == nil {
 				modbusError = strconv.Itoa(int(a))
@@ -311,13 +267,5 @@ func (mt *ModbusTest) getError() string {
 			expected = (&modbus.ModbusError{FunctionCode: byte(mt.getFunction()) | 1<<7, ExceptionCode: 11}).Error()
 		}
 	}
-	return expected
-}
-
-func (mt *ModbusTest) getWriteData() []byte {
-	data, err := valueToByte(mt.Write)
-	if err != nil {
-		return nil
-	}
-	return data
+	return &expected
 }

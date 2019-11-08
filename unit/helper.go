@@ -41,7 +41,7 @@ func dataSingleCoil(data []byte) []byte {
 }
 
 // TODO expect
-func countBit(v []*Value, is16bit bool) (bits uint16, err error) {
+func countBit(v []*Value, is16bit bool) (bits uint16) {
 	for _, w := range v {
 		if w.Type() == Bool {
 			bits++
@@ -49,10 +49,7 @@ func countBit(v []*Value, is16bit bool) (bits uint16, err error) {
 			if bits%8 != 0 {
 				bits += 8 - bits%8
 			}
-			byteData, err := w.Write()
-			if err != nil {
-				return 0, fmt.Errorf("%s", err)
-			}
+			byteData := w.Write()
 			bits += 8 * uint16(len(byteData))
 		}
 	}
@@ -60,13 +57,13 @@ func countBit(v []*Value, is16bit bool) (bits uint16, err error) {
 		if bits%16 != 0 {
 			bits += 16 - bits%16
 		}
-		return bits / 16, nil
+		return bits / 16
 	} else {
-		return bits, nil
+		return bits
 	}
 }
 
-func valueToByte(v []*Value) (data []byte, err error) {
+func valueToByte(v []*Value) (data []byte) {
 	var i int
 	var vByte uint8
 	for _, w := range v {
@@ -87,10 +84,7 @@ func valueToByte(v []*Value) (data []byte, err error) {
 				vByte = 0
 				i = 0
 			}
-			b, err := w.Write()
-			if err != nil {
-				return data, err
-			}
+			b := w.Write()
 			data = append(data, b...)
 		}
 	}

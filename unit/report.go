@@ -1,5 +1,7 @@
 package unit
 
+import "time"
+
 type ReportWrite struct {
 	Name    string
 	Type    string
@@ -20,15 +22,19 @@ type ReportExpected struct {
 	GotBin      string
 }
 
-type Report struct {
-	Group         string
-	Test          string
-	Pause         string
-	Pass          bool
-	Write         []ReportWrite
-	Expected      []ReportExpected
-	ExpectedTime  string
-	ExpectedError string
-	GotTime       string
-	GotError      string
+type ReportGroup struct {
+	Name  string
+	Tests []ReportTest
+}
+
+type ReportTest struct {
+	Name     string
+	Pass     bool
+	Pause    string
+	Skip     string
+	Write    []ReportWrite
+	Expected []ReportExpected
+	GotByte  []byte
+	GotTime  time.Duration
+	GotError string
 }
