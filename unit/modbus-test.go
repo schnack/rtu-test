@@ -65,25 +65,6 @@ func (mt *ModbusTest) Run(client modbus.Client) ReportTest {
 }
 
 func (mt *ModbusTest) Check(report *ReportTest) {
-	switch mt.getFunction() {
-	case ReadCoils, ReadDiscreteInputs, ReadHoldingRegisters, ReadInputRegisters:
-
-	case WriteSingleCoil:
-		if !byteToEq(dataSingleCoil(valueToByte(mt.Write)), report.GotByte) {
-			report.Pass = false
-		}
-	case WriteSingleRegister:
-		if !byteToEq(valueToByte(mt.Write)[:2], report.GotByte) {
-			report.Pass = false
-		}
-	case WriteMultipleCoils, WriteMultipleRegisters:
-		if report.GotByte == nil {
-			report.Pass = false
-		} else if mt.getQuantity() != binary.BigEndian.Uint16(report.GotByte) {
-			report.Pass = false
-		}
-	}
-
 	countBit := 0
 	var expected ReportExpected
 	for _, v := range mt.Expected {

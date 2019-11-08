@@ -23,14 +23,15 @@ func (m *Message) Print(report ReportTest) {
 		if err := t.Execute(buff, report); err != nil {
 			logrus.Fatal(err)
 		}
+		if d < 0 {
+			buff.WriteString(" [Enter]")
+			var t string
+			_, _ = fmt.Scanln(&t)
+		}
 		Init().Display(buff.String())
 	}
 
-	if d < 0 {
-		Init().Display("Press ENTER to continue...")
-		var t string
-		_, _ = fmt.Scanln(&t)
-	} else if d > 0 {
+	if d > 0 {
 		time.Sleep(d)
 	}
 }

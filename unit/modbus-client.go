@@ -45,17 +45,7 @@ func (mc *ModbusClient) Run() error {
 		report := ReportGroup{Name: group}
 		logrus.Warnf(Init().Render(TestGROUP, report))
 		for _, test := range tests {
-			//test.Before.Print(report)
 			report.Tests = append(report.Tests, test.Run(client))
-			/*
-				if reportTest.Pass {
-					test.Success.Print(report)
-				} else {
-					test.Error.Print(report)
-				}
-				//test.After.Print(report)
-
-			*/
 		}
 	}
 

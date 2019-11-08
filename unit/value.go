@@ -461,8 +461,8 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		b := make([]byte, 4)
 		binary.BigEndian.PutUint32(b, *v.Uint32)
 		report.Expected = fmt.Sprintf("%d", *v.Uint32)
-		report.ExpectedHex = fmt.Sprintf("%08x", *v.Uint32)
-		report.ExpectedBin = fmt.Sprintf("%032b", *v.Uint32)
+		report.ExpectedHex = fmt.Sprintf("%08x", b)
+		report.ExpectedBin = fmt.Sprintf("%08b", b)
 		offsetBit = currentBit + (currentBit % 8) + 32
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
@@ -731,7 +731,7 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.GotHex = fmt.Sprintf("%x", rawBite[currentBit/8:offsetBit/8])
 		report.GotBin = fmt.Sprintf("%b", rawBite[currentBit/8:offsetBit/8])
 
-		report.Pass = got != *v.String
+		report.Pass = got == *v.String
 
 	case Byte:
 		expected, err := parseStringByte(*v.Byte)
@@ -739,8 +739,8 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 			logrus.Fatal(err)
 		}
 		report.Expected = fmt.Sprintf("% x", expected)
-		report.ExpectedHex = fmt.Sprintf("%x", expected)
-		report.ExpectedBin = fmt.Sprintf("%b", expected)
+		report.ExpectedHex = fmt.Sprintf("%02x", expected)
+		report.ExpectedBin = fmt.Sprintf("%08b", expected)
 
 		offsetBit = currentBit + (currentBit % 8) + (len(expected) * 8)
 		if len(rawBite) < offsetBit/8 {
@@ -751,8 +751,8 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		got := rawBite[currentBit/8 : offsetBit/8]
 
 		report.Got = fmt.Sprintf("% x", got)
-		report.GotHex = fmt.Sprintf("%x", got)
-		report.GotBin = fmt.Sprintf("%b", got)
+		report.GotHex = fmt.Sprintf("%02x", got)
+		report.GotBin = fmt.Sprintf("%08b", got)
 
 		if len(got) != len(expected) {
 			report.Pass = false
@@ -773,10 +773,10 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		}
 		report.Expected = d.String()
 		report.ExpectedHex = fmt.Sprintf("%016x", d.Nanoseconds())
-		report.ExpectedBin = fmt.Sprintf("%064b", d.Nanoseconds())
+		report.ExpectedBin = fmt.Sprintf("[%064b]", d.Nanoseconds())
 		report.Got = rawTime.String()
 		report.GotHex = fmt.Sprintf("%016x", rawTime.Nanoseconds())
-		report.GotBin = fmt.Sprintf("%064b", rawTime.Nanoseconds())
+		report.GotBin = fmt.Sprintf("[%064b]", rawTime.Nanoseconds())
 
 	case Error:
 		if rawError != *v.Error {
@@ -799,7 +799,7 @@ func (v *Value) ReportWrite() ReportWrite {
 	case Int8:
 		report.Data = fmt.Sprintf("%d", *v.Int8)
 		report.DataHex = fmt.Sprintf("%02x", b)
-		report.DataBin = fmt.Sprintf("[%08b]", b)
+		report.DataBin = fmt.Sprintf("%08b", b)
 
 	case Int16:
 		report.Data = fmt.Sprintf("%d", *v.Int16)
@@ -819,7 +819,7 @@ func (v *Value) ReportWrite() ReportWrite {
 	case Uint8:
 		report.Data = fmt.Sprintf("%d", *v.Uint8)
 		report.DataHex = fmt.Sprintf("%02x", b)
-		report.DataBin = fmt.Sprintf("[%08b]", b)
+		report.DataBin = fmt.Sprintf("%08b", b)
 
 	case Uint16:
 		report.Data = fmt.Sprintf("%d", *v.Uint16)

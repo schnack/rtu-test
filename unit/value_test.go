@@ -4,14 +4,115 @@ import (
 	"fmt"
 	"github.com/schnack/gotest"
 	"testing"
+	"time"
 )
+
+func TestValue_CheckTime(t *testing.T) {
+	var param string = "2ms"
+	v := Value{Name: "Test", Time: &param}
+	raw := []byte{0x01, 0x02}
+
+	offset, report := v.Check(raw, time.Second, "", 0)
+
+	if err := gotest.Expect(offset).Eq(0); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.Type).Eq(Time.String()); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.Expected).Eq("2ms"); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.ExpectedHex).Eq("00000000001e8480"); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.ExpectedBin).Eq("[0000000000000000000000000000000000000000000111101000010010000000]"); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.Got).Eq("1s"); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.GotHex).Eq("000000003b9aca00"); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.GotBin).Eq("[0000000000000000000000000000000000111011100110101100101000000000]"); err != nil {
+		t.Error(err)
+	}
+
+	offset, report = v.Check(raw, time.Nanosecond, "", offset)
+	if err := gotest.Expect(offset).Eq(0); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.Got).Eq("1ns"); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_CheckError(t *testing.T) {
+	var param string = "error"
+	v := Value{Name: "Test", Error: &param}
+	raw := []byte{}
+
+	offset, report := v.Check(raw, time.Second, "test", 0)
+
+	if err := gotest.Expect(offset).Eq(0); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.Type).Eq(Error.String()); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.Expected).Eq("error"); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.ExpectedHex).Eq("6572726f72"); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.ExpectedBin).Eq("[01100101 01110010 01110010 01101111 01110010]"); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.Got).Eq("test"); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.GotHex).Eq("74657374"); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.GotBin).Eq("[01110100 01100101 01110011 01110100]"); err != nil {
+		t.Error(err)
+	}
+
+	offset, report = v.Check(raw, time.Nanosecond, "error", offset)
+	if err := gotest.Expect(offset).Eq(0); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.Got).Eq("error"); err != nil {
+		t.Error(err)
+	}
+}
 
 func TestValue_CheckInt8(t *testing.T) {
 	var param int8 = 2
 	v := Value{Name: "Test", Int8: &param}
 	raw := []byte{0x01, 0x02}
 
-	offset, report := v.Check(raw, 0)
+	offset, report := v.Check(raw, time.Second, "", 0)
 
 	if err := gotest.Expect(offset).Eq(8); err != nil {
 		t.Error(err)
@@ -44,7 +145,7 @@ func TestValue_CheckInt8(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
+	offset, report = v.Check(raw, time.Second, "", offset)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -62,7 +163,7 @@ func TestValue_CheckInt8Range(t *testing.T) {
 	v := Value{Name: "Test", MinInt8: &paramMin, MaxInt8: &paramMax}
 	raw := []byte{0x01, 0x02, 0x03, 0x04, 0x05}
 
-	offset, report := v.Check(raw, 0)
+	offset, report := v.Check(raw, time.Second, "", 0)
 	if err := gotest.Expect(offset).Eq(8); err != nil {
 		t.Error(err)
 	}
@@ -94,7 +195,7 @@ func TestValue_CheckInt8Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
+	offset, report = v.Check(raw, time.Second, "", offset)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -105,7 +206,7 @@ func TestValue_CheckInt8Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
+	offset, report = v.Check(raw, time.Second, "", offset)
 	if err := gotest.Expect(offset).Eq(24); err != nil {
 		t.Error(err)
 	}
@@ -116,7 +217,7 @@ func TestValue_CheckInt8Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
+	offset, report = v.Check(raw, time.Second, "", offset)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -127,7 +228,7 @@ func TestValue_CheckInt8Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
+	offset, report = v.Check(raw, time.Second, "", offset)
 	if err := gotest.Expect(offset).Eq(40); err != nil {
 		t.Error(err)
 	}
@@ -144,7 +245,7 @@ func TestValue_CheckInt8Min(t *testing.T) {
 	v := Value{Name: "Test", MinInt8: &paramMin}
 	raw := []byte{0x01, 0x02, 0x03}
 
-	offset, report := v.Check(raw, 0)
+	offset, report := v.Check(raw, time.Second, "", 0)
 	if err := gotest.Expect(offset).Eq(8); err != nil {
 		t.Error(err)
 	}
@@ -176,7 +277,7 @@ func TestValue_CheckInt8Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
+	offset, report = v.Check(raw, time.Second, "", offset)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -187,7 +288,7 @@ func TestValue_CheckInt8Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
+	offset, report = v.Check(raw, time.Second, "", offset)
 	if err := gotest.Expect(offset).Eq(24); err != nil {
 		t.Error(err)
 	}
@@ -204,7 +305,7 @@ func TestValue_CheckInt8Max(t *testing.T) {
 	v := Value{Name: "Test", MaxInt8: &paramMax}
 	raw := []byte{0x01, 0x02, 0x03}
 
-	offset, report := v.Check(raw, 0)
+	offset, report := v.Check(raw, time.Second, "", 0)
 	if err := gotest.Expect(offset).Eq(8); err != nil {
 		t.Error(err)
 	}
@@ -236,7 +337,7 @@ func TestValue_CheckInt8Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
+	offset, report = v.Check(raw, time.Second, "", offset)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -247,7 +348,7 @@ func TestValue_CheckInt8Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
+	offset, report = v.Check(raw, time.Second, "", offset)
 	if err := gotest.Expect(offset).Eq(24); err != nil {
 		t.Error(err)
 	}
@@ -266,7 +367,7 @@ func TestValue_CheckInt16(t *testing.T) {
 		0x00, 0x01,
 		0x00, 0x02}
 
-	offset, report := v.Check(raw, 0)
+	offset, report := v.Check(raw, time.Second, "", 0)
 
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
@@ -299,7 +400,7 @@ func TestValue_CheckInt16(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
+	offset, report = v.Check(raw, time.Second, "", offset)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -311,7 +412,6 @@ func TestValue_CheckInt16(t *testing.T) {
 	}
 }
 
-// TODO Провальные тесты
 func TestValue_CheckInt16Range(t *testing.T) {
 	var paramMin int16 = 2
 	var paramMax int16 = 4
@@ -323,8 +423,8 @@ func TestValue_CheckInt16Range(t *testing.T) {
 		0, 0x04,
 		0, 0x05}
 
-	offset, report := v.Check(raw, 0)
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	offset, report := v.Check(raw, time.Second, "", 0)
+	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
@@ -339,24 +439,24 @@ func TestValue_CheckInt16Range(t *testing.T) {
 	if err := gotest.Expect(report.Expected).Eq(fmt.Sprintf(FormatRange, "2", "4")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "02", "04")); err != nil {
+	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "0002", "0004")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "00000010", "00000100")); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "[00000000 00000010]", "[00000000 00000100]")); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.GotHex).Eq("0001"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[00000000 00000001]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(16); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -366,8 +466,8 @@ func TestValue_CheckInt16Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(24); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(48); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -377,8 +477,8 @@ func TestValue_CheckInt16Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(32); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -388,8 +488,8 @@ func TestValue_CheckInt16Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(48); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(80); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
@@ -408,8 +508,8 @@ func TestValue_CheckInt16Min(t *testing.T) {
 		0, 0x02,
 		0, 0x03}
 
-	offset, report := v.Check(raw, 0)
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	offset, report := v.Check(raw, time.Second, "", 0)
+	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
@@ -424,24 +524,24 @@ func TestValue_CheckInt16Min(t *testing.T) {
 	if err := gotest.Expect(report.Expected).Eq(fmt.Sprintf(FormatRange, "2", "")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "02", "")); err != nil {
+	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "0002", "")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "00000010", "")); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "[00000000 00000010]", "")); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.GotHex).Eq("0001"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[00000000 00000001]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(16); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -451,8 +551,8 @@ func TestValue_CheckInt16Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(24); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(48); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -471,8 +571,8 @@ func TestValue_CheckInt16Max(t *testing.T) {
 		0, 0x02,
 		0, 0x03}
 
-	offset, report := v.Check(raw, 0)
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	offset, report := v.Check(raw, time.Second, "", 0)
+	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
@@ -487,24 +587,24 @@ func TestValue_CheckInt16Max(t *testing.T) {
 	if err := gotest.Expect(report.Expected).Eq(fmt.Sprintf(FormatRange, "", "2")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "", "02")); err != nil {
+	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "", "0002")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "", "00000010")); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "", "[00000000 00000010]")); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.GotHex).Eq("0001"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[00000000 00000001]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(16); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -514,8 +614,8 @@ func TestValue_CheckInt16Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(24); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(48); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
@@ -533,9 +633,9 @@ func TestValue_CheckInt32(t *testing.T) {
 		0x00, 0x00, 0x00, 0x01,
 		0x00, 0x00, 0x00, 0x02}
 
-	offset, report := v.Check(raw, 0)
+	offset, report := v.Check(raw, time.Second, "", 0)
 
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
@@ -550,24 +650,24 @@ func TestValue_CheckInt32(t *testing.T) {
 	if err := gotest.Expect(report.Expected).Eq("2"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedHex).Eq("02"); err != nil {
+	if err := gotest.Expect(report.ExpectedHex).Eq("00000002"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq("00000010"); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq("[00000000 00000000 00000000 00000010]"); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.GotHex).Eq("00000001"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[00000000 00000000 00000000 00000001]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -590,8 +690,8 @@ func TestValue_CheckInt32Range(t *testing.T) {
 		0, 0, 0, 5,
 	}
 
-	offset, report := v.Check(raw, 0)
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	offset, report := v.Check(raw, time.Second, "", 0)
+	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
@@ -606,24 +706,24 @@ func TestValue_CheckInt32Range(t *testing.T) {
 	if err := gotest.Expect(report.Expected).Eq(fmt.Sprintf(FormatRange, "2", "4")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "02", "04")); err != nil {
+	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "00000002", "00000004")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "00000010", "00000100")); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "[00000000 00000000 00000000 00000010]", "[00000000 00000000 00000000 00000100]")); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.GotHex).Eq("00000001"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[00000000 00000000 00000000 00000001]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(16); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -633,8 +733,8 @@ func TestValue_CheckInt32Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(24); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(96); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -644,8 +744,8 @@ func TestValue_CheckInt32Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(32); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -655,8 +755,8 @@ func TestValue_CheckInt32Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(48); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(160); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
@@ -676,8 +776,8 @@ func TestValue_CheckInt32Min(t *testing.T) {
 		0, 0, 0, 3,
 	}
 
-	offset, report := v.Check(raw, 0)
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	offset, report := v.Check(raw, time.Second, "", 0)
+	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
@@ -692,24 +792,24 @@ func TestValue_CheckInt32Min(t *testing.T) {
 	if err := gotest.Expect(report.Expected).Eq(fmt.Sprintf(FormatRange, "2", "")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "02", "")); err != nil {
+	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "00000002", "")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "00000010", "")); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "[00000000 00000000 00000000 00000010]", "")); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.GotHex).Eq("00000001"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[00000000 00000000 00000000 00000001]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(16); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -719,8 +819,8 @@ func TestValue_CheckInt32Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(24); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(96); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -740,8 +840,8 @@ func TestValue_CheckInt32Max(t *testing.T) {
 		0, 0, 0, 3,
 	}
 
-	offset, report := v.Check(raw, 0)
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	offset, report := v.Check(raw, time.Second, "", 0)
+	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
@@ -756,24 +856,24 @@ func TestValue_CheckInt32Max(t *testing.T) {
 	if err := gotest.Expect(report.Expected).Eq(fmt.Sprintf(FormatRange, "", "2")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "", "02")); err != nil {
+	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "", "00000002")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "", "00000010")); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "", "[00000000 00000000 00000000 00000010]")); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.GotHex).Eq("00000001"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[00000000 00000000 00000000 00000001]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(16); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -783,8 +883,8 @@ func TestValue_CheckInt32Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(24); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(96); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
@@ -803,9 +903,9 @@ func TestValue_CheckInt64(t *testing.T) {
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
 	}
 
-	offset, report := v.Check(raw, 0)
+	offset, report := v.Check(raw, time.Second, "", 0)
 
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
@@ -820,24 +920,24 @@ func TestValue_CheckInt64(t *testing.T) {
 	if err := gotest.Expect(report.Expected).Eq("2"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedHex).Eq("02"); err != nil {
+	if err := gotest.Expect(report.ExpectedHex).Eq("0000000000000002"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq("00000010"); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq("[00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000010]"); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.GotHex).Eq("0000000000000001"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000001]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -860,8 +960,8 @@ func TestValue_CheckInt64Range(t *testing.T) {
 		0, 0, 0, 0, 0, 0, 0, 5,
 	}
 
-	offset, report := v.Check(raw, 0)
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	offset, report := v.Check(raw, time.Second, "", 0)
+	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
@@ -876,24 +976,24 @@ func TestValue_CheckInt64Range(t *testing.T) {
 	if err := gotest.Expect(report.Expected).Eq(fmt.Sprintf(FormatRange, "2", "4")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "02", "04")); err != nil {
+	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "0000000000000002", "0000000000000004")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "00000010", "00000100")); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "[00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000010]", "[00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000100]")); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.GotHex).Eq("0000000000000001"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000001]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(16); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -903,8 +1003,8 @@ func TestValue_CheckInt64Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(24); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(192); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -914,8 +1014,8 @@ func TestValue_CheckInt64Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(32); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(256); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -925,8 +1025,8 @@ func TestValue_CheckInt64Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(48); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(320); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
@@ -946,8 +1046,8 @@ func TestValue_CheckInt64Min(t *testing.T) {
 		0, 0, 0, 0, 0, 0, 0, 3,
 	}
 
-	offset, report := v.Check(raw, 0)
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	offset, report := v.Check(raw, time.Second, "", 0)
+	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
@@ -962,24 +1062,24 @@ func TestValue_CheckInt64Min(t *testing.T) {
 	if err := gotest.Expect(report.Expected).Eq(fmt.Sprintf(FormatRange, "2", "")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "02", "")); err != nil {
+	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "0000000000000002", "")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "00000010", "")); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "[00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000010]", "")); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.GotHex).Eq("0000000000000001"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000001]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(16); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -989,8 +1089,8 @@ func TestValue_CheckInt64Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(24); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(192); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -1010,8 +1110,8 @@ func TestValue_CheckInt64Max(t *testing.T) {
 		0, 0, 0, 0, 0, 0, 0, 3,
 	}
 
-	offset, report := v.Check(raw, 0)
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	offset, report := v.Check(raw, time.Second, "", 0)
+	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
@@ -1026,24 +1126,24 @@ func TestValue_CheckInt64Max(t *testing.T) {
 	if err := gotest.Expect(report.Expected).Eq(fmt.Sprintf(FormatRange, "", "2")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "", "02")); err != nil {
+	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "", "0000000000000002")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "", "00000010")); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "", "[00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000010]")); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.GotHex).Eq("0000000000000001"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000001]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(16); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -1053,8 +1153,8 @@ func TestValue_CheckInt64Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(24); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(192); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
@@ -1070,7 +1170,7 @@ func TestValue_CheckUint8(t *testing.T) {
 	v := Value{Name: "Test", Uint8: &param}
 	raw := []byte{0x01, 0x02}
 
-	offset, report := v.Check(raw, 0)
+	offset, report := v.Check(raw, time.Second, "", 0)
 
 	if err := gotest.Expect(offset).Eq(8); err != nil {
 		t.Error(err)
@@ -1090,7 +1190,7 @@ func TestValue_CheckUint8(t *testing.T) {
 	if err := gotest.Expect(report.ExpectedHex).Eq("02"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq("00000010"); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq("[00000010]"); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
@@ -1099,12 +1199,12 @@ func TestValue_CheckUint8(t *testing.T) {
 	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[00000001]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -1121,7 +1221,7 @@ func TestValue_CheckUint8Range(t *testing.T) {
 	v := Value{Name: "Test", MinUint8: &paramMin, MaxUint8: &paramMax}
 	raw := []byte{0x01, 0x02, 0x03, 0x04, 0x05}
 
-	offset, report := v.Check(raw, 0)
+	offset, report := v.Check(raw, time.Second, "", 0)
 	if err := gotest.Expect(offset).Eq(8); err != nil {
 		t.Error(err)
 	}
@@ -1140,7 +1240,7 @@ func TestValue_CheckUint8Range(t *testing.T) {
 	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "02", "04")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "00000010", "00000100")); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "[00000010]", "[00000100]")); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
@@ -1149,11 +1249,11 @@ func TestValue_CheckUint8Range(t *testing.T) {
 	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[00000001]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
+	offset, report = v.Check(raw, time.Second, "", offset)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -1164,7 +1264,7 @@ func TestValue_CheckUint8Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
+	offset, report = v.Check(raw, time.Second, "", offset)
 	if err := gotest.Expect(offset).Eq(24); err != nil {
 		t.Error(err)
 	}
@@ -1175,7 +1275,7 @@ func TestValue_CheckUint8Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
+	offset, report = v.Check(raw, time.Second, "", offset)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -1186,8 +1286,8 @@ func TestValue_CheckUint8Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(48); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(40); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
@@ -1203,7 +1303,7 @@ func TestValue_CheckUint8Min(t *testing.T) {
 	v := Value{Name: "Test", MinUint8: &paramMin}
 	raw := []byte{0x01, 0x02, 0x03}
 
-	offset, report := v.Check(raw, 0)
+	offset, report := v.Check(raw, time.Second, "", 0)
 	if err := gotest.Expect(offset).Eq(8); err != nil {
 		t.Error(err)
 	}
@@ -1222,7 +1322,7 @@ func TestValue_CheckUint8Min(t *testing.T) {
 	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "02", "")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "00000010", "")); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "[00000010]", "")); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
@@ -1231,11 +1331,11 @@ func TestValue_CheckUint8Min(t *testing.T) {
 	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[00000001]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
+	offset, report = v.Check(raw, time.Second, "", offset)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -1246,7 +1346,7 @@ func TestValue_CheckUint8Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
+	offset, report = v.Check(raw, time.Second, "", offset)
 	if err := gotest.Expect(offset).Eq(24); err != nil {
 		t.Error(err)
 	}
@@ -1263,7 +1363,7 @@ func TestValue_CheckUint8Max(t *testing.T) {
 	v := Value{Name: "Test", MaxUint8: &paramMax}
 	raw := []byte{0x01, 0x02, 0x03}
 
-	offset, report := v.Check(raw, 0)
+	offset, report := v.Check(raw, time.Second, "", 0)
 	if err := gotest.Expect(offset).Eq(8); err != nil {
 		t.Error(err)
 	}
@@ -1282,7 +1382,7 @@ func TestValue_CheckUint8Max(t *testing.T) {
 	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "", "02")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "", "00000010")); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "", "[00000010]")); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
@@ -1291,11 +1391,11 @@ func TestValue_CheckUint8Max(t *testing.T) {
 	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[00000001]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
+	offset, report = v.Check(raw, time.Second, "", offset)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -1306,7 +1406,7 @@ func TestValue_CheckUint8Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
+	offset, report = v.Check(raw, time.Second, "", offset)
 	if err := gotest.Expect(offset).Eq(24); err != nil {
 		t.Error(err)
 	}
@@ -1323,9 +1423,9 @@ func TestValue_CheckUint16(t *testing.T) {
 	v := Value{Name: "Test", Uint16: &param}
 	raw := []byte{0x00, 0x01, 0x00, 0x02}
 
-	offset, report := v.Check(raw, 0)
+	offset, report := v.Check(raw, time.Second, "", 0)
 
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
@@ -1340,24 +1440,24 @@ func TestValue_CheckUint16(t *testing.T) {
 	if err := gotest.Expect(report.Expected).Eq("2"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedHex).Eq("02"); err != nil {
+	if err := gotest.Expect(report.ExpectedHex).Eq("0002"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq("00000010"); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq("[00000000 00000010]"); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.GotHex).Eq("0001"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[00000000 00000001]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -1379,8 +1479,8 @@ func TestValue_CheckUint16Range(t *testing.T) {
 		0, 0x04,
 		0, 0x05}
 
-	offset, report := v.Check(raw, 0)
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	offset, report := v.Check(raw, time.Second, "", 0)
+	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
@@ -1395,24 +1495,24 @@ func TestValue_CheckUint16Range(t *testing.T) {
 	if err := gotest.Expect(report.Expected).Eq(fmt.Sprintf(FormatRange, "2", "4")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "02", "04")); err != nil {
+	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "0002", "0004")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "00000010", "00000100")); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "[00000000 00000010]", "[00000000 00000100]")); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.GotHex).Eq("0001"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[00000000 00000001]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(16); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -1422,8 +1522,8 @@ func TestValue_CheckUint16Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(24); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(48); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -1433,8 +1533,8 @@ func TestValue_CheckUint16Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(32); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -1444,8 +1544,8 @@ func TestValue_CheckUint16Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(48); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(80); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
@@ -1464,8 +1564,8 @@ func TestValue_CheckUint16Min(t *testing.T) {
 		0, 0x02,
 		0, 0x03}
 
-	offset, report := v.Check(raw, 0)
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	offset, report := v.Check(raw, time.Second, "", 0)
+	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
@@ -1480,24 +1580,24 @@ func TestValue_CheckUint16Min(t *testing.T) {
 	if err := gotest.Expect(report.Expected).Eq(fmt.Sprintf(FormatRange, "2", "")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "02", "")); err != nil {
+	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "0002", "")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "00000010", "")); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "[00000000 00000010]", "")); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.GotHex).Eq("0001"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[00000000 00000001]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(16); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -1507,8 +1607,8 @@ func TestValue_CheckUint16Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(24); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(48); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -1527,8 +1627,8 @@ func TestValue_CheckUint16Max(t *testing.T) {
 		0, 0x02,
 		0, 0x03}
 
-	offset, report := v.Check(raw, 0)
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	offset, report := v.Check(raw, time.Second, "", 0)
+	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
@@ -1543,24 +1643,24 @@ func TestValue_CheckUint16Max(t *testing.T) {
 	if err := gotest.Expect(report.Expected).Eq(fmt.Sprintf(FormatRange, "", "2")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "", "02")); err != nil {
+	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "", "0002")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "", "00000010")); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "", "[00000000 00000010]")); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.GotHex).Eq("0001"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[00000000 00000001]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(16); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -1570,8 +1670,8 @@ func TestValue_CheckUint16Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(24); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(48); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
@@ -1589,9 +1689,9 @@ func TestValue_CheckUint32(t *testing.T) {
 		0x00, 0x00, 0x00, 0x01,
 		0x00, 0x00, 0x00, 0x02}
 
-	offset, report := v.Check(raw, 0)
+	offset, report := v.Check(raw, time.Second, "", 0)
 
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
@@ -1606,24 +1706,24 @@ func TestValue_CheckUint32(t *testing.T) {
 	if err := gotest.Expect(report.Expected).Eq("2"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedHex).Eq("02"); err != nil {
+	if err := gotest.Expect(report.ExpectedHex).Eq("00000002"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq("00000010"); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq("[00000000 00000000 00000000 00000010]"); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.GotHex).Eq("00000001"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[00000000 00000000 00000000 00000001]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -1646,8 +1746,8 @@ func TestValue_CheckUint32Range(t *testing.T) {
 		0, 0, 0, 5,
 	}
 
-	offset, report := v.Check(raw, 0)
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	offset, report := v.Check(raw, time.Second, "", 0)
+	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
@@ -1662,24 +1762,24 @@ func TestValue_CheckUint32Range(t *testing.T) {
 	if err := gotest.Expect(report.Expected).Eq(fmt.Sprintf(FormatRange, "2", "4")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "02", "04")); err != nil {
+	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "00000002", "00000004")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "00000010", "00000100")); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "[00000000 00000000 00000000 00000010]", "[00000000 00000000 00000000 00000100]")); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.GotHex).Eq("00000001"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[00000000 00000000 00000000 00000001]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(16); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -1689,8 +1789,8 @@ func TestValue_CheckUint32Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(24); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(96); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -1700,8 +1800,8 @@ func TestValue_CheckUint32Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(32); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -1711,8 +1811,8 @@ func TestValue_CheckUint32Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(48); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(160); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
@@ -1732,8 +1832,8 @@ func TestValue_CheckUint32Min(t *testing.T) {
 		0, 0, 0, 3,
 	}
 
-	offset, report := v.Check(raw, 0)
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	offset, report := v.Check(raw, time.Second, "", 0)
+	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
@@ -1748,24 +1848,24 @@ func TestValue_CheckUint32Min(t *testing.T) {
 	if err := gotest.Expect(report.Expected).Eq(fmt.Sprintf(FormatRange, "2", "")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "02", "")); err != nil {
+	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "00000002", "")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "00000010", "")); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "[00000000 00000000 00000000 00000010]", "")); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.GotHex).Eq("00000001"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[00000000 00000000 00000000 00000001]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(16); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -1775,8 +1875,8 @@ func TestValue_CheckUint32Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(24); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(96); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -1796,8 +1896,8 @@ func TestValue_CheckUint32Max(t *testing.T) {
 		0, 0, 0, 3,
 	}
 
-	offset, report := v.Check(raw, 0)
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	offset, report := v.Check(raw, time.Second, "", 0)
+	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
@@ -1812,24 +1912,24 @@ func TestValue_CheckUint32Max(t *testing.T) {
 	if err := gotest.Expect(report.Expected).Eq(fmt.Sprintf(FormatRange, "", "2")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "", "02")); err != nil {
+	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "", "00000002")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "", "00000010")); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "", "[00000000 00000000 00000000 00000010]")); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.GotHex).Eq("00000001"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[00000000 00000000 00000000 00000001]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(16); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -1839,8 +1939,8 @@ func TestValue_CheckUint32Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(24); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(96); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
@@ -1859,9 +1959,9 @@ func TestValue_CheckUint64(t *testing.T) {
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
 	}
 
-	offset, report := v.Check(raw, 0)
+	offset, report := v.Check(raw, time.Second, "", 0)
 
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
@@ -1876,24 +1976,24 @@ func TestValue_CheckUint64(t *testing.T) {
 	if err := gotest.Expect(report.Expected).Eq("2"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedHex).Eq("02"); err != nil {
+	if err := gotest.Expect(report.ExpectedHex).Eq("0000000000000002"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq("00000010"); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq("[00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000010]"); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.GotHex).Eq("0000000000000001"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000001]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -1916,8 +2016,8 @@ func TestValue_CheckUint64Range(t *testing.T) {
 		0, 0, 0, 0, 0, 0, 0, 5,
 	}
 
-	offset, report := v.Check(raw, 0)
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	offset, report := v.Check(raw, time.Second, "", 0)
+	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
@@ -1932,24 +2032,24 @@ func TestValue_CheckUint64Range(t *testing.T) {
 	if err := gotest.Expect(report.Expected).Eq(fmt.Sprintf(FormatRange, "2", "4")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "02", "04")); err != nil {
+	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "0000000000000002", "0000000000000004")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "00000010", "00000100")); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "[00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000010]", "[00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000100]")); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.GotHex).Eq("0000000000000001"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000001]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(16); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -1959,8 +2059,8 @@ func TestValue_CheckUint64Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(24); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(192); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -1970,8 +2070,8 @@ func TestValue_CheckUint64Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(32); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(256); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -1981,8 +2081,8 @@ func TestValue_CheckUint64Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(48); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(320); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
@@ -2002,8 +2102,8 @@ func TestValue_CheckUint64Min(t *testing.T) {
 		0, 0, 0, 0, 0, 0, 0, 3,
 	}
 
-	offset, report := v.Check(raw, 0)
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	offset, report := v.Check(raw, time.Second, "", 0)
+	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
@@ -2018,24 +2118,24 @@ func TestValue_CheckUint64Min(t *testing.T) {
 	if err := gotest.Expect(report.Expected).Eq(fmt.Sprintf(FormatRange, "2", "")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "02", "")); err != nil {
+	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "0000000000000002", "")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "00000010", "")); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "[00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000010]", "")); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.GotHex).Eq("0000000000000001"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000001]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(16); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -2045,8 +2145,8 @@ func TestValue_CheckUint64Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(24); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(192); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -2066,8 +2166,8 @@ func TestValue_CheckUint64Max(t *testing.T) {
 		0, 0, 0, 0, 0, 0, 0, 3,
 	}
 
-	offset, report := v.Check(raw, 0)
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	offset, report := v.Check(raw, time.Second, "", 0)
+	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
@@ -2082,24 +2182,24 @@ func TestValue_CheckUint64Max(t *testing.T) {
 	if err := gotest.Expect(report.Expected).Eq(fmt.Sprintf(FormatRange, "", "2")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "", "02")); err != nil {
+	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "", "0000000000000002")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "", "00000010")); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "", "[00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000010]")); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.GotHex).Eq("0000000000000001"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000001]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(16); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
@@ -2109,8 +2209,8 @@ func TestValue_CheckUint64Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(24); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(192); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
@@ -2129,7 +2229,7 @@ func TestValue_CheckFloat32(t *testing.T) {
 		0x40, 0x19, 0x99, 0x9A,
 	}
 
-	offset, report := v.Check(raw, 0)
+	offset, report := v.Check(raw, time.Second, "", 0)
 
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
@@ -2143,33 +2243,33 @@ func TestValue_CheckFloat32(t *testing.T) {
 	if err := gotest.Expect(report.Type).Eq(Float32.String()); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Expected).Eq("2"); err != nil {
+	if err := gotest.Expect(report.Expected).Eq("2.400000"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedHex).Eq("02"); err != nil {
+	if err := gotest.Expect(report.ExpectedHex).Eq("4019999a"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq("00000010"); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq("[01000000 00011001 10011001 10011010]"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
+	if err := gotest.Expect(report.Got).Eq("2.300000"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.GotHex).Eq("40133333"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[01000000 00010011 00110011 00110011]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
+	offset, report = v.Check(raw, time.Second, "", offset)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq("2"); err != nil {
+	if err := gotest.Expect(report.Got).Eq("2.400000"); err != nil {
 		t.Error(err)
 	}
 }
@@ -2186,8 +2286,8 @@ func TestValue_CheckFloat32Range(t *testing.T) {
 		0x40, 0x20, 0x00, 0x00,
 	}
 
-	offset, report := v.Check(raw, 0)
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	offset, report := v.Check(raw, time.Second, "", 0)
+	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
@@ -2199,66 +2299,66 @@ func TestValue_CheckFloat32Range(t *testing.T) {
 	if err := gotest.Expect(report.Type).Eq(Float32.String()); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Expected).Eq(fmt.Sprintf(FormatRange, "2", "4")); err != nil {
+	if err := gotest.Expect(report.Expected).Eq(fmt.Sprintf(FormatRange, "2.200000", "2.400000")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "02", "04")); err != nil {
+	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "400ccccd", "4019999a")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "00000010", "00000100")); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "[01000000 00001100 11001100 11001101]", "[01000000 00011001 10011001 10011010]")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
+	if err := gotest.Expect(report.Got).Eq("2.100000"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.GotHex).Eq("40066666"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[01000000 00000110 01100110 01100110]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(16); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq("2"); err != nil {
+	if err := gotest.Expect(report.Got).Eq("2.200000"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(24); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(96); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq("3"); err != nil {
+	if err := gotest.Expect(report.Got).Eq("2.300000"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(32); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq("4"); err != nil {
+	if err := gotest.Expect(report.Got).Eq("2.400000"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(48); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(160); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq("5"); err != nil {
+	if err := gotest.Expect(report.Got).Eq("2.500000"); err != nil {
 		t.Error(err)
 	}
 }
@@ -2272,8 +2372,8 @@ func TestValue_CheckFloat32Min(t *testing.T) {
 		0x40, 0x13, 0x33, 0x33,
 	}
 
-	offset, report := v.Check(raw, 0)
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	offset, report := v.Check(raw, time.Second, "", 0)
+	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
@@ -2285,44 +2385,44 @@ func TestValue_CheckFloat32Min(t *testing.T) {
 	if err := gotest.Expect(report.Type).Eq(Float32.String()); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Expected).Eq(fmt.Sprintf(FormatRange, "2", "")); err != nil {
+	if err := gotest.Expect(report.Expected).Eq(fmt.Sprintf(FormatRange, "2.200000", "")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "02", "")); err != nil {
+	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "400ccccd", "")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "00000010", "")); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "[01000000 00001100 11001100 11001101]", "")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
+	if err := gotest.Expect(report.Got).Eq("2.100000"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.GotHex).Eq("40066666"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[01000000 00000110 01100110 01100110]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(16); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq("2"); err != nil {
+	if err := gotest.Expect(report.Got).Eq("2.200000"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(24); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(96); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq("3"); err != nil {
+	if err := gotest.Expect(report.Got).Eq("2.300000"); err != nil {
 		t.Error(err)
 	}
 }
@@ -2336,8 +2436,8 @@ func TestValue_CheckFloat32Max(t *testing.T) {
 		0x40, 0x13, 0x33, 0x33,
 	}
 
-	offset, report := v.Check(raw, 0)
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	offset, report := v.Check(raw, time.Second, "", 0)
+	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
@@ -2349,44 +2449,44 @@ func TestValue_CheckFloat32Max(t *testing.T) {
 	if err := gotest.Expect(report.Type).Eq(Float32.String()); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Expected).Eq(fmt.Sprintf(FormatRange, "", "2")); err != nil {
+	if err := gotest.Expect(report.Expected).Eq(fmt.Sprintf(FormatRange, "", "2.200000")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "", "02")); err != nil {
+	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "", "400ccccd")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "", "00000010")); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "", "[01000000 00001100 11001100 11001101]")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
+	if err := gotest.Expect(report.Got).Eq("2.100000"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.GotHex).Eq("40066666"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[01000000 00000110 01100110 01100110]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(16); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq("2"); err != nil {
+	if err := gotest.Expect(report.Got).Eq("2.200000"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(24); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(96); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq("3"); err != nil {
+	if err := gotest.Expect(report.Got).Eq("2.300000"); err != nil {
 		t.Error(err)
 	}
 }
@@ -2399,9 +2499,9 @@ func TestValue_CheckFloat64(t *testing.T) {
 		0x40, 0x03, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33,
 	}
 
-	offset, report := v.Check(raw, 0)
+	offset, report := v.Check(raw, time.Second, "", 0)
 
-	if err := gotest.Expect(offset).Eq(32); err != nil {
+	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
@@ -2413,33 +2513,33 @@ func TestValue_CheckFloat64(t *testing.T) {
 	if err := gotest.Expect(report.Type).Eq(Float64.String()); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Expected).Eq("2"); err != nil {
+	if err := gotest.Expect(report.Expected).Eq("2.400000"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedHex).Eq("02"); err != nil {
+	if err := gotest.Expect(report.ExpectedHex).Eq("4003333333333333"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq("00000010"); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq("[01000000 00000011 00110011 00110011 00110011 00110011 00110011 00110011]"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
+	if err := gotest.Expect(report.Got).Eq("2.300000"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.GotHex).Eq("4002666666666666"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[01000000 00000010 01100110 01100110 01100110 01100110 01100110 01100110]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(64); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq("2"); err != nil {
+	if err := gotest.Expect(report.Got).Eq("2.400000"); err != nil {
 		t.Error(err)
 	}
 }
@@ -2456,8 +2556,8 @@ func TestValue_CheckFloat64Range(t *testing.T) {
 		0x40, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	}
 
-	offset, report := v.Check(raw, 0)
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	offset, report := v.Check(raw, time.Second, "", 0)
+	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
@@ -2469,66 +2569,66 @@ func TestValue_CheckFloat64Range(t *testing.T) {
 	if err := gotest.Expect(report.Type).Eq(Float64.String()); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Expected).Eq(fmt.Sprintf(FormatRange, "2", "4")); err != nil {
+	if err := gotest.Expect(report.Expected).Eq(fmt.Sprintf(FormatRange, "2.200000", "2.400000")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "02", "04")); err != nil {
+	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "400199999999999a", "4003333333333333")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "00000010", "00000100")); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "[01000000 00000001 10011001 10011001 10011001 10011001 10011001 10011010]", "[01000000 00000011 00110011 00110011 00110011 00110011 00110011 00110011]")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
+	if err := gotest.Expect(report.Got).Eq("2.100000"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.GotHex).Eq("4000cccccccccccd"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[01000000 00000000 11001100 11001100 11001100 11001100 11001100 11001101]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(16); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq("2"); err != nil {
+	if err := gotest.Expect(report.Got).Eq("2.200000"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(24); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(192); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq("3"); err != nil {
+	if err := gotest.Expect(report.Got).Eq("2.300000"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(32); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(256); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq("4"); err != nil {
+	if err := gotest.Expect(report.Got).Eq("2.400000"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(48); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(320); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq("5"); err != nil {
+	if err := gotest.Expect(report.Got).Eq("2.500000"); err != nil {
 		t.Error(err)
 	}
 }
@@ -2542,8 +2642,8 @@ func TestValue_CheckFloat64Min(t *testing.T) {
 		0x40, 0x02, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66,
 	}
 
-	offset, report := v.Check(raw, 0)
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	offset, report := v.Check(raw, time.Second, "", 0)
+	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
@@ -2555,44 +2655,44 @@ func TestValue_CheckFloat64Min(t *testing.T) {
 	if err := gotest.Expect(report.Type).Eq(Float64.String()); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Expected).Eq(fmt.Sprintf(FormatRange, "2", "")); err != nil {
+	if err := gotest.Expect(report.Expected).Eq(fmt.Sprintf(FormatRange, "2.200000", "")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "02", "")); err != nil {
+	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "400199999999999a", "")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "00000010", "")); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "[01000000 00000001 10011001 10011001 10011001 10011001 10011001 10011010]", "")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
+	if err := gotest.Expect(report.Got).Eq("2.100000"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.GotHex).Eq("4000cccccccccccd"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[01000000 00000000 11001100 11001100 11001100 11001100 11001100 11001101]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(16); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq("2"); err != nil {
+	if err := gotest.Expect(report.Got).Eq("2.200000"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(24); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(192); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq("3"); err != nil {
+	if err := gotest.Expect(report.Got).Eq("2.300000"); err != nil {
 		t.Error(err)
 	}
 }
@@ -2606,8 +2706,8 @@ func TestValue_CheckFloat64Max(t *testing.T) {
 		0x40, 0x02, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66,
 	}
 
-	offset, report := v.Check(raw, 0)
-	if err := gotest.Expect(offset).Eq(8); err != nil {
+	offset, report := v.Check(raw, time.Second, "", 0)
+	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
@@ -2619,44 +2719,44 @@ func TestValue_CheckFloat64Max(t *testing.T) {
 	if err := gotest.Expect(report.Type).Eq(Float64.String()); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Expected).Eq(fmt.Sprintf(FormatRange, "", "2")); err != nil {
+	if err := gotest.Expect(report.Expected).Eq(fmt.Sprintf(FormatRange, "", "2.200000")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "", "02")); err != nil {
+	if err := gotest.Expect(report.ExpectedHex).Eq(fmt.Sprintf(FormatRange, "", "400199999999999a")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "", "00000010")); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq(fmt.Sprintf(FormatRange, "", "[01000000 00000001 10011001 10011001 10011001 10011001 10011001 10011010]")); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
+	if err := gotest.Expect(report.Got).Eq("2.100000"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.GotHex).Eq("4000cccccccccccd"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[01000000 00000000 11001100 11001100 11001100 11001100 11001100 11001101]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(16); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq("2"); err != nil {
+	if err := gotest.Expect(report.Got).Eq("2.200000"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(24); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(192); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq("3"); err != nil {
+	if err := gotest.Expect(report.Got).Eq("2.300000"); err != nil {
 		t.Error(err)
 	}
 }
@@ -2666,7 +2766,7 @@ func TestValue_CheckBool(t *testing.T) {
 	v := Value{Name: "Test", Bool: &param}
 	raw := []byte{0b00000101}
 
-	offset, report := v.Check(raw, 0)
+	offset, report := v.Check(raw, time.Second, "", 0)
 
 	if err := gotest.Expect(offset).Eq(1); err != nil {
 		t.Error(err)
@@ -2680,44 +2780,44 @@ func TestValue_CheckBool(t *testing.T) {
 	if err := gotest.Expect(report.Type).Eq(Bool.String()); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Expected).Eq("2"); err != nil {
+	if err := gotest.Expect(report.Expected).Eq("true"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedHex).Eq("02"); err != nil {
+	if err := gotest.Expect(report.ExpectedHex).Eq("1"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq("00000010"); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq("1"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
+	if err := gotest.Expect(report.Got).Eq("true"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.GotHex).Eq("1"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("1"); err != nil {
 		t.Error(err)
 	}
 	param = false
-	offset, report = v.Check(raw, offset)
+	offset, report = v.Check(raw, time.Second, "", offset)
 	if err := gotest.Expect(offset).Eq(2); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(true); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq("2"); err != nil {
+	if err := gotest.Expect(report.Got).Eq("false"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
+	offset, report = v.Check(raw, time.Second, "", offset)
 	if err := gotest.Expect(offset).Eq(3); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq("2"); err != nil {
+	if err := gotest.Expect(report.Got).Eq("true"); err != nil {
 		t.Error(err)
 	}
 }
@@ -2730,7 +2830,7 @@ func TestValue_CheckString(t *testing.T) {
 		104, 101, 108, 109, 111,
 	}
 
-	offset, report := v.Check(raw, 0)
+	offset, report := v.Check(raw, time.Second, "", 0)
 
 	if err := gotest.Expect(offset).Eq(40); err != nil {
 		t.Error(err)
@@ -2744,33 +2844,33 @@ func TestValue_CheckString(t *testing.T) {
 	if err := gotest.Expect(report.Type).Eq(String.String()); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Expected).Eq("2"); err != nil {
+	if err := gotest.Expect(report.Expected).Eq("hello"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedHex).Eq("02"); err != nil {
+	if err := gotest.Expect(report.ExpectedHex).Eq("68656c6c6f"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq("00000010"); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq("[1101000 1100101 1101100 1101100 1101111]"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
+	if err := gotest.Expect(report.Got).Eq("hello"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.GotHex).Eq("68656c6c6f"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[1101000 1100101 1101100 1101100 1101111]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(2); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(80); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq("2"); err != nil {
+	if err := gotest.Expect(report.Got).Eq("helmo"); err != nil {
 		t.Error(err)
 	}
 }
@@ -2783,9 +2883,9 @@ func TestValue_CheckByte(t *testing.T) {
 		0x01, 0x00, 0x04,
 	}
 
-	offset, report := v.Check(raw, 0)
+	offset, report := v.Check(raw, time.Second, "", 0)
 
-	if err := gotest.Expect(offset).Eq(40); err != nil {
+	if err := gotest.Expect(offset).Eq(24); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("Test"); err != nil {
@@ -2797,33 +2897,33 @@ func TestValue_CheckByte(t *testing.T) {
 	if err := gotest.Expect(report.Type).Eq(Byte.String()); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Expected).Eq("2"); err != nil {
+	if err := gotest.Expect(report.Expected).Eq("01 00 03"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedHex).Eq("02"); err != nil {
+	if err := gotest.Expect(report.ExpectedHex).Eq("010003"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.ExpectedBin).Eq("00000010"); err != nil {
+	if err := gotest.Expect(report.ExpectedBin).Eq("[00000001 00000000 00000011]"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq("1"); err != nil {
+	if err := gotest.Expect(report.Got).Eq("01 00 03"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.GotHex).Eq("010003"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.GotBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.GotBin).Eq("[00000001 00000000 00000011]"); err != nil {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, offset)
-	if err := gotest.Expect(offset).Eq(2); err != nil {
+	offset, report = v.Check(raw, time.Second, "", offset)
+	if err := gotest.Expect(offset).Eq(48); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Pass).Eq(false); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Got).Eq("2"); err != nil {
+	if err := gotest.Expect(report.Got).Eq("01 00 04"); err != nil {
 		t.Error(err)
 	}
 }
@@ -2956,7 +3056,7 @@ func TestValue_ReportWriteInt8(t *testing.T) {
 	if err := gotest.Expect(report.DataHex).Eq("01"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.DataBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.DataBin).Eq("[00000001]"); err != nil {
 		t.Error(err)
 	}
 }
@@ -2965,7 +3065,7 @@ func TestValue_ReportWriteInt16(t *testing.T) {
 	var v int16 = 1
 	report := (&Value{Name: "test", Int16: &v}).ReportWrite()
 
-	if err := gotest.Expect(report.Type).Eq(Int8.String()); err != nil {
+	if err := gotest.Expect(report.Type).Eq(Int16.String()); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("test"); err != nil {
@@ -2974,10 +3074,10 @@ func TestValue_ReportWriteInt16(t *testing.T) {
 	if err := gotest.Expect(report.Data).Eq("1"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.DataHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.DataHex).Eq("0001"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.DataBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.DataBin).Eq("[00000000 00000001]"); err != nil {
 		t.Error(err)
 	}
 }
@@ -2986,7 +3086,7 @@ func TestValue_ReportWriteInt32(t *testing.T) {
 	var v int32 = 1
 	report := (&Value{Name: "test", Int32: &v}).ReportWrite()
 
-	if err := gotest.Expect(report.Type).Eq(Int8.String()); err != nil {
+	if err := gotest.Expect(report.Type).Eq(Int32.String()); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("test"); err != nil {
@@ -2995,10 +3095,10 @@ func TestValue_ReportWriteInt32(t *testing.T) {
 	if err := gotest.Expect(report.Data).Eq("1"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.DataHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.DataHex).Eq("00000001"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.DataBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.DataBin).Eq("[00000000 00000000 00000000 00000001]"); err != nil {
 		t.Error(err)
 	}
 }
@@ -3007,7 +3107,7 @@ func TestValue_ReportWriteInt64(t *testing.T) {
 	var v int64 = 1
 	report := (&Value{Name: "test", Int64: &v}).ReportWrite()
 
-	if err := gotest.Expect(report.Type).Eq(Int8.String()); err != nil {
+	if err := gotest.Expect(report.Type).Eq(Int64.String()); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("test"); err != nil {
@@ -3016,10 +3116,10 @@ func TestValue_ReportWriteInt64(t *testing.T) {
 	if err := gotest.Expect(report.Data).Eq("1"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.DataHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.DataHex).Eq("0000000000000001"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.DataBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.DataBin).Eq("[00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000001]"); err != nil {
 		t.Error(err)
 	}
 }
@@ -3028,7 +3128,7 @@ func TestValue_ReportWriteUint8(t *testing.T) {
 	var v uint8 = 1
 	report := (&Value{Name: "test", Uint8: &v}).ReportWrite()
 
-	if err := gotest.Expect(report.Type).Eq(Int8.String()); err != nil {
+	if err := gotest.Expect(report.Type).Eq(Uint8.String()); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("test"); err != nil {
@@ -3040,7 +3140,7 @@ func TestValue_ReportWriteUint8(t *testing.T) {
 	if err := gotest.Expect(report.DataHex).Eq("01"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.DataBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.DataBin).Eq("[00000001]"); err != nil {
 		t.Error(err)
 	}
 }
@@ -3049,7 +3149,7 @@ func TestValue_ReportWriteUint16(t *testing.T) {
 	var v uint16 = 1
 	report := (&Value{Name: "test", Uint16: &v}).ReportWrite()
 
-	if err := gotest.Expect(report.Type).Eq(Int8.String()); err != nil {
+	if err := gotest.Expect(report.Type).Eq(Uint16.String()); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("test"); err != nil {
@@ -3058,19 +3158,19 @@ func TestValue_ReportWriteUint16(t *testing.T) {
 	if err := gotest.Expect(report.Data).Eq("1"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.DataHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.DataHex).Eq("0001"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.DataBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.DataBin).Eq("[00000000 00000001]"); err != nil {
 		t.Error(err)
 	}
 }
 
 func TestValue_ReportWriteUint32(t *testing.T) {
 	var v uint32 = 1
-	report := (&Value{Uint32: &v}).ReportWrite()
+	report := (&Value{Name: "test", Uint32: &v}).ReportWrite()
 
-	if err := gotest.Expect(report.Type).Eq(Int8.String()); err != nil {
+	if err := gotest.Expect(report.Type).Eq(Uint32.String()); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("test"); err != nil {
@@ -3079,10 +3179,10 @@ func TestValue_ReportWriteUint32(t *testing.T) {
 	if err := gotest.Expect(report.Data).Eq("1"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.DataHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.DataHex).Eq("00000001"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.DataBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.DataBin).Eq("[00000000 00000000 00000000 00000001]"); err != nil {
 		t.Error(err)
 	}
 
@@ -3092,7 +3192,7 @@ func TestValue_ReportWriteUint64(t *testing.T) {
 	var v uint64 = 1
 	report := (&Value{Name: "test", Uint64: &v}).ReportWrite()
 
-	if err := gotest.Expect(report.Type).Eq(Int8.String()); err != nil {
+	if err := gotest.Expect(report.Type).Eq(Uint64.String()); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("test"); err != nil {
@@ -3101,10 +3201,10 @@ func TestValue_ReportWriteUint64(t *testing.T) {
 	if err := gotest.Expect(report.Data).Eq("1"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.DataHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.DataHex).Eq("0000000000000001"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.DataBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.DataBin).Eq("[00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000001]"); err != nil {
 		t.Error(err)
 	}
 }
@@ -3113,19 +3213,19 @@ func TestValue_ReportWriteFloat32(t *testing.T) {
 	var v float32 = 1.2
 	report := (&Value{Name: "test", Float32: &v}).ReportWrite()
 
-	if err := gotest.Expect(report.Type).Eq(Int8.String()); err != nil {
+	if err := gotest.Expect(report.Type).Eq(Float32.String()); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("test"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Data).Eq("1"); err != nil {
+	if err := gotest.Expect(report.Data).Eq("1.200000"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.DataHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.DataHex).Eq("3f99999a"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.DataBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.DataBin).Eq("[00111111 10011001 10011001 10011010]"); err != nil {
 		t.Error(err)
 	}
 }
@@ -3134,19 +3234,19 @@ func TestValue_ReportWriteFloat64(t *testing.T) {
 	var v float64 = 1.2
 	report := (&Value{Name: "test", Float64: &v}).ReportWrite()
 
-	if err := gotest.Expect(report.Type).Eq(Int8.String()); err != nil {
+	if err := gotest.Expect(report.Type).Eq(Float64.String()); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("test"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Data).Eq("1"); err != nil {
+	if err := gotest.Expect(report.Data).Eq("1.200000"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.DataHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.DataHex).Eq("3ff3333333333333"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.DataBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.DataBin).Eq("[00111111 11110011 00110011 00110011 00110011 00110011 00110011 00110011]"); err != nil {
 		t.Error(err)
 	}
 }
@@ -3155,19 +3255,19 @@ func TestValue_ReportWriteBoolTrue(t *testing.T) {
 	var v bool = true
 	report := (&Value{Name: "test", Bool: &v}).ReportWrite()
 
-	if err := gotest.Expect(report.Type).Eq(Int8.String()); err != nil {
+	if err := gotest.Expect(report.Type).Eq(Bool.String()); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("test"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Data).Eq("1"); err != nil {
+	if err := gotest.Expect(report.Data).Eq("true"); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.DataHex).Eq("01"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.DataBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.DataBin).Eq("[00000001]"); err != nil {
 		t.Error(err)
 	}
 }
@@ -3176,19 +3276,19 @@ func TestValue_ReportWriteBoolFalse(t *testing.T) {
 	var v bool = false
 	report := (&Value{Name: "test", Bool: &v}).ReportWrite()
 
-	if err := gotest.Expect(report.Type).Eq(Int8.String()); err != nil {
+	if err := gotest.Expect(report.Type).Eq(Bool.String()); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("test"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Data).Eq("1"); err != nil {
+	if err := gotest.Expect(report.Data).Eq("false"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.DataHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.DataHex).Eq("00"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.DataBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.DataBin).Eq("[00000000]"); err != nil {
 		t.Error(err)
 	}
 }
@@ -3197,19 +3297,19 @@ func TestValue_ReportWriteString(t *testing.T) {
 	var v string = "test"
 	report := (&Value{Name: "test", String: &v}).ReportWrite()
 
-	if err := gotest.Expect(report.Type).Eq(Int8.String()); err != nil {
+	if err := gotest.Expect(report.Type).Eq(String.String()); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("test"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Data).Eq("1"); err != nil {
+	if err := gotest.Expect(report.Data).Eq("test"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.DataHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.DataHex).Eq("74657374"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.DataBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.DataBin).Eq("[01110100 01100101 01110011 01110100]"); err != nil {
 		t.Error(err)
 	}
 }
@@ -3218,19 +3318,19 @@ func TestValue_ReportWriteByte(t *testing.T) {
 	var v string = "0x01 0x0001 0x000002"
 	report := (&Value{Name: "test", Byte: &v}).ReportWrite()
 
-	if err := gotest.Expect(report.Type).Eq(Int8.String()); err != nil {
+	if err := gotest.Expect(report.Type).Eq(Byte.String()); err != nil {
 		t.Error(err)
 	}
 	if err := gotest.Expect(report.Name).Eq("test"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.Data).Eq("1"); err != nil {
+	if err := gotest.Expect(report.Data).Eq("01 00 01 00 00 02"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.DataHex).Eq("01"); err != nil {
+	if err := gotest.Expect(report.DataHex).Eq("010001000002"); err != nil {
 		t.Error(err)
 	}
-	if err := gotest.Expect(report.DataBin).Eq("00000001"); err != nil {
+	if err := gotest.Expect(report.DataBin).Eq("[00000001 00000000 00000001 00000000 00000000 00000010]"); err != nil {
 		t.Error(err)
 	}
 }
@@ -3328,6 +3428,20 @@ func TestValue_TypeString(t *testing.T) {
 func TestValue_TypeByte(t *testing.T) {
 	var v string = "test"
 	if err := gotest.Expect((&Value{Byte: &v}).Type()).Eq(Byte); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_TypeTime(t *testing.T) {
+	var v string = "1s"
+	if err := gotest.Expect((&Value{Time: &v}).Type()).Eq(Time); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_TypeError(t *testing.T) {
+	var v string = "error"
+	if err := gotest.Expect((&Value{Error: &v}).Type()).Eq(Error); err != nil {
 		t.Error(err)
 	}
 }
