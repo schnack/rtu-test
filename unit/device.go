@@ -1,13 +1,11 @@
 package unit
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/go-yaml/yaml"
 	"github.com/sirupsen/logrus"
 	"os"
 	"sync"
-	"text/template"
 )
 
 var instanceDevice *Device
@@ -21,9 +19,6 @@ const (
 func Init() *Device {
 	onceDevice.Do(func() {
 		instanceDevice = &Device{}
-		if err := instanceDevice.Load(); err != nil {
-			logrus.Fatal(err)
-		}
 	})
 	return instanceDevice
 }
@@ -37,24 +32,8 @@ type Device struct {
 	ModbusClient ModbusClient `yaml:"modbusClient"`
 }
 
-func (d *Device) Display(s string) {
-	logrus.Info(s)
-	if d.Log != LogStdout {
-		fmt.Println(s)
-	}
-}
-
-func (d *Device) Render(tmpl string, data interface{}) string {
-	t := template.Must(template.New("message").Parse(tmpl))
-	buff := new(bytes.Buffer)
-	if err := t.Execute(buff, data); err != nil {
-		logrus.Fatal(err)
-	}
-	return buff.String()
-}
-
-func (d *Device) Load() error {
-	file, err := os.Open("rue.yml")
+func (d *Device) Load(s string) error {
+	file, err := os.Open(s)
 	if err != nil {
 		return fmt.Errorf("device load config: %s", err)
 	}

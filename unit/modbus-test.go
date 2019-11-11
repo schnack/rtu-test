@@ -44,20 +44,20 @@ func (mt *ModbusTest) Run(client modbus.Client) ReportTest {
 	}
 
 	report := ReportTest{Name: mt.Name, Pass: true, Skip: mt.Skip}
-	logrus.Warnf(Init().Render(TestRUN, report))
+	logrus.Warnf(render(TestRUN, report))
 	if report.Skip != "" {
-		logrus.Warnf(Init().Render(TestSKIP, report))
+		logrus.Warnf(render(TestSKIP, report))
 		return report
 	}
 	mt.Before.Print(report)
 	mt.Exec(client, &report)
 	mt.Check(&report)
 	if report.Pass {
-		logrus.Warnf(Init().Render(TestPASS, report))
+		logrus.Warnf(render(TestPASS, report))
 		mt.Success.Print(report)
 
 	} else {
-		logrus.Errorf(Init().Render(TestFAIL, report))
+		logrus.Errorf(render(TestFAIL, report))
 		mt.Error.Print(report)
 	}
 	mt.After.Print(report)

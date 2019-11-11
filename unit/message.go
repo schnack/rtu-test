@@ -1,10 +1,8 @@
 package unit
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/sirupsen/logrus"
-	"text/template"
 	"time"
 )
 
@@ -18,17 +16,17 @@ func (m *Message) Print(report ReportTest) {
 	report.Pause = d.String()
 
 	if m.Message != "" {
-		t := template.Must(template.New("message").Parse(m.Message))
-		buff := new(bytes.Buffer)
-		if err := t.Execute(buff, report); err != nil {
-			logrus.Fatal(err)
-		}
+		message := render(m.Message, report)
 		if d < 0 {
-			buff.WriteString(" [Enter]")
+			message = fmt.Sprintf("%s %s", message, "[Enter]")
 			var t string
 			_, _ = fmt.Scanln(&t)
 		}
-		Init().Display(buff.String())
+
+		logrus.Info(message)
+		if Init().Log != LogStdout {
+			fmt.Println(message)
+		}
 	}
 
 	if d > 0 {

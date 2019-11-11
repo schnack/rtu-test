@@ -1,11 +1,90 @@
 package unit
 
-/*
 import (
 	"github.com/schnack/gotest"
 	"testing"
+	"time"
 )
 
+func TestModbusTest_Run(t *testing.T) {
+	var param uint16 = 2
+	var errorString string = ""
+	var timeString string = "2s"
+	var Address uint16 = 0
+	var Quantity uint16 = 2
+	modbus := &ModbusTest{
+		Name:     "Test",
+		Function: "ReadHoldingRegisters",
+		Address:  &Address,
+		Quantity: &Quantity,
+		Expected: []*Value{
+			{Name: "param", Uint16: &param},
+			{Name: "error", Error: &errorString},
+			{Name: "time", Time: &timeString},
+		},
+	}
+
+	client := NewFixtureModBusClient([]byte{0x00, 0x02}, nil)
+	report := modbus.Run(client)
+
+	if err := gotest.Expect(report.Expected[0].Name).Eq("param"); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.Expected[0].Pass).Eq(true); err != nil {
+		t.Error(err)
+	}
+
+	if err := gotest.Expect(report.Expected[1].Name).Eq("error"); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.Expected[1].Pass).Eq(true); err != nil {
+		t.Error(err)
+	}
+
+	if err := gotest.Expect(report.Expected[2].Name).Eq("time"); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.Expected[2].Pass).Eq(true); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestModbusTest_Check(t *testing.T) {
+	var param uint8 = 2
+	var errorString string = ""
+	var timeString string = "2s"
+	modbus := &ModbusTest{
+		Name: "Test",
+		Expected: []*Value{
+			{Name: "param", Uint8: &param},
+			{Name: "error", Error: &errorString},
+			{Name: "time", Time: &timeString},
+		},
+	}
+	report := ReportTest{GotByte: []byte{0x02}, GotError: errorString, GotTime: time.Second}
+	modbus.Check(&report)
+
+	if err := gotest.Expect(report.Expected[0].Name).Eq("param"); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.Expected[0].Pass).Eq(true); err != nil {
+		t.Error(err)
+	}
+
+	if err := gotest.Expect(report.Expected[1].Name).Eq("error"); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.Expected[1].Pass).Eq(true); err != nil {
+		t.Error(err)
+	}
+
+	if err := gotest.Expect(report.Expected[2].Name).Eq("time"); err != nil {
+		t.Error(err)
+	}
+	if err := gotest.Expect(report.Expected[2].Pass).Eq(true); err != nil {
+		t.Error(err)
+	}
+}
 
 func TestModbusTest_ExecReadCoils(t *testing.T) {
 	var Address uint16 = 0
@@ -18,17 +97,18 @@ func TestModbusTest_ExecReadCoils(t *testing.T) {
 	}
 
 	client := NewFixtureModBusClient([]byte{0b00000011}, nil)
-	modbus.Exec(client)
+	report := ReportTest{}
+	modbus.Exec(client, &report)
 
-	if err := gotest.Expect(modbus.ResultByte).Eq([]byte{3}); err != nil {
+	if err := gotest.Expect(report.GotByte).Eq([]byte{3}); err != nil {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect(modbus.ResultTime > 1).Eq(true); err != nil {
+	if err := gotest.Expect(report.GotTime > 1).Eq(true); err != nil {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect(modbus.ResultError).Nil(); err != nil {
+	if err := gotest.Expect(report.GotError).Eq(""); err != nil {
 		t.Error(err)
 	}
 
@@ -52,18 +132,18 @@ func TestModbusTest_ExecReadDiscreteInputs(t *testing.T) {
 	}
 
 	client := NewFixtureModBusClient([]byte{0b00000011}, nil)
+	report := ReportTest{}
+	modbus.Exec(client, &report)
 
-	modbus.Exec(client)
-
-	if err := gotest.Expect(modbus.ResultByte).Eq([]byte{3}); err != nil {
+	if err := gotest.Expect(report.GotByte).Eq([]byte{3}); err != nil {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect(modbus.ResultTime > 1).Eq(true); err != nil {
+	if err := gotest.Expect(report.GotTime > 1).Eq(true); err != nil {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect(modbus.ResultError).Nil(); err != nil {
+	if err := gotest.Expect(report.GotError).Eq(""); err != nil {
 		t.Error(err)
 	}
 
@@ -87,18 +167,18 @@ func TestModbusTest_ExecReadHoldingRegisters(t *testing.T) {
 	}
 
 	client := NewFixtureModBusClient([]byte{0x01, 0x01}, nil)
+	report := ReportTest{}
+	modbus.Exec(client, &report)
 
-	modbus.Exec(client)
-
-	if err := gotest.Expect(modbus.ResultByte).Eq([]byte{0x01, 0x01}); err != nil {
+	if err := gotest.Expect(report.GotByte).Eq([]byte{0x01, 0x01}); err != nil {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect(modbus.ResultTime > 1).Eq(true); err != nil {
+	if err := gotest.Expect(report.GotTime > 1).Eq(true); err != nil {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect(modbus.ResultError).Nil(); err != nil {
+	if err := gotest.Expect(report.GotError).Eq(""); err != nil {
 		t.Error(err)
 	}
 
@@ -122,18 +202,18 @@ func TestModbusTest_ExecReadInputRegisters(t *testing.T) {
 	}
 
 	client := NewFixtureModBusClient([]byte{0x01, 0x01}, nil)
+	report := ReportTest{}
+	modbus.Exec(client, &report)
 
-	modbus.Exec(client)
-
-	if err := gotest.Expect(modbus.ResultByte).Eq([]byte{0x01, 0x01}); err != nil {
+	if err := gotest.Expect(report.GotByte).Eq([]byte{0x01, 0x01}); err != nil {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect(modbus.ResultTime > 1).Eq(true); err != nil {
+	if err := gotest.Expect(report.GotTime > 1).Eq(true); err != nil {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect(modbus.ResultError).Nil(); err != nil {
+	if err := gotest.Expect(report.GotError).Eq(""); err != nil {
 		t.Error(err)
 	}
 
@@ -159,18 +239,18 @@ func TestModbusTest_ExecWriteSingleCoil(t *testing.T) {
 	}
 
 	client := NewFixtureModBusClient([]byte{0xff, 0x00}, nil)
+	report := ReportTest{}
+	modbus.Exec(client, &report)
 
-	modbus.Exec(client)
-
-	if err := gotest.Expect(modbus.ResultByte).Eq([]byte{0xff, 0x00}); err != nil {
+	if err := gotest.Expect(report.GotByte).Eq([]byte{0xff, 0x00}); err != nil {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect(modbus.ResultTime > 1).Eq(true); err != nil {
+	if err := gotest.Expect(report.GotTime > 1).Eq(true); err != nil {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect(modbus.ResultError).Nil(); err != nil {
+	if err := gotest.Expect(report.GotError).Eq(""); err != nil {
 		t.Error(err)
 	}
 
@@ -202,18 +282,18 @@ func TestModbusTest_ExecWriteSingleRegister(t *testing.T) {
 	}
 
 	client := NewFixtureModBusClient([]byte{0x01, 0x01}, nil)
+	report := ReportTest{}
+	modbus.Exec(client, &report)
 
-	modbus.Exec(client)
-
-	if err := gotest.Expect(modbus.ResultByte).Eq([]byte{0x01, 0x01}); err != nil {
+	if err := gotest.Expect(report.GotByte).Eq([]byte{0x01, 0x01}); err != nil {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect(modbus.ResultTime > 1).Eq(true); err != nil {
+	if err := gotest.Expect(report.GotTime > 1).Eq(true); err != nil {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect(modbus.ResultError).Nil(); err != nil {
+	if err := gotest.Expect(report.GotError).Eq(""); err != nil {
 		t.Error(err)
 	}
 
@@ -247,18 +327,18 @@ func TestModbusTest_ExecWriteMultipleCoils(t *testing.T) {
 	}
 
 	client := NewFixtureModBusClient([]byte{0x01, 0x01}, nil)
+	report := ReportTest{}
+	modbus.Exec(client, &report)
 
-	modbus.Exec(client)
-
-	if err := gotest.Expect(modbus.ResultByte).Eq([]byte{0x01, 0x01}); err != nil {
+	if err := gotest.Expect(report.GotByte).Eq([]byte{0x01, 0x01}); err != nil {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect(modbus.ResultTime > 1).Eq(true); err != nil {
+	if err := gotest.Expect(report.GotTime > 1).Eq(true); err != nil {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect(modbus.ResultError).Nil(); err != nil {
+	if err := gotest.Expect(report.GotError).Eq(""); err != nil {
 		t.Error(err)
 	}
 
@@ -292,18 +372,18 @@ func TestModbusTest_ExecWriteMultipleRegisters(t *testing.T) {
 	}
 
 	client := NewFixtureModBusClient([]byte{0x01, 0x01}, nil)
+	report := ReportTest{}
+	modbus.Exec(client, &report)
 
-	modbus.Exec(client)
-
-	if err := gotest.Expect(modbus.ResultByte).Eq([]byte{0x01, 0x01}); err != nil {
+	if err := gotest.Expect(report.GotByte).Eq([]byte{0x01, 0x01}); err != nil {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect(modbus.ResultTime > 1).Eq(true); err != nil {
+	if err := gotest.Expect(report.GotTime > 1).Eq(true); err != nil {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect(modbus.ResultError).Nil(); err != nil {
+	if err := gotest.Expect(report.GotError).Eq(""); err != nil {
 		t.Error(err)
 	}
 
@@ -387,13 +467,12 @@ func TestModbusTest_getQuantity(t *testing.T) {
 
 func TestModbusTest_getError(t *testing.T) {
 
-	if err := gotest.Expect((&ModbusTest{Function: "ReadCoils", ExpectedError: "0x01"}).getError()).Eq("modbus: exception '1' (illegal function), function '129'"); err != nil {
+	if err := gotest.Expect(*(&ModbusTest{Function: "ReadCoils"}).getError("0x01")).Eq("modbus: exception '1' (illegal function), function '129'"); err != nil {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect((&ModbusTest{Function: "ReadCoils", ExpectedError: "test"}).getError()).Eq("test"); err != nil {
+	if err := gotest.Expect(*(&ModbusTest{Function: "ReadCoils"}).getError("test")).Eq("test"); err != nil {
 		t.Error(err)
 	}
 
 }
-*/

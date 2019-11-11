@@ -4,15 +4,26 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"strconv"
 	"strings"
+	"text/template"
 	"time"
 )
+
+func render(tmpl string, data interface{}) string {
+	t := template.Must(template.New("message").Parse(tmpl))
+	buff := new(bytes.Buffer)
+	if err := t.Execute(buff, data); err != nil {
+		logrus.Fatal(err)
+	}
+	return buff.String()
+}
 
 func parseStringByte(sb string) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	byteClear := strings.ReplaceAll(strings.ReplaceAll(sb, " ", ""), "0x", "")
-	for i, _ := range byteClear {
+	for i := range byteClear {
 		if i%2 != 0 {
 			b, err := strconv.ParseUint(fmt.Sprintf("%c%c", byteClear[i-1], byteClear[i]), 16, 8)
 			if err != nil {
@@ -94,19 +105,6 @@ func valueToByte(v []*Value) (data []byte) {
 		i = 0
 	}
 	return
-}
-
-// byteToEq - byte-by-byte comparison
-func byteToEq(b1, b2 []byte) bool {
-	if len(b1) != len(b2) {
-		return false
-	}
-	for i := range b1 {
-		if b1[i] != b2[i] {
-			return false
-		}
-	}
-	return true
 }
 
 func parseDuration(d string) time.Duration {
