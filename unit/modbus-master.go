@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-type ModbusClient struct {
+type ModbusMaster struct {
 	SlaveId   uint8                    `yaml:"slaveId"`
 	Port      string                   `yaml:"port"`
 	BoundRate int                      `yaml:"boundRate"`
@@ -27,7 +27,7 @@ func (l *loger) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-func (mc *ModbusClient) getHandler() *modbus.RTUClientHandler {
+func (mc *ModbusMaster) getHandler() *modbus.RTUClientHandler {
 	handler := modbus.NewRTUClientHandler(mc.Port)
 	handler.BaudRate = mc.BoundRate
 	handler.DataBits = mc.DataBits
@@ -39,7 +39,7 @@ func (mc *ModbusClient) getHandler() *modbus.RTUClientHandler {
 	return handler
 }
 
-func (mc *ModbusClient) Run() error {
+func (mc *ModbusMaster) Run() error {
 	handler := mc.getHandler()
 	if err := handler.Connect(); err != nil {
 		return err

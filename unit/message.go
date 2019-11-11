@@ -19,13 +19,14 @@ func (m *Message) Print(report ReportTest) {
 		message := render(m.Message, report)
 		if d < 0 {
 			message = fmt.Sprintf("%s %s", message, "[Enter]")
+			logrus.Info(message)
+
+			if Init().Log != LogStdout {
+				fmt.Println(message)
+			}
+
 			var t string
 			_, _ = fmt.Scanln(&t)
-		}
-
-		logrus.Info(message)
-		if Init().Log != LogStdout {
-			fmt.Println(message)
 		}
 	}
 

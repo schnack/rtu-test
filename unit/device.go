@@ -3,8 +3,10 @@ package unit
 import (
 	"fmt"
 	"github.com/go-yaml/yaml"
+	"github.com/shiena/ansicolor"
 	"github.com/sirupsen/logrus"
 	"os"
+	"runtime"
 	"sync"
 )
 
@@ -29,7 +31,7 @@ type Device struct {
 	Log          string       `yaml:"log"`
 	LogLvl       string       `yaml:"logLvl"`
 	Description  string       `yaml:"description"`
-	ModbusClient ModbusClient `yaml:"modbusClient"`
+	ModbusMaster ModbusMaster `yaml:"modbusClient"`
 }
 
 func (d *Device) Load(s string) error {
@@ -46,7 +48,9 @@ func (d *Device) Load(s string) error {
 }
 
 func (d *Device) RunTest() {
-	logrus.SetFormatter(&logrus.TextFormatter{})
+	format := &logrus.TextFormatter{}
+
+	logrus.SetFormatter(format)
 
 	switch d.LogLvl {
 	case "trace":
@@ -70,9 +74,19 @@ func (d *Device) RunTest() {
 		logrus.SetOutput(os.Stderr)
 		logrus.SetLevel(logrus.PanicLevel)
 	case LogStdout:
-		logrus.SetOutput(os.Stdout)
+		if runtime.GOOS == "windows" {
+			format.ForceColors = true
+			logrus.SetOutput(ansicolor.NewAnsiColorWriter(os.Stdout))
+		} else {
+			logrus.SetOutput(os.Stdout)
+		}
 	case LogStderr:
-		logrus.SetOutput(os.Stderr)
+		if runtime.GOOS == "windows" {
+			format.ForceColors = true
+			logrus.SetOutput(ansicolor.NewAnsiColorWriter(os.Stderr))
+		} else {
+			logrus.SetOutput(os.Stderr)
+		}
 	default:
 		file, err := os.OpenFile(d.Log, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)
 		if err != nil {
@@ -82,7 +96,7 @@ func (d *Device) RunTest() {
 		logrus.SetOutput(file)
 	}
 
-	if err := d.ModbusClient.Run(); err != nil {
+	if err := d.ModbusMaster.Run(); err != nil {
 		logrus.Fatal(err)
 	}
 }

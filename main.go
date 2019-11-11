@@ -11,7 +11,7 @@ func main() {
 	var comport = flag.String("p", "", "serial port")
 	var filter = flag.String("f", "", "filter")
 	var logs = flag.String("l", "", "log")
-	var logLvl = flag.String("lvl", "info", "logLvl")
+	var logLvl = flag.String("lvl", "", "logLvl")
 	var help = flag.Bool("h", false, "help")
 	flag.Parse()
 
@@ -42,11 +42,11 @@ func main() {
 	}
 
 	if *comport != "" {
-		d.ModbusClient.Port = *comport
+		d.ModbusMaster.Port = *comport
 	}
 
 	if *filter != "" {
-		d.ModbusClient.Filter = *filter
+		d.ModbusMaster.Filter = *filter
 	}
 
 	d.RunTest()
