@@ -105,6 +105,65 @@ func valueToByte(v []*Value) (data []byte) {
 	return
 }
 
+func valueToByte1(v []*Value, base int) (data []byte) {
+	var i int
+	var vByte uint8
+	var vByte16 []byte
+	switch base {
+	case 16:
+		vByte16 = make([]byte, 2)
+	case 32:
+		vByte16 = make([]byte, 4)
+	case 64:
+		vByte16 = make([]byte, 8)
+	default:
+		vByte16 = make([]byte, 1)
+	}
+	var ii = 0
+	for _, w := range v {
+		switch w.Type() {
+		case Bool:
+			if *w.Bool {
+				vByte = vByte | 1<<i
+			}
+			i++
+			if i > 7 {
+				vByte16[ii] = vByte
+				ii++
+				vByte16 = append(data, vByte)
+				vByte = 0
+				i = 0
+			}
+		case Int8, Uint8:
+			if i != 0 {
+				data = append(data, vByte)
+				vByte = 0
+				i = 0
+			}
+			data = append(data, w.Write()...)
+		default:
+			if i != 0 {
+				data = append(data, vByte)
+				vByte = 0
+				i = 0
+			}
+			if len(data)%2 != 0 {
+				data = append(data, 0)
+			}
+			data = append(data, w.Write()...)
+		}
+	}
+	if i != 0 {
+		data = append(data, vByte)
+		vByte = 0
+		i = 0
+	}
+	if len(data)%2 != 0 {
+		data = append(data, 0)
+	}
+	return
+}
+
 // Есть особенность если указан в конфигурации
 //  int8 будет дополнен []{byte{int8, 0}} LittleEndian
 //  int16 #TODO Доделат!!!
