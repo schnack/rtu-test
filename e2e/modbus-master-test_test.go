@@ -12,7 +12,7 @@ func TestModbusTest_Run(t *testing.T) {
 	var timeString string = "2s"
 	var Address uint16 = 0
 	var Quantity uint16 = 2
-	modbus := &ModbusTest{
+	modbus := &ModbusMasterTest{
 		Name:     "Test",
 		Function: "ReadHoldingRegisters",
 		Address:  &Address,
@@ -53,7 +53,7 @@ func TestModbusTest_Check(t *testing.T) {
 	var param uint8 = 2
 	var errorString string = ""
 	var timeString string = "2s"
-	modbus := &ModbusTest{
+	modbus := &ModbusMasterTest{
 		Name: "Test",
 		Expected: []*Value{
 			{Name: "param", Uint8: &param},
@@ -89,7 +89,7 @@ func TestModbusTest_Check(t *testing.T) {
 func TestModbusTest_ExecReadCoils(t *testing.T) {
 	var Address uint16 = 0
 	var Quantity uint16 = 2
-	modbus := &ModbusTest{
+	modbus := &ModbusMasterTest{
 		Name:     "Test",
 		Function: "ReadCoils",
 		Address:  &Address,
@@ -124,7 +124,7 @@ func TestModbusTest_ExecReadCoils(t *testing.T) {
 func TestModbusTest_ExecReadDiscreteInputs(t *testing.T) {
 	var Address uint16 = 0
 	var Quantity uint16 = 2
-	modbus := &ModbusTest{
+	modbus := &ModbusMasterTest{
 		Name:     "Test",
 		Function: "ReadDiscreteInputs",
 		Address:  &Address,
@@ -159,7 +159,7 @@ func TestModbusTest_ExecReadDiscreteInputs(t *testing.T) {
 func TestModbusTest_ExecReadHoldingRegisters(t *testing.T) {
 	var Address uint16 = 0
 	var Quantity uint16 = 2
-	modbus := &ModbusTest{
+	modbus := &ModbusMasterTest{
 		Name:     "Test",
 		Function: "ReadHoldingRegisters",
 		Address:  &Address,
@@ -194,7 +194,7 @@ func TestModbusTest_ExecReadHoldingRegisters(t *testing.T) {
 func TestModbusTest_ExecReadInputRegisters(t *testing.T) {
 	var Address uint16 = 0
 	var Quantity uint16 = 2
-	modbus := &ModbusTest{
+	modbus := &ModbusMasterTest{
 		Name:     "Test",
 		Function: "Read Input Registers",
 		Address:  &Address,
@@ -229,7 +229,7 @@ func TestModbusTest_ExecReadInputRegisters(t *testing.T) {
 func TestModbusTest_ExecWriteSingleCoil(t *testing.T) {
 	var param1 = true
 	var Address uint16 = 0
-	modbus := &ModbusTest{
+	modbus := &ModbusMasterTest{
 		Name:     "Test",
 		Function: "Write Single Coil",
 		Address:  &Address,
@@ -271,7 +271,7 @@ func TestModbusTest_ExecWriteSingleRegister(t *testing.T) {
 	var param1 = true
 	var param2 uint8 = 1
 	var Address uint16 = 0
-	modbus := &ModbusTest{
+	modbus := &ModbusMasterTest{
 		Name:     "Test",
 		Function: "Write Single Register",
 		Address:  &Address,
@@ -315,7 +315,7 @@ func TestModbusTest_ExecWriteMultipleCoils(t *testing.T) {
 	var param2 uint8 = 1
 	var Address uint16 = 0
 	var Quantity uint16 = 16
-	modbus := &ModbusTest{
+	modbus := &ModbusMasterTest{
 		Name:     "Test",
 		Function: "Write Multiple Coils",
 		Address:  &Address,
@@ -360,7 +360,7 @@ func TestModbusTest_ExecWriteMultipleRegisters(t *testing.T) {
 	var param2 uint8 = 1
 	var Address uint16 = 0
 	var Quantity uint16 = 1
-	modbus := &ModbusTest{
+	modbus := &ModbusMasterTest{
 		Name:     "Test",
 		Function: "Write Multiple Registers",
 		Address:  &Address,
@@ -402,47 +402,47 @@ func TestModbusTest_ExecWriteMultipleRegisters(t *testing.T) {
 
 func TestModbusTest_getFunction(t *testing.T) {
 
-	if err := gotest.Expect((&ModbusTest{Function: "0x01"}).getFunction()).Eq(ReadCoils); err != nil {
+	if err := gotest.Expect((&ModbusMasterTest{Function: "0x01"}).getFunction()).Eq(ReadCoils); err != nil {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect((&ModbusTest{Function: "ReadCoils"}).getFunction()).Eq(ReadCoils); err != nil {
+	if err := gotest.Expect((&ModbusMasterTest{Function: "ReadCoils"}).getFunction()).Eq(ReadCoils); err != nil {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect((&ModbusTest{Function: "read coils"}).getFunction()).Eq(ReadCoils); err != nil {
+	if err := gotest.Expect((&ModbusMasterTest{Function: "read coils"}).getFunction()).Eq(ReadCoils); err != nil {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect((&ModbusTest{Function: "bad function"}).getFunction()).Eq(NilFunction); err != nil {
+	if err := gotest.Expect((&ModbusMasterTest{Function: "bad function"}).getFunction()).Eq(NilFunction); err != nil {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect((&ModbusTest{Function: "ReadDiscreteInputs"}).getFunction()).Eq(ReadDiscreteInputs); err != nil {
+	if err := gotest.Expect((&ModbusMasterTest{Function: "ReadDiscreteInputs"}).getFunction()).Eq(ReadDiscreteInputs); err != nil {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect((&ModbusTest{Function: "WriteSingleCoil"}).getFunction()).Eq(WriteSingleCoil); err != nil {
+	if err := gotest.Expect((&ModbusMasterTest{Function: "WriteSingleCoil"}).getFunction()).Eq(WriteSingleCoil); err != nil {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect((&ModbusTest{Function: "WriteMultipleCoils"}).getFunction()).Eq(WriteMultipleCoils); err != nil {
+	if err := gotest.Expect((&ModbusMasterTest{Function: "WriteMultipleCoils"}).getFunction()).Eq(WriteMultipleCoils); err != nil {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect((&ModbusTest{Function: "ReadInputRegisters"}).getFunction()).Eq(ReadInputRegisters); err != nil {
+	if err := gotest.Expect((&ModbusMasterTest{Function: "ReadInputRegisters"}).getFunction()).Eq(ReadInputRegisters); err != nil {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect((&ModbusTest{Function: "ReadHoldingRegisters"}).getFunction()).Eq(ReadHoldingRegisters); err != nil {
+	if err := gotest.Expect((&ModbusMasterTest{Function: "ReadHoldingRegisters"}).getFunction()).Eq(ReadHoldingRegisters); err != nil {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect((&ModbusTest{Function: "WriteSingleRegister"}).getFunction()).Eq(WriteSingleRegister); err != nil {
+	if err := gotest.Expect((&ModbusMasterTest{Function: "WriteSingleRegister"}).getFunction()).Eq(WriteSingleRegister); err != nil {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect((&ModbusTest{Function: "WriteMultipleRegisters"}).getFunction()).Eq(WriteMultipleRegisters); err != nil {
+	if err := gotest.Expect((&ModbusMasterTest{Function: "WriteMultipleRegisters"}).getFunction()).Eq(WriteMultipleRegisters); err != nil {
 		t.Error(err)
 	}
 }
@@ -450,16 +450,16 @@ func TestModbusTest_getFunction(t *testing.T) {
 func TestModbusTest_getQuantity(t *testing.T) {
 
 	var quantity uint16 = 10
-	if err := gotest.Expect((&ModbusTest{Function: "ReadCoils", Quantity: &quantity}).getQuantity()).Eq(uint16(10)); err != nil {
+	if err := gotest.Expect((&ModbusMasterTest{Function: "ReadCoils", Quantity: &quantity}).getQuantity()).Eq(uint16(10)); err != nil {
 		t.Error(err)
 	}
 
 	var param1 int64 = 2
-	if err := gotest.Expect((&ModbusTest{Function: "ReadCoils", Expected: []*Value{{Int64: &param1}}}).getQuantity()).Eq(uint16(64)); err != nil {
+	if err := gotest.Expect((&ModbusMasterTest{Function: "ReadCoils", Expected: []*Value{{Int64: &param1}}}).getQuantity()).Eq(uint16(64)); err != nil {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect((&ModbusTest{Function: "ReadInputRegisters", Expected: []*Value{{Int64: &param1}}}).getQuantity()).Eq(uint16(4)); err != nil {
+	if err := gotest.Expect((&ModbusMasterTest{Function: "ReadInputRegisters", Expected: []*Value{{Int64: &param1}}}).getQuantity()).Eq(uint16(4)); err != nil {
 		t.Error(err)
 	}
 
@@ -467,11 +467,11 @@ func TestModbusTest_getQuantity(t *testing.T) {
 
 func TestModbusTest_getError(t *testing.T) {
 
-	if err := gotest.Expect(*(&ModbusTest{Function: "ReadCoils"}).getError("0x01")).Eq("modbus: exception '1' (illegal function), function '129'"); err != nil {
+	if err := gotest.Expect(*(&ModbusMasterTest{Function: "ReadCoils"}).getError("0x01")).Eq("modbus: exception '1' (illegal function), function '129'"); err != nil {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect(*(&ModbusTest{Function: "ReadCoils"}).getError("test")).Eq("test"); err != nil {
+	if err := gotest.Expect(*(&ModbusMasterTest{Function: "ReadCoils"}).getError("test")).Eq("test"); err != nil {
 		t.Error(err)
 	}
 

@@ -31,7 +31,7 @@ type Device struct {
 	Log          string       `yaml:"log"`
 	LogLvl       string       `yaml:"logLvl"`
 	Description  string       `yaml:"description"`
-	ModbusMaster ModbusMaster `yaml:"modbusClient"`
+	ModbusMaster ModbusMaster `yaml:"modbusMaster"`
 }
 
 func (d *Device) Load(s string) error {

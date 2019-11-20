@@ -24,7 +24,7 @@ const (
 	WriteMultipleRegisters = ModbusFunction(modbus.FuncCodeWriteMultipleRegisters)
 )
 
-type ModbusTest struct {
+type ModbusMasterTest struct {
 	Name     string   `yaml:"name"`
 	Skip     string   `yaml:"skip"`
 	Before   Message  `yaml:"before"`
@@ -38,7 +38,7 @@ type ModbusTest struct {
 	After    Message  `yaml:"after"`
 }
 
-func (mt *ModbusTest) Run(client modbus.Client) ReportTest {
+func (mt *ModbusMasterTest) Run(client modbus.Client) ReportTest {
 	if err := mt.Validation(); err != nil {
 		logrus.Fatal(err)
 	}
@@ -64,7 +64,7 @@ func (mt *ModbusTest) Run(client modbus.Client) ReportTest {
 	return report
 }
 
-func (mt *ModbusTest) Check(report *ReportTest) {
+func (mt *ModbusMasterTest) Check(report *ReportTest) {
 	countBit := 0
 	var expected ReportExpected
 	for _, v := range mt.Expected {
@@ -76,7 +76,7 @@ func (mt *ModbusTest) Check(report *ReportTest) {
 	}
 }
 
-func (mt *ModbusTest) Exec(client modbus.Client, report *ReportTest) {
+func (mt *ModbusMasterTest) Exec(client modbus.Client, report *ReportTest) {
 	var err error
 	switch mt.getFunction() {
 	case ReadDiscreteInputs:
@@ -149,7 +149,7 @@ func (mt *ModbusTest) Exec(client modbus.Client, report *ReportTest) {
 }
 
 // TODO
-func (mt *ModbusTest) Validation() error {
+func (mt *ModbusMasterTest) Validation() error {
 	if mt.Address == nil {
 		return fmt.Errorf("address is nil")
 	}
@@ -170,7 +170,7 @@ func (mt *ModbusTest) Validation() error {
 	return nil
 }
 
-func (mt *ModbusTest) getFunction() ModbusFunction {
+func (mt *ModbusMasterTest) getFunction() ModbusFunction {
 	mFunc := strings.ReplaceAll(strings.ToLower(mt.Function), " ", "")
 	if strings.HasPrefix(mFunc, "0x") {
 		if a, err := strconv.ParseInt(strings.TrimPrefix(mFunc, "0x"), 16, 8); err == nil {
@@ -199,7 +199,7 @@ func (mt *ModbusTest) getFunction() ModbusFunction {
 	}
 }
 
-func (mt *ModbusTest) getQuantity() uint16 {
+func (mt *ModbusMasterTest) getQuantity() uint16 {
 
 	if mt.Quantity != nil {
 		return *mt.Quantity
@@ -219,7 +219,7 @@ func (mt *ModbusTest) getQuantity() uint16 {
 	return 0
 }
 
-func (mt *ModbusTest) getError(expected string) *string {
+func (mt *ModbusMasterTest) getError(expected string) *string {
 	if mt.getFunction() != NilFunction {
 		modbusError := strings.ReplaceAll(strings.ToLower(expected), " ", "")
 		if strings.HasPrefix(modbusError, "0x") {

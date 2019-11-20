@@ -1,0 +1,111 @@
+---
+version: 1.0.0
+
+name: New Device
+description: "My new Device"
+logs: stdout        # "off", stdout, stderr, /path/to/file
+logLvl: info        # trace | debug | info | warn | error | fatal | panic
+
+modbusSlave:
+  slaveId: 0x01     # modbus address
+  port: /dev/ttyUSB0
+  boundRate: 115200
+  dataBits: 8
+  parity: N         # Parity: N - None, E - Even, O - Odd (default E)
+  stopBits: 2
+  timeout: 20s
+
+  # Starting value
+  coils:
+    - name: "param1"
+      address: 0x0000
+      bool: true
+  discreteInput:
+    - name: "param1"
+      address: 0x0000
+      uint8: 255
+  holdingRegisters:
+    - name: "param1"
+      address: 0x0000
+      uint16: 1
+  InputRegisters:
+    - name: "param1"
+      address: 0x0000
+      uint16: 1
+
+  tests:
+
+    Default:
+      - name: TestName
+
+        # Строги порядок выполнения команд
+        nextTest:
+          - TestName
+
+        # Сообщение перед тестом
+        before:
+          message: "the message after the test"
+          pause: 1s # ms, s, m, h
+
+        # Количество запусков
+        lifetime: 1
+
+        # Кретерии запуска
+        timeout: 2s
+
+        # или команда
+        function: write multiple registers
+        address: 0x0000
+        quantity: 0x0003
+        data:
+          - name: "param1"
+            uint8: 8
+
+        # Проверка
+        expected:
+          coils:
+            - name: "param1"
+              address: 0x0000
+              bool: true
+          discreteInput:
+            - name: "param1"
+              address: 0x0000
+              uint8: 255
+          holdingRegisters:
+            - name: "param1"
+              address: 0x0000
+              uint16: 1
+          InputRegisters:
+            - name: "param1"
+              address: 0x0000
+              uint16: 1
+
+        success:
+          message: "the message on successful completion of the test"
+          pause: 2s # ms, s, m, h
+        error:
+          message: "the message about the failed test execution"
+          pause: 2s # ms, s, m, h
+
+        # Запись
+        write:
+          coils:
+            - name: "param1"
+              address: 0x0000
+              bool: true
+          discreteInput:
+            - name: "param1"
+              address: 0x0000
+              uint8: 255
+          holdingRegisters:
+            - name: "param1"
+              address: 0x0000
+              uint16: 1
+          InputRegisters:
+            - name: "param1"
+              address: 0x0000
+              uint16: 1
+
+        after:
+          message: "the message after the test"
+          pause: 1s # ms, s, m, h
