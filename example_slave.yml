@@ -28,84 +28,88 @@ modbusSlave:
     - name: "param1"
       address: 0x0000
       uint16: 1
-  InputRegisters:
+  inputRegisters:
     - name: "param1"
       address: 0x0000
       uint16: 1
 
   tests:
+    - name: TestName
 
-    Default:
-      - name: TestName
+      skip: "Сообщения о причине отключения теста"
 
-        # Строги порядок выполнения команд
-        nextTest:
-          - TestName
+      # Сообщение перед тестом
+      before:
+        message: "the message after the test"
+        pause: 1s # ms, s, m, h
 
-        # Сообщение перед тестом
-        before:
-          message: "the message after the test"
-          pause: 1s # ms, s, m, h
+      # Строги порядок выполнения команд
+      next:
+        - TestName
 
-        # Количество запусков
-        lifetime: 1
 
-        # Кретерии запуска
-        timeout: 2s
+      # Количество запусков
+      lifetime: 1
 
-        # или команда
-        function: write multiple registers
-        address: 0x0000
-        quantity: 0x0003
-        data:
+      # Задержка перед ответом
+      timeout: 2s
+
+      # Повторный запуск
+      autorun: 2s
+
+      # или команда
+      function: write multiple registers
+      address: 0x0000
+      quantity: 0x0003
+      data:
+        - name: "param1"
+          uint8: 8
+
+      # Проверка
+      expected:
+        coils:
           - name: "param1"
-            uint8: 8
+            address: 0x0000
+            bool: true
+        discreteInput:
+          - name: "param1"
+            address: 0x0000
+            uint8: 255
+        holdingRegisters:
+          - name: "param1"
+            address: 0x0000
+            uint16: 1
+        InputRegisters:
+          - name: "param1"
+            address: 0x0000
+            uint16: 1
 
-        # Проверка
-        expected:
-          coils:
-            - name: "param1"
-              address: 0x0000
-              bool: true
-          discreteInput:
-            - name: "param1"
-              address: 0x0000
-              uint8: 255
-          holdingRegisters:
-            - name: "param1"
-              address: 0x0000
-              uint16: 1
-          InputRegisters:
-            - name: "param1"
-              address: 0x0000
-              uint16: 1
+      success:
+        message: "the message on successful completion of the test"
+        pause: 2s # ms, s, m, h
+      error:
+        message: "the message about the failed test execution"
+        pause: 2s # ms, s, m, h
 
-        success:
-          message: "the message on successful completion of the test"
-          pause: 2s # ms, s, m, h
-        error:
-          message: "the message about the failed test execution"
-          pause: 2s # ms, s, m, h
+      # Запись
+      write:
+        coils:
+          - name: "param1"
+            address: 0x0000
+            bool: true
+        discreteInput:
+          - name: "param1"
+            address: 0x0000
+            uint8: 255
+        holdingRegisters:
+          - name: "param1"
+            address: 0x0000
+            uint16: 1
+        InputRegisters:
+          - name: "param1"
+            address: 0x0000
+            uint16: 1
 
-        # Запись
-        write:
-          coils:
-            - name: "param1"
-              address: 0x0000
-              bool: true
-          discreteInput:
-            - name: "param1"
-              address: 0x0000
-              uint8: 255
-          holdingRegisters:
-            - name: "param1"
-              address: 0x0000
-              uint16: 1
-          InputRegisters:
-            - name: "param1"
-              address: 0x0000
-              uint16: 1
-
-        after:
-          message: "the message after the test"
-          pause: 1s # ms, s, m, h
+      after:
+        message: "the message after the test"
+        pause: 1s # ms, s, m, h

@@ -76,6 +76,7 @@ func (mt *ModbusMasterTest) Check(report *ReportTest) {
 	}
 }
 
+// TODO Сделать дополнение до 16бит при записи регистров
 func (mt *ModbusMasterTest) Exec(client modbus.Client, report *ReportTest) {
 	var err error
 	switch mt.getFunction() {

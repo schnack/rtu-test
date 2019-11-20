@@ -51,7 +51,6 @@ func dataSingleCoil(data []byte) []byte {
 	}
 }
 
-// TODO expect
 func countBit(v []*Value, is16bit bool) (bits uint16) {
 	for _, w := range v {
 		if w.Type() == Bool {
@@ -95,14 +94,61 @@ func valueToByte(v []*Value) (data []byte) {
 				vByte = 0
 				i = 0
 			}
-			b := w.Write()
-			data = append(data, b...)
+			data = append(data, w.Write()...)
 		}
 	}
 	if i != 0 {
 		data = append(data, vByte)
 		vByte = 0
 		i = 0
+	}
+	return
+}
+
+// Есть особенность если указан в конфигурации
+//  int8 будет дополнен []{byte{int8, 0}} LittleEndian
+//  int16 #TODO Доделат!!!
+func valueToByte16(v []*Value) (data []byte) {
+	var i int
+	var vByte uint8
+	for _, w := range v {
+		switch w.Type() {
+		case Bool:
+			if *w.Bool {
+				vByte = vByte | 1<<i
+			}
+			i++
+			if i > 7 {
+				data = append(data, vByte)
+				vByte = 0
+				i = 0
+			}
+		case Int8, Uint8:
+			if i != 0 {
+				data = append(data, vByte)
+				vByte = 0
+				i = 0
+			}
+			data = append(data, w.Write()...)
+		default:
+			if i != 0 {
+				data = append(data, vByte)
+				vByte = 0
+				i = 0
+			}
+			if len(data)%2 != 0 {
+				data = append(data, 0)
+			}
+			data = append(data, w.Write()...)
+		}
+	}
+	if i != 0 {
+		data = append(data, vByte)
+		vByte = 0
+		i = 0
+	}
+	if len(data)%2 != 0 {
+		data = append(data, 0)
 	}
 	return
 }

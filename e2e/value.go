@@ -79,6 +79,8 @@ const (
 
 type Value struct {
 	Name string `yaml:"name"`
+	// Используется для сервера
+	Address string `yaml:"address"`
 
 	Int8    *int8 `yaml:"int8"`
 	MaxInt8 *int8 `yaml:"maxInt8"`
