@@ -133,7 +133,7 @@ func (mt *ModbusMasterTest) Exec(client modbus.Client, report *ReportTest) {
 			report.Write = append(report.Write, w.ReportWrite())
 		}
 		startTime := time.Now()
-		if report.GotByte, err = client.WriteSingleRegister(*mt.Address, binary.BigEndian.Uint16(valueToByte(mt.Write))); err != nil {
+		if report.GotByte, err = client.WriteSingleRegister(*mt.Address, binary.BigEndian.Uint16(valueToByte16(mt.Write))); err != nil {
 			report.GotError = err.Error()
 		}
 		report.GotTime = time.Since(startTime)
@@ -142,7 +142,7 @@ func (mt *ModbusMasterTest) Exec(client modbus.Client, report *ReportTest) {
 			report.Write = append(report.Write, w.ReportWrite())
 		}
 		startTime := time.Now()
-		if report.GotByte, err = client.WriteMultipleRegisters(*mt.Address, mt.getQuantity(), valueToByte(mt.Write)); err != nil {
+		if report.GotByte, err = client.WriteMultipleRegisters(*mt.Address, mt.getQuantity(), valueToByte16(mt.Write)); err != nil {
 			report.GotError = err.Error()
 		}
 		report.GotTime = time.Since(startTime)

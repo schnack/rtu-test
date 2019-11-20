@@ -69,6 +69,26 @@ func Test_valueToByte(t *testing.T) {
 
 }
 
+func Test_valueToByte16(t *testing.T) {
+	var param1 = true
+	var param2 uint8 = 1
+	var param3 uint16 = 1
+	var param4 uint32 = 1
+	var param5 uint64 = 1
+	values := []*Value{
+		{Bool: &param1},
+		{Uint8: &param2},
+		{Uint16: &param3},
+		{Uint32: &param4},
+		{Uint64: &param5},
+	}
+	data := valueToByte16(values)
+	if err := gotest.Expect(data).Eq([]byte{1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1}); err != nil {
+		t.Error(err)
+	}
+
+}
+
 func Test_parsePauseNs(t *testing.T) {
 	d := parseDuration("1 ns")
 	if err := gotest.Expect(d).Eq(time.Duration(1)); err != nil {
