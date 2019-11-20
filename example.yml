@@ -23,7 +23,7 @@ modbusMaster:
       - name: TestName  # Test Name
         before:
           message: "the message before the test"
-          pause: 1s # ns, us ms, s, m, h
+          pause: 1s # ns, us ms, s, m, h, enter
 
         function: write multiple registers  #  or 0x10
         address: 0x0000
