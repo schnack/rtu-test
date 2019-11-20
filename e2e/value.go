@@ -1,4 +1,4 @@
-package unit
+package e2e
 
 import (
 	"bytes"
@@ -759,7 +759,7 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 			return
 		}
 
-		for i, _ := range expected {
+		for i := range expected {
 			if got[i] != expected[i] {
 				report.Pass = false
 				return

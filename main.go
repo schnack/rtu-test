@@ -4,7 +4,7 @@ import (
 	"flag"
 	"github.com/sirupsen/logrus"
 	"os"
-	"rtu-test/unit"
+	"rtu-test/e2e"
 )
 
 func main() {
@@ -20,7 +20,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	d := unit.Init()
+	d := e2e.Init()
 	fileNames := flag.Args()
 
 	if len(fileNames) == 0 {

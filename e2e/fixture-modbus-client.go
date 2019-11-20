@@ -1,4 +1,4 @@
-package unit
+package e2e
 
 func NewFixtureModBusClient(Results []byte, err error) *FixtureModBusClient {
 	return &FixtureModBusClient{Results: Results, Error: err}
