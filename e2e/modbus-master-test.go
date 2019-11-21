@@ -36,6 +36,7 @@ type ModbusMasterTest struct {
 	Success  Message  `yaml:"success"`
 	Error    Message  `yaml:"error"`
 	After    Message  `yaml:"after"`
+	Fatal    string   `yaml:"fatal"`
 }
 
 func (mt *ModbusMasterTest) Run(client modbus.Client) ReportTest {
@@ -44,21 +45,23 @@ func (mt *ModbusMasterTest) Run(client modbus.Client) ReportTest {
 	}
 
 	report := ReportTest{Name: mt.Name, Pass: true, Skip: mt.Skip}
-	logrus.Warnf(render(TestRUN, report))
+	logrus.Warn(render(TestRUN, report))
 	if report.Skip != "" {
-		logrus.Warnf(render(TestSKIP, report))
+		logrus.Warn(render(TestSKIP, report))
 		return report
 	}
 	mt.Before.Print(report)
 	mt.Exec(client, &report)
 	mt.Check(&report)
 	if report.Pass {
-		logrus.Warnf(render(TestPASS, report))
+		logrus.Warn(render(TestPASS, report))
 		mt.Success.Print(report)
-
 	} else {
-		logrus.Errorf(render(TestFAIL, report))
+		logrus.Error(render(TestFAIL, report))
 		mt.Error.Print(report)
+		if mt.Fatal != "" {
+			logrus.Fatal(mt.Fatal)
+		}
 	}
 	mt.After.Print(report)
 	return report

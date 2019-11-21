@@ -27,6 +27,11 @@ func (m *Message) Print(report ReportTest) {
 
 			var t string
 			_, _ = fmt.Scanln(&t)
+		} else {
+			logrus.Info(message)
+			if Init().Log != LogStdout {
+				fmt.Println(message)
+			}
 		}
 	}
 
