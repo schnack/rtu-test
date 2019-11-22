@@ -5,6 +5,9 @@ name: New Device
 description: "My new Device"
 logs: stdout        # "off", stdout, stderr, /path/to/file
 logLvl: info        # trace | debug | info | warn | error | fatal | panic
+exitMessage:
+  message: Для выхода нажмите {{ .Pause}}
+  pause: Enter
 
 modbusMaster:
   slaveId: 0x01     # modbus address

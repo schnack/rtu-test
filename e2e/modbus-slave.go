@@ -38,7 +38,7 @@ func (ms *ModbusSlave) Write1Bit(s []byte, v []*Value) {
 		data := v[i].Write()
 		for b := range data {
 			if len(s) < int(address) {
-				logrus.Fatal("!!!!!!!!!!")
+				logrus.Fatal("ModBus tables overflow")
 			}
 
 			if v[i].Type() == Bool {
