@@ -31,6 +31,7 @@ type Device struct {
 	Log          string       `yaml:"log"`
 	LogLvl       string       `yaml:"logLvl"`
 	Description  string       `yaml:"description"`
+	ExitMessage  Message      `yaml:"exitMessage"`
 	ModbusMaster ModbusMaster `yaml:"modbusMaster"`
 }
 
@@ -96,7 +97,13 @@ func (d *Device) RunTest() {
 		logrus.SetOutput(file)
 	}
 
-	if err := d.ModbusMaster.Run(); err != nil {
+	report := ReportGroups{
+		Name:        d.Name,
+		Description: d.Description,
+	}
+	logrus.RegisterExitHandler(func() { d.ExitMessage.PrintReportGroups(report) })
+
+	if err := d.ModbusMaster.Run(&report); err != nil {
 		logrus.Fatal(err)
 	}
 }

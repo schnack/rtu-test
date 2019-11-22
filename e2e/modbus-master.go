@@ -39,7 +39,9 @@ func (mc *ModbusMaster) getHandler() *modbus.RTUClientHandler {
 	return handler
 }
 
-func (mc *ModbusMaster) Run() error {
+func (mc *ModbusMaster) Run(reports *ReportGroups) error {
+	reports.Tetst = "Hiiii!!!"
+
 	handler := mc.getHandler()
 	if err := handler.Connect(); err != nil {
 		return err
@@ -69,6 +71,7 @@ func (mc *ModbusMaster) Run() error {
 			}
 			report.Tests = append(report.Tests, test.Run(client))
 		}
+		reports.ReportGroup = append(reports.ReportGroup, report)
 	}
 
 	return nil

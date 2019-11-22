@@ -11,7 +11,7 @@ type Message struct {
 	Pause   string `yaml:"pause"`
 }
 
-func (m *Message) Print(report ReportTest) {
+func (m *Message) PrintReportTest(report ReportTest) {
 	d := parseDuration(m.Pause)
 	report.Pause = d.String()
 
@@ -28,6 +28,66 @@ func (m *Message) Print(report ReportTest) {
 			var t string
 			_, _ = fmt.Scanln(&t)
 		} else {
+			logrus.Info(message)
+			if Init().Log != LogStdout {
+				fmt.Println(message)
+			}
+		}
+	}
+
+	if d > 0 {
+		time.Sleep(d)
+	}
+}
+
+func (m *Message) PrintReportGroup(report ReportGroup) {
+	d := parseDuration(m.Pause)
+	report.Pause = d.String()
+
+	if m.Message != "" {
+		message := render(m.Message, report)
+		if d < 0 {
+			message = fmt.Sprintf("%s %s", message, "[Enter]")
+			logrus.Info(message)
+
+			if Init().Log != LogStdout {
+				fmt.Println(message)
+			}
+
+			var t string
+			_, _ = fmt.Scanln(&t)
+		} else {
+			logrus.Info(message)
+			if Init().Log != LogStdout {
+				fmt.Println(message)
+			}
+		}
+	}
+
+	if d > 0 {
+		time.Sleep(d)
+	}
+}
+
+func (m *Message) PrintReportGroups(reports ReportGroups) {
+	d := parseDuration(m.Pause)
+
+	if m.Message != "" {
+		if d < 0 {
+			reports.Pause = m.Pause
+			message := render(m.Message, reports)
+			logrus.Info(message)
+
+			if Init().Log != LogStdout {
+				fmt.Println(message)
+			}
+
+			var t string
+			_, _ = fmt.Scanln(&t)
+		} else {
+			reports.Pause = d.String()
+			message := render(m.Message, reports)
+
 			logrus.Info(message)
 			if Init().Log != LogStdout {
 				fmt.Println(message)

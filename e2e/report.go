@@ -24,7 +24,16 @@ type ReportExpected struct {
 
 type ReportGroup struct {
 	Name  string
+	Pause string
 	Tests []ReportTest
+}
+
+type ReportGroups struct {
+	Name        string
+	Description string
+	Pause       string
+	Tetst       string
+	ReportGroup []ReportGroup
 }
 
 type ReportTest struct {
