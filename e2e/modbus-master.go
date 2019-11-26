@@ -27,6 +27,7 @@ func (l *loger) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
+// TODO test
 func (mc *ModbusMaster) getHandler() *modbus.RTUClientHandler {
 	handler := modbus.NewRTUClientHandler(mc.Port)
 	handler.BaudRate = mc.BoundRate
@@ -39,9 +40,8 @@ func (mc *ModbusMaster) getHandler() *modbus.RTUClientHandler {
 	return handler
 }
 
+// TODO Test
 func (mc *ModbusMaster) Run(reports *ReportGroups) error {
-	reports.Tetst = "Hiiii!!!"
-
 	handler := mc.getHandler()
 	if err := handler.Connect(); err != nil {
 		return err

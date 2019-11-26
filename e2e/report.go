@@ -32,7 +32,6 @@ type ReportGroups struct {
 	Name        string
 	Description string
 	Pause       string
-	Tetst       string
 	ReportGroup []ReportGroup
 }
 

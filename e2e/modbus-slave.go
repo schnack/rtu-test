@@ -36,16 +36,15 @@ func (ms *ModbusSlave) Write1Bit(s []byte, v []*Value) {
 		}
 
 		data := v[i].Write()
-		for b := range data {
+		for _, b := range data {
 			if len(s) < int(address) {
 				logrus.Fatal("ModBus tables overflow")
 			}
-
 			if v[i].Type() == Bool {
-				s[address] = byte(b)
+				s[address] = b
 				address++
 			} else {
-				for ii := 0; ii <= 7; ii++ {
+				for ii := 7; ii >= 0; ii-- {
 					if (b & (1 << ii)) != 0 {
 						s[address] = 1
 					} else {
@@ -61,7 +60,7 @@ func (ms *ModbusSlave) Write1Bit(s []byte, v []*Value) {
 func (ms *ModbusSlave) getServer() *mbserver.Server {
 	s := mbserver.NewServer()
 	ms.Write1Bit(s.Coils, ms.Coils)
-	ms.Write1Bit(s.DiscreteInputs, ms.Coils)
+	ms.Write1Bit(s.DiscreteInputs, ms.DiscreteInput)
 	s.RegisterFunctionHandler(1, ms.ReadCoils)
 	s.RegisterFunctionHandler(2, ms.ReadDiscreteInputs)
 	s.RegisterFunctionHandler(3, ms.ReadHoldingRegisters)

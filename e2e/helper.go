@@ -3,7 +3,6 @@ package e2e
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
 	"github.com/sirupsen/logrus"
 	"strconv"
 	"strings"
@@ -25,7 +24,7 @@ func parseStringByte(sb string) ([]byte, error) {
 	byteClear := strings.ReplaceAll(strings.ReplaceAll(sb, " ", ""), "0x", "")
 	for i := range byteClear {
 		if i%2 != 0 {
-			b, err := strconv.ParseUint(fmt.Sprintf("%c%c", byteClear[i-1], byteClear[i]), 16, 8)
+			b, err := strconv.ParseUint(byteClear[i-1:i+1], 16, 8)
 			if err != nil {
 				return nil, err
 			}
