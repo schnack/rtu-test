@@ -39,5 +39,46 @@ func TestModbusSlave_Write1Bit(t *testing.T) {
 	}); err != nil {
 		t.Error(err)
 	}
+}
 
+func TestModbusSlave_Write16Bit(t *testing.T) {
+	var param1 = true
+	var param2 uint8 = 0xf0
+	var param3 uint8 = 0x0f
+	var param4 = true
+	var param5 uint16 = 0xF0_0F
+	var param6 uint32 = 0xF0_00_00_0F
+	var param7 uint64 = 0xF0_00_00_00_00_00_00_0F
+	slave := ModbusSlave{
+		Coils: []*Value{
+			{Name: "param1", Bool: &param1},
+			{Name: "param2", Address: "0x0002", Uint8: &param2},
+			{Name: "param3", Uint8: &param3},
+			{Name: "param4", Bool: &param4},
+			{Name: "param5", Uint16: &param5},
+			{Name: "param6", Address: "0x0006", Uint32: &param6},
+			{Name: "param7", Address: "0x0009", Uint64: &param7},
+		},
+	}
+	b := make([]uint16, 13)
+
+	slave.Write16Bit(b, slave.Coils)
+
+	if err := gotest.Expect(b).Eq([]uint16{
+		1,
+		0,
+		61455,
+		1,
+		61455,
+		0,
+		61440,
+		15,
+		0,
+		61440,
+		0,
+		0,
+		15,
+	}); err != nil {
+		t.Error(err)
+	}
 }

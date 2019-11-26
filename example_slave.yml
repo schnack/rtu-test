@@ -39,9 +39,7 @@ modbusSlave:
       skip: "Сообщения о причине отключения теста"
 
       # Сообщение перед тестом
-      before:
-        message: "the message after the test"
-        pause: 1s # ms, s, m, h
+      before: "the message after the test"
 
       # Строги порядок выполнения команд
       next:
@@ -84,12 +82,8 @@ modbusSlave:
             address: 0x0000
             uint16: 1
 
-      success:
-        message: "the message on successful completion of the test"
-        pause: 2s # ms, s, m, h
-      error:
-        message: "the message about the failed test execution"
-        pause: 2s # ms, s, m, h
+      success: "the message on successful completion of the test"
+      error: "the message about the failed test execution"
 
       # Запись
       write:
@@ -110,6 +104,4 @@ modbusSlave:
             address: 0x0000
             uint16: 1
 
-      after:
-        message: "the message after the test"
-        pause: 1s # ms, s, m, h
+      after: "the message after the test"
