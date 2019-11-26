@@ -5,6 +5,7 @@ import (
 	"github.com/goburrow/serial"
 	"github.com/sirupsen/logrus"
 	"github.com/tbrandon/mbserver"
+	"sync"
 )
 
 type ModbusSlave struct {
@@ -22,28 +23,40 @@ type ModbusSlave struct {
 	InputRegisters   []*Value `yaml:"InputRegisters"`
 
 	Tests []*ModbusSlaveTest `yaml:"tests"`
+
+	muCoils            sync.Mutex `yaml:"-"`
+	muDiscreteInput    sync.Mutex `yaml:"-"`
+	muHoldingRegisters sync.Mutex `yaml:"-"`
+	muInputRegisters   sync.Mutex `yaml:"-"`
 }
 
 func (ms *ModbusSlave) getServer() *mbserver.Server {
 	s := mbserver.NewServer()
+	ms.muCoils.Lock()
+	defer ms.muCoils.Unlock()
 	ms.Write1Bit(s.Coils, ms.Coils)
+	ms.muDiscreteInput.Lock()
+	defer ms.muDiscreteInput.Unlock()
 	ms.Write1Bit(s.DiscreteInputs, ms.DiscreteInput)
+	ms.muHoldingRegisters.Lock()
+	defer ms.muHoldingRegisters.Unlock()
 	ms.Write16Bit(s.HoldingRegisters, ms.HoldingRegisters)
+	ms.muInputRegisters.Lock()
+	defer ms.muInputRegisters.Unlock()
 	ms.Write16Bit(s.InputRegisters, ms.InputRegisters)
-	s.RegisterFunctionHandler(1, ms.ReadCoils)
-	s.RegisterFunctionHandler(2, ms.ReadDiscreteInputs)
-	s.RegisterFunctionHandler(3, ms.ReadHoldingRegisters)
-	s.RegisterFunctionHandler(4, ms.ReadInputRegisters)
-	s.RegisterFunctionHandler(5, ms.WriteSingleCoil)
-	s.RegisterFunctionHandler(6, ms.WriteHoldingRegister)
-	s.RegisterFunctionHandler(15, ms.WriteMultipleCoils)
-	s.RegisterFunctionHandler(16, ms.WriteHoldingRegisters)
+	s.RegisterFunctionHandler(1, ms.ActionHandler)
+	s.RegisterFunctionHandler(2, ms.ActionHandler)
+	s.RegisterFunctionHandler(3, ms.ActionHandler)
+	s.RegisterFunctionHandler(4, ms.ActionHandler)
+	s.RegisterFunctionHandler(5, ms.ActionHandler)
+	s.RegisterFunctionHandler(6, ms.ActionHandler)
+	s.RegisterFunctionHandler(15, ms.ActionHandler)
+	s.RegisterFunctionHandler(16, ms.ActionHandler)
 	return s
 }
 
 func (ms *ModbusSlave) Run() {
 	s := ms.getServer()
-
 	err := s.ListenRTU(&serial.Config{
 		Address:  ms.Port,
 		BaudRate: ms.BoundRate,
@@ -57,44 +70,38 @@ func (ms *ModbusSlave) Run() {
 	}
 }
 
-func (ms *ModbusSlave) ReadCoils(s *mbserver.Server, f mbserver.Framer) (result []byte, exp *mbserver.Exception) {
-	result, exp = mbserver.ReadCoils(s, f)
-	return
-}
+func (ms *ModbusSlave) ActionHandler(s *mbserver.Server, f mbserver.Framer) (result []byte, exp *mbserver.Exception) {
 
-func (ms *ModbusSlave) ReadDiscreteInputs(s *mbserver.Server, f mbserver.Framer) (result []byte, exp *mbserver.Exception) {
-	result, exp = mbserver.ReadDiscreteInputs(s, f)
-	return
-}
+	for i := range ms.Tests {
+		if ms.Tests[i].Check(f) {
 
-func (ms *ModbusSlave) ReadHoldingRegisters(s *mbserver.Server, f mbserver.Framer) (result []byte, exp *mbserver.Exception) {
-	result, exp = mbserver.ReadHoldingRegisters(s, f)
-	return
-}
+		}
+	}
+	// TODO message
+	// TODO expected
 
-func (ms *ModbusSlave) ReadInputRegisters(s *mbserver.Server, f mbserver.Framer) (result []byte, exp *mbserver.Exception) {
-	result, exp = mbserver.ReadInputRegisters(s, f)
+	switch ModbusFunction(f.GetFunction()) {
+	case ReadCoils:
+		result, exp = mbserver.ReadCoils(s, f)
+	case ReadDiscreteInputs:
+		result, exp = mbserver.ReadDiscreteInputs(s, f)
+	case ReadHoldingRegisters:
+		result, exp = mbserver.ReadHoldingRegisters(s, f)
+	case ReadInputRegisters:
+		result, exp = mbserver.ReadInputRegisters(s, f)
+	case WriteSingleCoil:
+		result, exp = mbserver.WriteSingleCoil(s, f)
+	case WriteSingleRegister:
+		result, exp = mbserver.WriteHoldingRegister(s, f)
+	case WriteMultipleCoils:
+		result, exp = mbserver.WriteMultipleCoils(s, f)
+	case WriteMultipleRegisters:
+		result, exp = mbserver.WriteHoldingRegisters(s, f)
+	}
 	return
-}
+	// TODO message
+	// TODO write
 
-func (ms *ModbusSlave) WriteSingleCoil(s *mbserver.Server, f mbserver.Framer) (result []byte, exp *mbserver.Exception) {
-	result, exp = mbserver.WriteSingleCoil(s, f)
-	return
-}
-
-func (ms *ModbusSlave) WriteHoldingRegister(s *mbserver.Server, f mbserver.Framer) (result []byte, exp *mbserver.Exception) {
-	result, exp = mbserver.WriteHoldingRegister(s, f)
-	return
-}
-
-func (ms *ModbusSlave) WriteMultipleCoils(s *mbserver.Server, f mbserver.Framer) (result []byte, exp *mbserver.Exception) {
-	result, exp = mbserver.WriteMultipleCoils(s, f)
-	return
-}
-
-func (ms *ModbusSlave) WriteHoldingRegisters(s *mbserver.Server, f mbserver.Framer) (result []byte, exp *mbserver.Exception) {
-	result, exp = mbserver.WriteHoldingRegisters(s, f)
-	return
 }
 
 func (ms *ModbusSlave) Write1Bit(s []byte, v []*Value) {

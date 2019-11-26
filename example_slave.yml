@@ -45,7 +45,6 @@ modbusSlave:
       next:
         - TestName
 
-
       # Количество запусков
       lifetime: 1
 
