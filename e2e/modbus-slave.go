@@ -6,6 +6,14 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/tbrandon/mbserver"
 	"sync"
+	"time"
+)
+
+const (
+	CoilsTable            = "coils"
+	DiscreteInputTable    = "discreteInput"
+	HoldingRegistersTable = "holdingRegisters"
+	InputRegistersTable   = "inputRegisters"
 )
 
 type ModbusSlave struct {
@@ -20,7 +28,7 @@ type ModbusSlave struct {
 	Coils            []*Value `yaml:"coils"`
 	DiscreteInput    []*Value `yaml:"discreteInput"`
 	HoldingRegisters []*Value `yaml:"holdingRegisters"`
-	InputRegisters   []*Value `yaml:"InputRegisters"`
+	InputRegisters   []*Value `yaml:"inputRegisters"`
 
 	Tests []*ModbusSlaveTest `yaml:"tests"`
 
@@ -28,22 +36,16 @@ type ModbusSlave struct {
 	muDiscreteInput    sync.Mutex `yaml:"-"`
 	muHoldingRegisters sync.Mutex `yaml:"-"`
 	muInputRegisters   sync.Mutex `yaml:"-"`
+
+	currentTest *ModbusSlaveTest `yaml:"-"`
 }
 
 func (ms *ModbusSlave) getServer() *mbserver.Server {
 	s := mbserver.NewServer()
-	ms.muCoils.Lock()
-	defer ms.muCoils.Unlock()
-	ms.Write1Bit(s.Coils, ms.Coils)
-	ms.muDiscreteInput.Lock()
-	defer ms.muDiscreteInput.Unlock()
-	ms.Write1Bit(s.DiscreteInputs, ms.DiscreteInput)
-	ms.muHoldingRegisters.Lock()
-	defer ms.muHoldingRegisters.Unlock()
-	ms.Write16Bit(s.HoldingRegisters, ms.HoldingRegisters)
-	ms.muInputRegisters.Lock()
-	defer ms.muInputRegisters.Unlock()
-	ms.Write16Bit(s.InputRegisters, ms.InputRegisters)
+	ms.Write1Bit(s.Coils, ms.Coils, &ms.muCoils)
+	ms.Write1Bit(s.DiscreteInputs, ms.DiscreteInput, &ms.muDiscreteInput)
+	ms.Write16Bit(s.HoldingRegisters, ms.HoldingRegisters, &ms.muHoldingRegisters)
+	ms.Write16Bit(s.InputRegisters, ms.InputRegisters, &ms.muInputRegisters)
 	s.RegisterFunctionHandler(1, ms.ActionHandler)
 	s.RegisterFunctionHandler(2, ms.ActionHandler)
 	s.RegisterFunctionHandler(3, ms.ActionHandler)
@@ -72,13 +74,42 @@ func (ms *ModbusSlave) Run() {
 
 func (ms *ModbusSlave) ActionHandler(s *mbserver.Server, f mbserver.Framer) (result []byte, exp *mbserver.Exception) {
 
-	for i := range ms.Tests {
-		if ms.Tests[i].Check(f) {
+	var test *ModbusSlaveTest
+	max := 0
+	var next []string
 
+	if ms.currentTest != nil && ms.currentTest.Next != nil {
+		next = ms.currentTest.Next
+	}
+
+	for i := range ms.Tests {
+		ball := ms.Tests[i].Check(f, next)
+
+		if ball != 0 && ball > max {
+			test = ms.Tests[i]
+			max = ball
 		}
 	}
-	// TODO message
-	// TODO expected
+
+	if test != nil && test.Lifetime != nil {
+		*test.Lifetime--
+	}
+
+	// Before
+	if test != nil && test.BeforeWrite != nil {
+		if v, ok := test.BeforeWrite[CoilsTable]; ok {
+			ms.Write1Bit(s.Coils, v, &ms.muCoils)
+		}
+		if v, ok := test.BeforeWrite[DiscreteInputTable]; ok {
+			ms.Write1Bit(s.DiscreteInputs, v, &ms.muDiscreteInput)
+		}
+		if v, ok := test.BeforeWrite[HoldingRegistersTable]; ok {
+			ms.Write16Bit(s.HoldingRegisters, v, &ms.muHoldingRegisters)
+		}
+		if v, ok := test.BeforeWrite[InputRegistersTable]; ok {
+			ms.Write16Bit(s.InputRegisters, v, &ms.muInputRegisters)
+		}
+	}
 
 	switch ModbusFunction(f.GetFunction()) {
 	case ReadCoils:
@@ -98,13 +129,33 @@ func (ms *ModbusSlave) ActionHandler(s *mbserver.Server, f mbserver.Framer) (res
 	case WriteMultipleRegisters:
 		result, exp = mbserver.WriteHoldingRegisters(s, f)
 	}
-	return
+
+	// after
+	if test != nil && test.AfterWrite != nil {
+		if v, ok := test.AfterWrite[CoilsTable]; ok {
+			ms.Write1Bit(s.Coils, v, &ms.muCoils)
+		}
+		if v, ok := test.AfterWrite[DiscreteInputTable]; ok {
+			ms.Write1Bit(s.DiscreteInputs, v, &ms.muDiscreteInput)
+		}
+		if v, ok := test.AfterWrite[HoldingRegistersTable]; ok {
+			ms.Write16Bit(s.HoldingRegisters, v, &ms.muHoldingRegisters)
+		}
+		if v, ok := test.AfterWrite[InputRegistersTable]; ok {
+			ms.Write16Bit(s.InputRegisters, v, &ms.muInputRegisters)
+		}
+	}
 	// TODO message
 	// TODO write
-
+	// TODO message
+	ms.currentTest = test
+	time.Sleep(parseDuration(ms.currentTest.TimeOut))
+	return
 }
 
-func (ms *ModbusSlave) Write1Bit(s []byte, v []*Value) {
+func (ms *ModbusSlave) Write1Bit(s []byte, v []*Value, mu *sync.Mutex) {
+	mu.Lock()
+	defer mu.Unlock()
 	var address uint16 = 0
 	for i := range v {
 		if v[i].Address != "" {
@@ -140,7 +191,9 @@ func (ms *ModbusSlave) Write1Bit(s []byte, v []*Value) {
 	}
 }
 
-func (ms *ModbusSlave) Write16Bit(s []uint16, v []*Value) {
+func (ms *ModbusSlave) Write16Bit(s []uint16, v []*Value, mu *sync.Mutex) {
+	mu.Lock()
+	defer mu.Unlock()
 	var address uint16 = 0
 
 	var vBytes uint16 = 0

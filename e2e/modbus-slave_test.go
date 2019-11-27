@@ -2,6 +2,7 @@ package e2e
 
 import (
 	"github.com/schnack/gotest"
+	"sync"
 	"testing"
 )
 
@@ -24,7 +25,8 @@ func TestModbusSlave_Write1Bit(t *testing.T) {
 	}
 	b := make([]byte, 125)
 
-	slave.Write1Bit(b, slave.Coils)
+	mu := sync.Mutex{}
+	slave.Write1Bit(b, slave.Coils, &mu)
 
 	if err := gotest.Expect(b).Eq([]byte{
 		1,
@@ -62,7 +64,8 @@ func TestModbusSlave_Write16Bit(t *testing.T) {
 	}
 	b := make([]uint16, 13)
 
-	slave.Write16Bit(b, slave.Coils)
+	mu := sync.Mutex{}
+	slave.Write16Bit(b, slave.Coils, &mu)
 
 	if err := gotest.Expect(b).Eq([]uint16{
 		1,

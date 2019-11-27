@@ -62,6 +62,25 @@ modbusSlave:
         - name: "param1"
           uint8: 8
 
+      # Запись в табличку перед тестом
+      beforeWrite:
+        coils:
+          - name: "param1"
+            address: 0x0000
+            bool: true
+        discreteInput:
+          - name: "param1"
+            address: 0x0000
+            uint8: 255
+        holdingRegisters:
+          - name: "param1"
+            address: 0x0000
+            uint16: 1
+        inputRegisters:
+          - name: "param1"
+            address: 0x0000
+            uint16: 1
+
       # Проверка
       expected:
         coils:
@@ -76,7 +95,7 @@ modbusSlave:
           - name: "param1"
             address: 0x0000
             uint16: 1
-        InputRegisters:
+        inputRegisters:
           - name: "param1"
             address: 0x0000
             uint16: 1
@@ -85,7 +104,7 @@ modbusSlave:
       error: "the message about the failed test execution"
 
       # Запись
-      write:
+      afterWrite:
         coils:
           - name: "param1"
             address: 0x0000
@@ -98,7 +117,7 @@ modbusSlave:
           - name: "param1"
             address: 0x0000
             uint16: 1
-        InputRegisters:
+        inputRegisters:
           - name: "param1"
             address: 0x0000
             uint16: 1
