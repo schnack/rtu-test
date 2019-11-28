@@ -150,6 +150,26 @@ func (ms *ModbusSlave) ActionHandler(s *mbserver.Server, f mbserver.Framer) (res
 	return
 }
 
+func (ms *ModbusSlave) Expect1Bit(s []byte, v []*Value, mu *sync.Mutex) []*ReportExpected {
+	mu.Lock()
+	defer mu.Unlock()
+	var address uint16 = 0
+	for i := range v {
+		if v[i].Address != "" {
+			rawAddress, err := parseStringByte(v[i].Address)
+			if err != nil {
+				logrus.Fatalf("parse address %s", err)
+			}
+			address = binary.BigEndian.Uint16(rawAddress)
+		}
+
+		v[i].LengthBit()
+	}
+	address = address
+	//TODO
+	return nil
+}
+
 func (ms *ModbusSlave) Write1Bit(s []byte, v []*Value, mu *sync.Mutex) {
 	mu.Lock()
 	defer mu.Unlock()

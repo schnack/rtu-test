@@ -3426,7 +3426,7 @@ func TestValue_TypeString(t *testing.T) {
 }
 
 func TestValue_TypeByte(t *testing.T) {
-	var v string = "test"
+	var v string = "0x01020304"
 	if err := gotest.Expect((&Value{Byte: &v}).Type()).Eq(Byte); err != nil {
 		t.Error(err)
 	}
@@ -3442,6 +3442,61 @@ func TestValue_TypeTime(t *testing.T) {
 func TestValue_TypeError(t *testing.T) {
 	var v string = "error"
 	if err := gotest.Expect((&Value{Error: &v}).Type()).Eq(Error); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_LengthBitEmpty(t *testing.T) {
+	if err := gotest.Expect((&Value{}).LengthBit()).Eq(0); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_LengthBit8(t *testing.T) {
+	var v int8 = 1
+	if err := gotest.Expect((&Value{Int8: &v}).LengthBit()).Eq(8); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_LengthBit16(t *testing.T) {
+	var v int16 = 1
+	if err := gotest.Expect((&Value{Int16: &v}).LengthBit()).Eq(16); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_LengthBit32(t *testing.T) {
+	var v int32 = 1
+	if err := gotest.Expect((&Value{Int32: &v}).LengthBit()).Eq(32); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_LengthBit64(t *testing.T) {
+	var v int64 = 1
+	if err := gotest.Expect((&Value{Int64: &v}).LengthBit()).Eq(64); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_LengthBitBool(t *testing.T) {
+	var v bool = true
+	if err := gotest.Expect((&Value{Bool: &v}).LengthBit()).Eq(1); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_LengthBitString(t *testing.T) {
+	var v string = "test"
+	if err := gotest.Expect((&Value{String: &v}).LengthBit()).Eq(8 * 4); err != nil {
+		t.Error(err)
+	}
+}
+
+func TestValue_LengthBitByte(t *testing.T) {
+	var v string = "0x01020304"
+	if err := gotest.Expect((&Value{Byte: &v}).LengthBit()).Eq(8 * 4); err != nil {
 		t.Error(err)
 	}
 }

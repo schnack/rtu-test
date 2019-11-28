@@ -135,6 +135,27 @@ type Value struct {
 
 const FormatRange = "%s..%s"
 
+func (v *Value) LengthBit() int {
+	switch v.Type() {
+	case Bool:
+		return 1
+	case Int8, Int8Range, Uint8, Uint8Range:
+		return 8
+	case Int16, Int16Range, Uint16, Uint16Range:
+		return 16
+	case Int32, Int32Range, Uint32, Uint32Range, Float32, Float32Range:
+		return 32
+	case Int64, Int64Range, Uint64, Uint64Range, Float64, Float64Range:
+		return 64
+	case String:
+		return len(v.Write()) * 8
+	case Byte:
+		return len(v.Write()) * 8
+	default:
+		return 0
+	}
+}
+
 func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, currentBit int) (offsetBit int, report ReportExpected) {
 	report.Name = v.Name
 	report.Pass = true

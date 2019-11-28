@@ -40,12 +40,12 @@ type ModbusMasterTest struct {
 	Disconnect bool     `yaml:"disconnect"`
 }
 
-func (mt *ModbusMasterTest) Run(client modbus.Client) ReportTest {
+func (mt *ModbusMasterTest) Run(client modbus.Client) ReportMasterTest {
 	if err := mt.Validation(); err != nil {
 		logrus.Fatal(err)
 	}
 
-	report := ReportTest{Name: mt.Name, Pass: true, Skip: mt.Skip}
+	report := ReportMasterTest{Name: mt.Name, Pass: true, Skip: mt.Skip}
 	logrus.Warn(render(TestRUN, report))
 	if report.Skip != "" {
 		logrus.Warn(render(TestSKIP, report))
@@ -68,7 +68,7 @@ func (mt *ModbusMasterTest) Run(client modbus.Client) ReportTest {
 	return report
 }
 
-func (mt *ModbusMasterTest) Check(report *ReportTest) {
+func (mt *ModbusMasterTest) Check(report *ReportMasterTest) {
 	countBit := 0
 	var expected ReportExpected
 	for _, v := range mt.Expected {
@@ -80,7 +80,7 @@ func (mt *ModbusMasterTest) Check(report *ReportTest) {
 	}
 }
 
-func (mt *ModbusMasterTest) Exec(client modbus.Client, report *ReportTest) {
+func (mt *ModbusMasterTest) Exec(client modbus.Client, report *ReportMasterTest) {
 	var err error
 	switch mt.getFunction() {
 	case ReadDiscreteInputs:

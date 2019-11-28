@@ -25,7 +25,7 @@ type ReportExpected struct {
 type ReportGroup struct {
 	Name  string
 	Pause string
-	Tests []ReportTest
+	Tests []ReportMasterTest
 }
 
 type ReportGroups struct {
@@ -35,7 +35,7 @@ type ReportGroups struct {
 	ReportGroup []ReportGroup
 }
 
-type ReportTest struct {
+type ReportMasterTest struct {
 	Name     string
 	Pass     bool
 	Pause    string
@@ -45,4 +45,14 @@ type ReportTest struct {
 	GotByte  []byte
 	GotTime  time.Duration
 	GotError string
+}
+
+type ReportSlaveTest struct {
+	Name                     string
+	Pass                     bool
+	Skip                     string
+	ExpectedCoils            []ReportExpected
+	ExpectedDiscreteInput    []ReportExpected
+	ExpectedHoldingRegisters []ReportExpected
+	ExpectedInputRegisters   []ReportExpected
 }

@@ -11,7 +11,7 @@ type Message struct {
 	Pause   string `yaml:"pause"`
 }
 
-func (m *Message) PrintReportTest(report ReportTest) {
+func (m *Message) PrintReportTest(report ReportMasterTest) {
 	d := parseDuration(m.Pause)
 	report.Pause = d.String()
 
