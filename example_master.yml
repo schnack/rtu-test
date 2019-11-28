@@ -28,6 +28,9 @@ modbusMaster:
           message: "the message before the test"
           pause: 1s # ns, us ms, s, m, h, enter
 
+        fatal: exit
+        disconnect: true
+
         function: write multiple registers  #  or 0x10
         address: 0x0000
         quantity: 0x0003

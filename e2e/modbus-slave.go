@@ -145,9 +145,6 @@ func (ms *ModbusSlave) ActionHandler(s *mbserver.Server, f mbserver.Framer) (res
 			ms.Write16Bit(s.InputRegisters, v, &ms.muInputRegisters)
 		}
 	}
-	// TODO message
-	// TODO write
-	// TODO message
 	ms.currentTest = test
 	time.Sleep(parseDuration(ms.currentTest.TimeOut))
 	return
