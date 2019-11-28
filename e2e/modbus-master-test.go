@@ -25,18 +25,19 @@ const (
 )
 
 type ModbusMasterTest struct {
-	Name     string   `yaml:"name"`
-	Skip     string   `yaml:"skip"`
-	Before   Message  `yaml:"before"`
-	Function string   `yaml:"function"`
-	Address  *uint16  `yaml:"address"`
-	Quantity *uint16  `yaml:"quantity"`
-	Write    []*Value `yaml:"write"`
-	Expected []*Value `yaml:"expected"`
-	Success  Message  `yaml:"success"`
-	Error    Message  `yaml:"error"`
-	After    Message  `yaml:"after"`
-	Fatal    string   `yaml:"fatal"`
+	Name       string   `yaml:"name"`
+	Skip       string   `yaml:"skip"`
+	Before     Message  `yaml:"before"`
+	Function   string   `yaml:"function"`
+	Address    *uint16  `yaml:"address"`
+	Quantity   *uint16  `yaml:"quantity"`
+	Write      []*Value `yaml:"write"`
+	Expected   []*Value `yaml:"expected"`
+	Success    Message  `yaml:"success"`
+	Error      Message  `yaml:"error"`
+	After      Message  `yaml:"after"`
+	Fatal      string   `yaml:"fatal"`
+	Disconnect bool     `yaml:"disconnect"`
 }
 
 func (mt *ModbusMasterTest) Run(client modbus.Client) ReportTest {

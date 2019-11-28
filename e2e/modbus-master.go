@@ -36,6 +36,7 @@ func (mc *ModbusMaster) getHandler() *modbus.RTUClientHandler {
 	handler.StopBits = mc.StopBits
 	handler.SlaveId = mc.SlaveId
 	handler.Timeout = parseDuration(mc.Timeout)
+	handler.IdleTimeout = parseDuration(mc.Timeout)
 	handler.Logger = log.New(&loger{}, "", 0)
 	return handler
 }
@@ -70,6 +71,10 @@ func (mc *ModbusMaster) Run(reports *ReportGroups) error {
 				continue
 			}
 			report.Tests = append(report.Tests, test.Run(client))
+			// При необходимости закрываем порт
+			if test.Disconnect {
+				handler.Close()
+			}
 		}
 		reports.ReportGroup = append(reports.ReportGroup, report)
 	}
