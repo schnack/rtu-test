@@ -2764,7 +2764,7 @@ func TestValue_CheckFloat64Max(t *testing.T) {
 func TestValue_CheckBool(t *testing.T) {
 	var param = true
 	v := Value{Name: "Test", Bool: &param}
-	raw := []byte{0b00000101}
+	raw := []byte{0b00000000, 0b00000101}
 
 	offset, report := v.Check(raw, time.Second, "", 0)
 

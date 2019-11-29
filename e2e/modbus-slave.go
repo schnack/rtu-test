@@ -150,7 +150,7 @@ func (ms *ModbusSlave) ActionHandler(s *mbserver.Server, f mbserver.Framer) (res
 	return
 }
 
-func (ms *ModbusSlave) Expect1Bit(s []byte, v []*Value, mu *sync.Mutex) []*ReportExpected {
+func (ms *ModbusSlave) Expect1Bit(s []byte, v []*Value, mu *sync.Mutex) (reports []ReportExpected) {
 	mu.Lock()
 	defer mu.Unlock()
 	var address uint16 = 0
@@ -163,11 +163,126 @@ func (ms *ModbusSlave) Expect1Bit(s []byte, v []*Value, mu *sync.Mutex) []*Repor
 			address = binary.BigEndian.Uint16(rawAddress)
 		}
 
-		v[i].LengthBit()
+		var buf []byte
+		if v[i].LengthBit()%8 != 0 {
+			buf = make([]byte, (v[i].LengthBit()/8)+1)
+		} else {
+			buf = make([]byte, v[i].LengthBit()/8)
+		}
+
+		for ii := 0; ii < v[i].LengthBit(); ii++ {
+			if len(s) <= int(address) {
+				logrus.Fatal("ModBus tables overflow")
+			}
+			if s[address] != 0 {
+				buf[ii/8] |= 1 << (ii % 8)
+			}
+			address++
+		}
+		_, report := v[i].Check(buf, 0, "", 0)
+		reports = append(reports, report)
 	}
-	address = address
-	//TODO
-	return nil
+	return
+}
+
+func (ms *ModbusSlave) Expect16Bit(s []uint16, v []*Value, mu *sync.Mutex) (reports []ReportExpected) {
+	mu.Lock()
+	defer mu.Unlock()
+	var address uint16 = 0
+	countBit := 0
+	for i := range v {
+
+		if countBit != 0 {
+			switch v[i].Type() {
+			case Bool:
+			case Uint8, Int8:
+			case String, Byte:
+				if len(v[i].Write()) == 1 && countBit%8 != 0 {
+					countBit += 8 - (countBit % 8)
+				} else {
+					address++
+					countBit = 0
+				}
+			default:
+				address++
+				countBit = 0
+
+			}
+		}
+
+		if v[i].Address != "" {
+			rawAddress, err := parseStringByte(v[i].Address)
+			if err != nil {
+				logrus.Fatalf("parse address %s", err)
+			}
+			address = binary.BigEndian.Uint16(rawAddress)
+			countBit = 0
+		}
+
+		var buf []byte
+		if v[i].LengthBit()%16 != 0 {
+			if v[i].LengthBit()%16 > 7 {
+				buf = make([]byte, (v[i].LengthBit()/8)+1)
+			} else {
+				buf = make([]byte, (v[i].LengthBit()/8)+2)
+			}
+		} else {
+			buf = make([]byte, v[i].LengthBit()/8)
+		}
+
+		for ii := range buf {
+			if ii%2 == 0 {
+				continue
+			}
+			b := make([]byte, 2)
+			binary.BigEndian.PutUint16(b, s[address])
+			buf[ii-1] = b[0]
+			buf[ii] = b[1]
+			if len(buf)-1 != ii {
+				address++
+			}
+		}
+
+		_, report := v[i].Check(buf, 0, "", countBit)
+
+		switch v[i].Type() {
+		case Bool:
+			countBit++
+			if countBit >= 16 {
+				address++
+				countBit = 0
+			}
+		case Uint8, Int8:
+			if countBit%8 != 0 {
+				countBit += 8 - (countBit % 8)
+			}
+			countBit += 8
+			if countBit >= 16 {
+				address++
+				countBit = 0
+			}
+		case String, Byte:
+			if len(v[i].Write()) == 1 {
+				if countBit%8 != 0 {
+					countBit += 8 - (countBit % 8)
+				}
+				countBit += 8
+				if countBit >= 16 {
+					address++
+					countBit = 0
+				}
+			} else {
+				address++
+				countBit = 0
+			}
+		default:
+			address++
+			countBit = 0
+		}
+
+		reports = append(reports, report)
+	}
+	return
 }
 
 func (ms *ModbusSlave) Write1Bit(s []byte, v []*Value, mu *sync.Mutex) {
@@ -192,7 +307,7 @@ func (ms *ModbusSlave) Write1Bit(s []byte, v []*Value, mu *sync.Mutex) {
 				s[address] = b
 				address++
 			} else {
-				for ii := 7; ii >= 0; ii-- {
+				for ii := 0; ii < 8; ii++ {
 					if len(s) <= int(address) {
 						logrus.Fatal("ModBus tables overflow")
 					}

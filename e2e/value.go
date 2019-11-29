@@ -156,6 +156,7 @@ func (v *Value) LengthBit() int {
 	}
 }
 
+// TODO Добавить основание 1bit или 16bit
 func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, currentBit int) (offsetBit int, report ReportExpected) {
 	report.Name = v.Name
 	report.Pass = true
