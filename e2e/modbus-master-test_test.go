@@ -54,7 +54,8 @@ func TestModbusTest_Check(t *testing.T) {
 	var errorString string = ""
 	var timeString string = "2s"
 	modbus := &ModbusMasterTest{
-		Name: "Test",
+		Name:     "Test",
+		Function: "ReadCoils",
 		Expected: []*Value{
 			{Name: "param", Uint8: &param},
 			{Name: "error", Error: &errorString},

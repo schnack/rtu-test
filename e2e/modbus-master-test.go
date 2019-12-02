@@ -72,7 +72,12 @@ func (mt *ModbusMasterTest) Check(report *ReportMasterTest) {
 	countBit := 0
 	var expected ReportExpected
 	for _, v := range mt.Expected {
-		countBit, expected = v.Check(report.GotByte, report.GotTime, report.GotError, countBit)
+		bitSize := 8
+		switch mt.getFunction() {
+		case ReadHoldingRegisters, ReadInputRegisters, WriteSingleRegister, WriteMultipleRegisters:
+			bitSize = 16
+		}
+		countBit, expected = v.Check(report.GotByte, report.GotTime, report.GotError, countBit, bitSize)
 		if !expected.Pass {
 			report.Pass = false
 		}

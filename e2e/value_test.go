@@ -12,7 +12,7 @@ func TestValue_CheckTime(t *testing.T) {
 	v := Value{Name: "Test", Time: &param}
 	raw := []byte{0x01, 0x02}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 
 	if err := gotest.Expect(offset).Eq(0); err != nil {
 		t.Error(err)
@@ -45,7 +45,7 @@ func TestValue_CheckTime(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Nanosecond, "", offset)
+	offset, report = v.Check(raw, time.Nanosecond, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(0); err != nil {
 		t.Error(err)
 	}
@@ -62,7 +62,7 @@ func TestValue_CheckError(t *testing.T) {
 	v := Value{Name: "Test", Error: &param}
 	raw := []byte{}
 
-	offset, report := v.Check(raw, time.Second, "test", 0)
+	offset, report := v.Check(raw, time.Second, "test", 0, 8)
 
 	if err := gotest.Expect(offset).Eq(0); err != nil {
 		t.Error(err)
@@ -95,7 +95,7 @@ func TestValue_CheckError(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Nanosecond, "error", offset)
+	offset, report = v.Check(raw, time.Nanosecond, "error", offset, 8)
 	if err := gotest.Expect(offset).Eq(0); err != nil {
 		t.Error(err)
 	}
@@ -112,7 +112,7 @@ func TestValue_CheckInt8(t *testing.T) {
 	v := Value{Name: "Test", Int8: &param}
 	raw := []byte{0x01, 0x02}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 
 	if err := gotest.Expect(offset).Eq(8); err != nil {
 		t.Error(err)
@@ -145,7 +145,7 @@ func TestValue_CheckInt8(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -163,7 +163,7 @@ func TestValue_CheckInt8Range(t *testing.T) {
 	v := Value{Name: "Test", MinInt8: &paramMin, MaxInt8: &paramMax}
 	raw := []byte{0x01, 0x02, 0x03, 0x04, 0x05}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 	if err := gotest.Expect(offset).Eq(8); err != nil {
 		t.Error(err)
 	}
@@ -195,7 +195,7 @@ func TestValue_CheckInt8Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -206,7 +206,7 @@ func TestValue_CheckInt8Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(24); err != nil {
 		t.Error(err)
 	}
@@ -217,7 +217,7 @@ func TestValue_CheckInt8Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -228,7 +228,7 @@ func TestValue_CheckInt8Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(40); err != nil {
 		t.Error(err)
 	}
@@ -245,7 +245,7 @@ func TestValue_CheckInt8Min(t *testing.T) {
 	v := Value{Name: "Test", MinInt8: &paramMin}
 	raw := []byte{0x01, 0x02, 0x03}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 	if err := gotest.Expect(offset).Eq(8); err != nil {
 		t.Error(err)
 	}
@@ -277,7 +277,7 @@ func TestValue_CheckInt8Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -288,7 +288,7 @@ func TestValue_CheckInt8Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(24); err != nil {
 		t.Error(err)
 	}
@@ -305,7 +305,7 @@ func TestValue_CheckInt8Max(t *testing.T) {
 	v := Value{Name: "Test", MaxInt8: &paramMax}
 	raw := []byte{0x01, 0x02, 0x03}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 	if err := gotest.Expect(offset).Eq(8); err != nil {
 		t.Error(err)
 	}
@@ -337,7 +337,7 @@ func TestValue_CheckInt8Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -348,7 +348,7 @@ func TestValue_CheckInt8Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(24); err != nil {
 		t.Error(err)
 	}
@@ -367,7 +367,7 @@ func TestValue_CheckInt16(t *testing.T) {
 		0x00, 0x01,
 		0x00, 0x02}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
@@ -400,7 +400,7 @@ func TestValue_CheckInt16(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -423,7 +423,7 @@ func TestValue_CheckInt16Range(t *testing.T) {
 		0, 0x04,
 		0, 0x05}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -455,7 +455,7 @@ func TestValue_CheckInt16Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -466,7 +466,7 @@ func TestValue_CheckInt16Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(48); err != nil {
 		t.Error(err)
 	}
@@ -477,7 +477,7 @@ func TestValue_CheckInt16Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -488,7 +488,7 @@ func TestValue_CheckInt16Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(80); err != nil {
 		t.Error(err)
 	}
@@ -508,7 +508,7 @@ func TestValue_CheckInt16Min(t *testing.T) {
 		0, 0x02,
 		0, 0x03}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -540,7 +540,7 @@ func TestValue_CheckInt16Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -551,7 +551,7 @@ func TestValue_CheckInt16Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(48); err != nil {
 		t.Error(err)
 	}
@@ -571,7 +571,7 @@ func TestValue_CheckInt16Max(t *testing.T) {
 		0, 0x02,
 		0, 0x03}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -603,7 +603,7 @@ func TestValue_CheckInt16Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -614,7 +614,7 @@ func TestValue_CheckInt16Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(48); err != nil {
 		t.Error(err)
 	}
@@ -633,7 +633,7 @@ func TestValue_CheckInt32(t *testing.T) {
 		0x00, 0x00, 0x00, 0x01,
 		0x00, 0x00, 0x00, 0x02}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
@@ -666,7 +666,7 @@ func TestValue_CheckInt32(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -690,7 +690,7 @@ func TestValue_CheckInt32Range(t *testing.T) {
 		0, 0, 0, 5,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -722,7 +722,7 @@ func TestValue_CheckInt32Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -733,7 +733,7 @@ func TestValue_CheckInt32Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(96); err != nil {
 		t.Error(err)
 	}
@@ -744,7 +744,7 @@ func TestValue_CheckInt32Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
@@ -755,7 +755,7 @@ func TestValue_CheckInt32Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(160); err != nil {
 		t.Error(err)
 	}
@@ -776,7 +776,7 @@ func TestValue_CheckInt32Min(t *testing.T) {
 		0, 0, 0, 3,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -808,7 +808,7 @@ func TestValue_CheckInt32Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -819,7 +819,7 @@ func TestValue_CheckInt32Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(96); err != nil {
 		t.Error(err)
 	}
@@ -840,7 +840,7 @@ func TestValue_CheckInt32Max(t *testing.T) {
 		0, 0, 0, 3,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -872,7 +872,7 @@ func TestValue_CheckInt32Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -883,7 +883,7 @@ func TestValue_CheckInt32Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(96); err != nil {
 		t.Error(err)
 	}
@@ -903,7 +903,7 @@ func TestValue_CheckInt64(t *testing.T) {
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
@@ -936,7 +936,7 @@ func TestValue_CheckInt64(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
@@ -960,7 +960,7 @@ func TestValue_CheckInt64Range(t *testing.T) {
 		0, 0, 0, 0, 0, 0, 0, 5,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -992,7 +992,7 @@ func TestValue_CheckInt64Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
@@ -1003,7 +1003,7 @@ func TestValue_CheckInt64Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(192); err != nil {
 		t.Error(err)
 	}
@@ -1014,7 +1014,7 @@ func TestValue_CheckInt64Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(256); err != nil {
 		t.Error(err)
 	}
@@ -1025,7 +1025,7 @@ func TestValue_CheckInt64Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(320); err != nil {
 		t.Error(err)
 	}
@@ -1046,7 +1046,7 @@ func TestValue_CheckInt64Min(t *testing.T) {
 		0, 0, 0, 0, 0, 0, 0, 3,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -1078,7 +1078,7 @@ func TestValue_CheckInt64Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
@@ -1089,7 +1089,7 @@ func TestValue_CheckInt64Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(192); err != nil {
 		t.Error(err)
 	}
@@ -1110,7 +1110,7 @@ func TestValue_CheckInt64Max(t *testing.T) {
 		0, 0, 0, 0, 0, 0, 0, 3,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -1142,7 +1142,7 @@ func TestValue_CheckInt64Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
@@ -1153,7 +1153,7 @@ func TestValue_CheckInt64Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(192); err != nil {
 		t.Error(err)
 	}
@@ -1170,7 +1170,7 @@ func TestValue_CheckUint8(t *testing.T) {
 	v := Value{Name: "Test", Uint8: &param}
 	raw := []byte{0x01, 0x02}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 
 	if err := gotest.Expect(offset).Eq(8); err != nil {
 		t.Error(err)
@@ -1203,7 +1203,7 @@ func TestValue_CheckUint8(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -1221,7 +1221,7 @@ func TestValue_CheckUint8Range(t *testing.T) {
 	v := Value{Name: "Test", MinUint8: &paramMin, MaxUint8: &paramMax}
 	raw := []byte{0x01, 0x02, 0x03, 0x04, 0x05}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 	if err := gotest.Expect(offset).Eq(8); err != nil {
 		t.Error(err)
 	}
@@ -1253,7 +1253,7 @@ func TestValue_CheckUint8Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -1264,7 +1264,7 @@ func TestValue_CheckUint8Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(24); err != nil {
 		t.Error(err)
 	}
@@ -1275,7 +1275,7 @@ func TestValue_CheckUint8Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -1286,7 +1286,7 @@ func TestValue_CheckUint8Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(40); err != nil {
 		t.Error(err)
 	}
@@ -1303,7 +1303,7 @@ func TestValue_CheckUint8Min(t *testing.T) {
 	v := Value{Name: "Test", MinUint8: &paramMin}
 	raw := []byte{0x01, 0x02, 0x03}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 	if err := gotest.Expect(offset).Eq(8); err != nil {
 		t.Error(err)
 	}
@@ -1335,7 +1335,7 @@ func TestValue_CheckUint8Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -1346,7 +1346,7 @@ func TestValue_CheckUint8Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(24); err != nil {
 		t.Error(err)
 	}
@@ -1363,7 +1363,7 @@ func TestValue_CheckUint8Max(t *testing.T) {
 	v := Value{Name: "Test", MaxUint8: &paramMax}
 	raw := []byte{0x01, 0x02, 0x03}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 	if err := gotest.Expect(offset).Eq(8); err != nil {
 		t.Error(err)
 	}
@@ -1395,7 +1395,7 @@ func TestValue_CheckUint8Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -1406,7 +1406,7 @@ func TestValue_CheckUint8Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(24); err != nil {
 		t.Error(err)
 	}
@@ -1423,7 +1423,7 @@ func TestValue_CheckUint16(t *testing.T) {
 	v := Value{Name: "Test", Uint16: &param}
 	raw := []byte{0x00, 0x01, 0x00, 0x02}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
@@ -1456,7 +1456,7 @@ func TestValue_CheckUint16(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -1479,7 +1479,7 @@ func TestValue_CheckUint16Range(t *testing.T) {
 		0, 0x04,
 		0, 0x05}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -1511,7 +1511,7 @@ func TestValue_CheckUint16Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -1522,7 +1522,7 @@ func TestValue_CheckUint16Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(48); err != nil {
 		t.Error(err)
 	}
@@ -1533,7 +1533,7 @@ func TestValue_CheckUint16Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -1544,7 +1544,7 @@ func TestValue_CheckUint16Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(80); err != nil {
 		t.Error(err)
 	}
@@ -1564,7 +1564,7 @@ func TestValue_CheckUint16Min(t *testing.T) {
 		0, 0x02,
 		0, 0x03}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -1596,7 +1596,7 @@ func TestValue_CheckUint16Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -1607,7 +1607,7 @@ func TestValue_CheckUint16Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(48); err != nil {
 		t.Error(err)
 	}
@@ -1627,7 +1627,7 @@ func TestValue_CheckUint16Max(t *testing.T) {
 		0, 0x02,
 		0, 0x03}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -1659,7 +1659,7 @@ func TestValue_CheckUint16Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -1670,7 +1670,7 @@ func TestValue_CheckUint16Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(48); err != nil {
 		t.Error(err)
 	}
@@ -1689,7 +1689,7 @@ func TestValue_CheckUint32(t *testing.T) {
 		0x00, 0x00, 0x00, 0x01,
 		0x00, 0x00, 0x00, 0x02}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
@@ -1722,7 +1722,7 @@ func TestValue_CheckUint32(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -1746,7 +1746,7 @@ func TestValue_CheckUint32Range(t *testing.T) {
 		0, 0, 0, 5,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -1778,7 +1778,7 @@ func TestValue_CheckUint32Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -1789,7 +1789,7 @@ func TestValue_CheckUint32Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(96); err != nil {
 		t.Error(err)
 	}
@@ -1800,7 +1800,7 @@ func TestValue_CheckUint32Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
@@ -1811,7 +1811,7 @@ func TestValue_CheckUint32Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(160); err != nil {
 		t.Error(err)
 	}
@@ -1832,7 +1832,7 @@ func TestValue_CheckUint32Min(t *testing.T) {
 		0, 0, 0, 3,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -1864,7 +1864,7 @@ func TestValue_CheckUint32Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -1875,7 +1875,7 @@ func TestValue_CheckUint32Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(96); err != nil {
 		t.Error(err)
 	}
@@ -1896,7 +1896,7 @@ func TestValue_CheckUint32Max(t *testing.T) {
 		0, 0, 0, 3,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -1928,7 +1928,7 @@ func TestValue_CheckUint32Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -1939,7 +1939,7 @@ func TestValue_CheckUint32Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(96); err != nil {
 		t.Error(err)
 	}
@@ -1959,7 +1959,7 @@ func TestValue_CheckUint64(t *testing.T) {
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
@@ -1992,7 +1992,7 @@ func TestValue_CheckUint64(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
@@ -2016,7 +2016,7 @@ func TestValue_CheckUint64Range(t *testing.T) {
 		0, 0, 0, 0, 0, 0, 0, 5,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -2048,7 +2048,7 @@ func TestValue_CheckUint64Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
@@ -2059,7 +2059,7 @@ func TestValue_CheckUint64Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(192); err != nil {
 		t.Error(err)
 	}
@@ -2070,7 +2070,7 @@ func TestValue_CheckUint64Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(256); err != nil {
 		t.Error(err)
 	}
@@ -2081,7 +2081,7 @@ func TestValue_CheckUint64Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(320); err != nil {
 		t.Error(err)
 	}
@@ -2102,7 +2102,7 @@ func TestValue_CheckUint64Min(t *testing.T) {
 		0, 0, 0, 0, 0, 0, 0, 3,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -2134,7 +2134,7 @@ func TestValue_CheckUint64Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
@@ -2145,7 +2145,7 @@ func TestValue_CheckUint64Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(192); err != nil {
 		t.Error(err)
 	}
@@ -2166,7 +2166,7 @@ func TestValue_CheckUint64Max(t *testing.T) {
 		0, 0, 0, 0, 0, 0, 0, 3,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -2198,7 +2198,7 @@ func TestValue_CheckUint64Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
@@ -2209,7 +2209,7 @@ func TestValue_CheckUint64Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(192); err != nil {
 		t.Error(err)
 	}
@@ -2229,7 +2229,7 @@ func TestValue_CheckFloat32(t *testing.T) {
 		0x40, 0x19, 0x99, 0x9A,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
@@ -2262,7 +2262,7 @@ func TestValue_CheckFloat32(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -2286,7 +2286,7 @@ func TestValue_CheckFloat32Range(t *testing.T) {
 		0x40, 0x20, 0x00, 0x00,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -2318,7 +2318,7 @@ func TestValue_CheckFloat32Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -2329,7 +2329,7 @@ func TestValue_CheckFloat32Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(96); err != nil {
 		t.Error(err)
 	}
@@ -2340,7 +2340,7 @@ func TestValue_CheckFloat32Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
@@ -2351,7 +2351,7 @@ func TestValue_CheckFloat32Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(160); err != nil {
 		t.Error(err)
 	}
@@ -2372,7 +2372,7 @@ func TestValue_CheckFloat32Min(t *testing.T) {
 		0x40, 0x13, 0x33, 0x33,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -2404,7 +2404,7 @@ func TestValue_CheckFloat32Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -2415,7 +2415,7 @@ func TestValue_CheckFloat32Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(96); err != nil {
 		t.Error(err)
 	}
@@ -2436,7 +2436,7 @@ func TestValue_CheckFloat32Max(t *testing.T) {
 		0x40, 0x13, 0x33, 0x33,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -2468,7 +2468,7 @@ func TestValue_CheckFloat32Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -2479,7 +2479,7 @@ func TestValue_CheckFloat32Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(96); err != nil {
 		t.Error(err)
 	}
@@ -2499,7 +2499,7 @@ func TestValue_CheckFloat64(t *testing.T) {
 		0x40, 0x03, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
@@ -2532,7 +2532,7 @@ func TestValue_CheckFloat64(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
@@ -2556,7 +2556,7 @@ func TestValue_CheckFloat64Range(t *testing.T) {
 		0x40, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -2588,7 +2588,7 @@ func TestValue_CheckFloat64Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
@@ -2599,7 +2599,7 @@ func TestValue_CheckFloat64Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(192); err != nil {
 		t.Error(err)
 	}
@@ -2610,7 +2610,7 @@ func TestValue_CheckFloat64Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(256); err != nil {
 		t.Error(err)
 	}
@@ -2621,7 +2621,7 @@ func TestValue_CheckFloat64Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(320); err != nil {
 		t.Error(err)
 	}
@@ -2642,7 +2642,7 @@ func TestValue_CheckFloat64Min(t *testing.T) {
 		0x40, 0x02, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -2674,7 +2674,7 @@ func TestValue_CheckFloat64Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
@@ -2685,7 +2685,7 @@ func TestValue_CheckFloat64Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(192); err != nil {
 		t.Error(err)
 	}
@@ -2706,7 +2706,7 @@ func TestValue_CheckFloat64Max(t *testing.T) {
 		0x40, 0x02, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -2738,7 +2738,7 @@ func TestValue_CheckFloat64Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
@@ -2749,7 +2749,7 @@ func TestValue_CheckFloat64Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(192); err != nil {
 		t.Error(err)
 	}
@@ -2766,7 +2766,7 @@ func TestValue_CheckBool(t *testing.T) {
 	v := Value{Name: "Test", Bool: &param}
 	raw := []byte{0b00000000, 0b00000101}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 
 	if err := gotest.Expect(offset).Eq(1); err != nil {
 		t.Error(err)
@@ -2799,7 +2799,7 @@ func TestValue_CheckBool(t *testing.T) {
 		t.Error(err)
 	}
 	param = false
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(2); err != nil {
 		t.Error(err)
 	}
@@ -2810,7 +2810,7 @@ func TestValue_CheckBool(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(3); err != nil {
 		t.Error(err)
 	}
@@ -2830,7 +2830,7 @@ func TestValue_CheckString(t *testing.T) {
 		104, 101, 108, 109, 111,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 
 	if err := gotest.Expect(offset).Eq(40); err != nil {
 		t.Error(err)
@@ -2863,7 +2863,7 @@ func TestValue_CheckString(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(80); err != nil {
 		t.Error(err)
 	}
@@ -2883,7 +2883,7 @@ func TestValue_CheckByte(t *testing.T) {
 		0x01, 0x00, 0x04,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0)
+	offset, report := v.Check(raw, time.Second, "", 0, 8)
 
 	if err := gotest.Expect(offset).Eq(24); err != nil {
 		t.Error(err)
@@ -2916,7 +2916,7 @@ func TestValue_CheckByte(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset)
+	offset, report = v.Check(raw, time.Second, "", offset, 8)
 	if err := gotest.Expect(offset).Eq(48); err != nil {
 		t.Error(err)
 	}
