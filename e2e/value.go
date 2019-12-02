@@ -156,8 +156,41 @@ func (v *Value) LengthBit() int {
 	}
 }
 
-// TODO Добавить основание 1bit или 16bit
-func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, currentBit int, bitSize int) (offsetBit int, report ReportExpected) {
+func (v *Value) cursor(currentBit, bitSize, basicBitSize int, byteOrder binary.ByteOrder) (startBit, endBit, offsetBit int) {
+	if currentBit%bitSize != 0 {
+		currentBit += bitSize - (currentBit % bitSize)
+	}
+
+	offsetBit = currentBit + bitSize
+
+	size := basicBitSize
+	if bitSize > basicBitSize {
+		size = bitSize
+	}
+
+	// корректировка подсчета данных для типа bool
+	if bitSize == 1 {
+		bitSize = 8
+	}
+
+	index := (currentBit % size) / bitSize
+	if byteOrder == binary.BigEndian {
+		index = ((size / bitSize) - 1) - index
+	}
+	endIndex := bitSize / 8
+
+	startBit = (currentBit-(currentBit%size))/8 + index
+	endBit = startBit + endIndex
+	return
+}
+
+// rawBite - []byte полученные от устройства
+// rawTime - время выполнения команды
+// rawError - текст ошибки
+// currentBit - курсор бита
+// minBitSize - размер данных хранимых в табличке модбас 8 или 16
+// orderByte - порядок байт
+func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, currentBit int, minBitSize int, byteOrder binary.ByteOrder) (offsetBit int, report ReportExpected) {
 	report.Name = v.Name
 	report.Pass = true
 	report.Type = v.Type().String()
@@ -170,13 +203,15 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf("%02x", *v.Int8)
 		report.ExpectedBin = fmt.Sprintf("[%08b]", *v.Int8)
 
-		offsetBit = currentBit + (currentBit % 8) + 8
+		start, _, offset := v.cursor(currentBit, 8, minBitSize, byteOrder)
+		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
 			return
 		}
 
-		got := int8(rawBite[currentBit/8 : offsetBit/8][0])
+		got := int8(rawBite[start])
+
 		report.Got = fmt.Sprintf("%d", got)
 		report.GotHex = fmt.Sprintf("%02x", got)
 		report.GotBin = fmt.Sprintf("[%08b]", got)
@@ -200,13 +235,15 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf(FormatRange, minHex, maxHex)
 		report.ExpectedBin = fmt.Sprintf(FormatRange, minBin, maxBin)
 
-		offsetBit = currentBit + (currentBit % 8) + 8
+		start, _, offset := v.cursor(currentBit, 8, minBitSize, byteOrder)
+		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
 			return
 		}
 
-		got := int8(rawBite[currentBit/8 : offsetBit/8][0])
+		got := int8(rawBite[start])
+
 		report.Got = fmt.Sprintf("%d", got)
 		report.GotHex = fmt.Sprintf("%02x", got)
 		report.GotBin = fmt.Sprintf("[%08b]", got)
@@ -216,18 +253,20 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 	case Int16:
 		report.Expected = fmt.Sprintf("%d", *v.Int16)
 		b := make([]byte, 2)
-		binary.BigEndian.PutUint16(b, uint16(*v.Int16))
+		byteOrder.PutUint16(b, uint16(*v.Int16))
 		report.ExpectedHex = fmt.Sprintf("%04x", b)
 		report.ExpectedBin = fmt.Sprintf("%08b", b)
-		offsetBit = currentBit + (currentBit % 8) + 16
+
+		start, end, offset := v.cursor(currentBit, 16, minBitSize, byteOrder)
+		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
 			return
 		}
 
-		got := int16(binary.BigEndian.Uint16(rawBite[currentBit/8 : offsetBit/8]))
+		got := int16(byteOrder.Uint16(rawBite[start:end]))
 		report.Got = fmt.Sprintf("%d", got)
-		binary.BigEndian.PutUint16(b, uint16(got))
+		byteOrder.PutUint16(b, uint16(got))
 		report.GotHex = fmt.Sprintf("%04x", b)
 		report.GotBin = fmt.Sprintf("%08b", b)
 
@@ -239,14 +278,14 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		var min, minHex, minBin = "", "", ""
 		if v.MinInt16 != nil {
 			min = fmt.Sprintf("%d", *v.MinInt16)
-			binary.BigEndian.PutUint16(b, uint16(*v.MinInt16))
+			byteOrder.PutUint16(b, uint16(*v.MinInt16))
 			minHex = fmt.Sprintf("%04x", b)
 			minBin = fmt.Sprintf("%08b", b)
 		}
 		var max, maxHex, maxBin = "", "", ""
 		if v.MaxInt16 != nil {
 			max = fmt.Sprintf("%d", *v.MaxInt16)
-			binary.BigEndian.PutUint16(b, uint16(*v.MaxInt16))
+			byteOrder.PutUint16(b, uint16(*v.MaxInt16))
 			maxHex = fmt.Sprintf("%04x", b)
 			maxBin = fmt.Sprintf("%08b", b)
 		}
@@ -254,15 +293,17 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf(FormatRange, minHex, maxHex)
 		report.ExpectedBin = fmt.Sprintf(FormatRange, minBin, maxBin)
 
-		offsetBit = currentBit + (currentBit % 8) + 16
+		start, end, offset := v.cursor(currentBit, 16, minBitSize, byteOrder)
+		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
 			return
 		}
 
-		got := int16(binary.BigEndian.Uint16(rawBite[currentBit/8 : offsetBit/8]))
+		got := int16(byteOrder.Uint16(rawBite[start:end]))
+
 		report.Got = fmt.Sprintf("%d", got)
-		binary.BigEndian.PutUint16(b, uint16(got))
+		byteOrder.PutUint16(b, uint16(got))
 		report.GotHex = fmt.Sprintf("%04x", b)
 		report.GotBin = fmt.Sprintf("%08b", b)
 
@@ -271,20 +312,21 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 	case Int32:
 		report.Expected = fmt.Sprintf("%d", *v.Int32)
 		b := make([]byte, 4)
-		binary.BigEndian.PutUint32(b, uint32(*v.Int32))
+		byteOrder.PutUint32(b, uint32(*v.Int32))
 		report.ExpectedHex = fmt.Sprintf("%08x", b)
 		report.ExpectedBin = fmt.Sprintf("%08b", b)
 
-		offsetBit = currentBit + (currentBit % 8) + 32
+		start, end, offset := v.cursor(currentBit, 32, minBitSize, byteOrder)
+		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
 			return
 		}
 
-		got := int32(binary.BigEndian.Uint32(rawBite[currentBit/8 : offsetBit/8]))
+		got := int32(byteOrder.Uint32(rawBite[start:end]))
 
 		report.Got = fmt.Sprintf("%d", got)
-		binary.BigEndian.PutUint32(b, uint32(got))
+		byteOrder.PutUint32(b, uint32(got))
 		report.GotHex = fmt.Sprintf("%08x", b)
 		report.GotBin = fmt.Sprintf("%08b", b)
 
@@ -295,14 +337,14 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		var min, minHex, minBin = "", "", ""
 		if v.MinInt32 != nil {
 			min = fmt.Sprintf("%d", *v.MinInt32)
-			binary.BigEndian.PutUint32(b, uint32(*v.MinInt32))
+			byteOrder.PutUint32(b, uint32(*v.MinInt32))
 			minHex = fmt.Sprintf("%08x", b)
 			minBin = fmt.Sprintf("%08b", b)
 		}
 		var max, maxHex, maxBin = "", "", ""
 		if v.MaxInt32 != nil {
 			max = fmt.Sprintf("%d", *v.MaxInt32)
-			binary.BigEndian.PutUint32(b, uint32(*v.MaxInt32))
+			byteOrder.PutUint32(b, uint32(*v.MaxInt32))
 			maxHex = fmt.Sprintf("%08x", b)
 			maxBin = fmt.Sprintf("%08b", b)
 		}
@@ -310,15 +352,16 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf(FormatRange, minHex, maxHex)
 		report.ExpectedBin = fmt.Sprintf(FormatRange, minBin, maxBin)
 
-		offsetBit = currentBit + (currentBit % 8) + 32
+		start, end, offset := v.cursor(currentBit, 32, minBitSize, byteOrder)
+		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
 			return
 		}
 
-		got := int32(binary.BigEndian.Uint32(rawBite[currentBit/8 : offsetBit/8]))
+		got := int32(byteOrder.Uint32(rawBite[start:end]))
 		report.Got = fmt.Sprintf("%d", got)
-		binary.BigEndian.PutUint32(b, uint32(got))
+		byteOrder.PutUint32(b, uint32(got))
 		report.GotHex = fmt.Sprintf("%08x", b)
 		report.GotBin = fmt.Sprintf("%08b", b)
 
@@ -327,19 +370,21 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 	case Int64:
 		report.Expected = fmt.Sprintf("%d", *v.Int64)
 		b := make([]byte, 8)
-		binary.BigEndian.PutUint64(b, uint64(*v.Int64))
+		byteOrder.PutUint64(b, uint64(*v.Int64))
 		report.ExpectedHex = fmt.Sprintf("%016x", b)
 		report.ExpectedBin = fmt.Sprintf("%08b", b)
 
-		offsetBit = currentBit + (currentBit % 8) + 64
+		start, end, offset := v.cursor(currentBit, 64, minBitSize, byteOrder)
+		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
 			return
 		}
 
-		got := int64(binary.BigEndian.Uint64(rawBite[currentBit/8 : offsetBit/8]))
+		got := int64(byteOrder.Uint64(rawBite[start:end]))
+
 		report.Got = fmt.Sprintf("%d", got)
-		binary.BigEndian.PutUint64(b, uint64(got))
+		byteOrder.PutUint64(b, uint64(got))
 		report.GotHex = fmt.Sprintf("%016x", b)
 		report.GotBin = fmt.Sprintf("%08b", b)
 
@@ -350,14 +395,14 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		var min, minHex, minBin = "", "", ""
 		if v.MinInt64 != nil {
 			min = fmt.Sprintf("%d", *v.MinInt64)
-			binary.BigEndian.PutUint64(b, uint64(*v.MinInt64))
+			byteOrder.PutUint64(b, uint64(*v.MinInt64))
 			minHex = fmt.Sprintf("%016x", b)
 			minBin = fmt.Sprintf("%08b", b)
 		}
 		var max, maxHex, maxBin = "", "", ""
 		if v.MaxInt64 != nil {
 			max = fmt.Sprintf("%d", *v.MaxInt64)
-			binary.BigEndian.PutUint64(b, uint64(*v.MaxInt64))
+			byteOrder.PutUint64(b, uint64(*v.MaxInt64))
 			maxHex = fmt.Sprintf("%016x", b)
 			maxBin = fmt.Sprintf("%08b", b)
 		}
@@ -365,15 +410,16 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf(FormatRange, minHex, maxHex)
 		report.ExpectedBin = fmt.Sprintf(FormatRange, minBin, maxBin)
 
-		offsetBit = currentBit + (currentBit % 8) + 64
+		start, end, offset := v.cursor(currentBit, 64, minBitSize, byteOrder)
+		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
 			return
 		}
 
-		got := int64(binary.BigEndian.Uint64(rawBite[currentBit/8 : offsetBit/8]))
+		got := int64(byteOrder.Uint64(rawBite[start:end]))
 		report.Got = fmt.Sprintf("%d", got)
-		binary.BigEndian.PutUint64(b, uint64(got))
+		byteOrder.PutUint64(b, uint64(got))
 		report.GotHex = fmt.Sprintf("%016x", b)
 		report.GotBin = fmt.Sprintf("%08b", b)
 
@@ -384,13 +430,16 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.Expected = fmt.Sprintf("%d", *v.Uint8)
 		report.ExpectedHex = fmt.Sprintf("%02x", *v.Uint8)
 		report.ExpectedBin = fmt.Sprintf("[%08b]", *v.Uint8)
-		offsetBit = currentBit + (currentBit % 8) + 8
+
+		start, _, offset := v.cursor(currentBit, 8, minBitSize, byteOrder)
+		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
 			return
 		}
 
-		got := rawBite[currentBit/8 : offsetBit/8][0]
+		got := rawBite[start]
+
 		report.Got = fmt.Sprintf("%d", got)
 		report.GotHex = fmt.Sprintf("%02x", got)
 		report.GotBin = fmt.Sprintf("[%08b]", got)
@@ -414,13 +463,14 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf(FormatRange, minHex, maxHex)
 		report.ExpectedBin = fmt.Sprintf(FormatRange, minBin, maxBin)
 
-		offsetBit = currentBit + (currentBit % 8) + 8
+		start, _, offset := v.cursor(currentBit, 8, minBitSize, byteOrder)
+		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
 			return
 		}
 
-		got := rawBite[currentBit/8 : offsetBit/8][0]
+		got := rawBite[start]
 		report.Got = fmt.Sprintf("%d", got)
 		report.GotHex = fmt.Sprintf("%02x", got)
 		report.GotBin = fmt.Sprintf("[%08b]", got)
@@ -430,18 +480,21 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 	case Uint16:
 		report.Expected = fmt.Sprintf("%d", *v.Uint16)
 		b := make([]byte, 2)
-		binary.BigEndian.PutUint16(b, *v.Uint16)
+		byteOrder.PutUint16(b, *v.Uint16)
 		report.ExpectedHex = fmt.Sprintf("%04x", b)
 		report.ExpectedBin = fmt.Sprintf("%08b", b)
-		offsetBit = currentBit + (currentBit % 8) + 16
+
+		start, end, offset := v.cursor(currentBit, 16, minBitSize, byteOrder)
+		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
 			return
 		}
 
-		got := binary.BigEndian.Uint16(rawBite[currentBit/8 : offsetBit/8])
+		got := byteOrder.Uint16(rawBite[start:end])
+
 		report.Got = fmt.Sprintf("%d", got)
-		binary.BigEndian.PutUint16(b, got)
+		byteOrder.PutUint16(b, got)
 		report.GotHex = fmt.Sprintf("%04x", b)
 		report.GotBin = fmt.Sprintf("%08b", b)
 
@@ -452,14 +505,14 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		var min, minHex, minBin = "", "", ""
 		if v.MinUint16 != nil {
 			min = fmt.Sprintf("%d", *v.MinUint16)
-			binary.BigEndian.PutUint16(b, *v.MinUint16)
+			byteOrder.PutUint16(b, *v.MinUint16)
 			minHex = fmt.Sprintf("%04x", b)
 			minBin = fmt.Sprintf("%08b", b)
 		}
 		var max, maxHex, maxBin = "", "", ""
 		if v.MaxUint16 != nil {
 			max = fmt.Sprintf("%d", *v.MaxUint16)
-			binary.BigEndian.PutUint16(b, *v.MaxUint16)
+			byteOrder.PutUint16(b, *v.MaxUint16)
 			maxHex = fmt.Sprintf("%04x", b)
 			maxBin = fmt.Sprintf("%08b", b)
 		}
@@ -467,15 +520,16 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf(FormatRange, minHex, maxHex)
 		report.ExpectedBin = fmt.Sprintf(FormatRange, minBin, maxBin)
 
-		offsetBit = currentBit + (currentBit % 8) + 16
+		start, end, offset := v.cursor(currentBit, 16, minBitSize, byteOrder)
+		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
 			return
 		}
 
-		got := binary.BigEndian.Uint16(rawBite[currentBit/8 : offsetBit/8])
+		got := byteOrder.Uint16(rawBite[start:end])
 		report.Got = fmt.Sprintf("%d", got)
-		binary.BigEndian.PutUint16(b, got)
+		byteOrder.PutUint16(b, got)
 		report.GotHex = fmt.Sprintf("%04x", b)
 		report.GotBin = fmt.Sprintf("%08b", b)
 
@@ -483,20 +537,22 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 
 	case Uint32:
 		b := make([]byte, 4)
-		binary.BigEndian.PutUint32(b, *v.Uint32)
+		byteOrder.PutUint32(b, *v.Uint32)
 		report.Expected = fmt.Sprintf("%d", *v.Uint32)
 		report.ExpectedHex = fmt.Sprintf("%08x", b)
 		report.ExpectedBin = fmt.Sprintf("%08b", b)
-		offsetBit = currentBit + (currentBit % 8) + 32
+
+		start, end, offset := v.cursor(currentBit, 32, minBitSize, byteOrder)
+		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
 			return
 		}
 
-		got := binary.BigEndian.Uint32(rawBite[currentBit/8 : offsetBit/8])
+		got := byteOrder.Uint32(rawBite[start:end])
 
 		report.Got = fmt.Sprintf("%d", got)
-		binary.BigEndian.PutUint32(b, got)
+		byteOrder.PutUint32(b, got)
 		report.GotHex = fmt.Sprintf("%08x", b)
 		report.GotBin = fmt.Sprintf("%08b", b)
 
@@ -507,14 +563,14 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		var min, minHex, minBin = "", "", ""
 		if v.MinUint32 != nil {
 			min = fmt.Sprintf("%d", *v.MinUint32)
-			binary.BigEndian.PutUint32(b, *v.MinUint32)
+			byteOrder.PutUint32(b, *v.MinUint32)
 			minHex = fmt.Sprintf("%08x", b)
 			minBin = fmt.Sprintf("%08b", b)
 		}
 		var max, maxHex, maxBin = "", "", ""
 		if v.MaxUint32 != nil {
 			max = fmt.Sprintf("%d", *v.MaxUint32)
-			binary.BigEndian.PutUint32(b, *v.MaxUint32)
+			byteOrder.PutUint32(b, *v.MaxUint32)
 			maxHex = fmt.Sprintf("%08x", b)
 			maxBin = fmt.Sprintf("%08b", b)
 		}
@@ -522,15 +578,17 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf(FormatRange, minHex, maxHex)
 		report.ExpectedBin = fmt.Sprintf(FormatRange, minBin, maxBin)
 
-		offsetBit = currentBit + (currentBit % 8) + 32
+		start, end, offset := v.cursor(currentBit, 32, minBitSize, byteOrder)
+		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
 			return
 		}
 
-		got := binary.BigEndian.Uint32(rawBite[currentBit/8 : offsetBit/8])
+		got := byteOrder.Uint32(rawBite[start:end])
+
 		report.Got = fmt.Sprintf("%d", got)
-		binary.BigEndian.PutUint32(b, got)
+		byteOrder.PutUint32(b, got)
 		report.GotHex = fmt.Sprintf("%08x", b)
 		report.GotBin = fmt.Sprintf("%08b", b)
 
@@ -539,19 +597,21 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 	case Uint64:
 		report.Expected = fmt.Sprintf("%d", *v.Uint64)
 		b := make([]byte, 8)
-		binary.BigEndian.PutUint64(b, *v.Uint64)
+		byteOrder.PutUint64(b, *v.Uint64)
 		report.ExpectedHex = fmt.Sprintf("%016x", b)
 		report.ExpectedBin = fmt.Sprintf("%08b", b)
 
-		offsetBit = currentBit + (currentBit % 8) + 64
+		start, end, offset := v.cursor(currentBit, 64, minBitSize, byteOrder)
+		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
 			return
 		}
 
-		got := binary.BigEndian.Uint64(rawBite[currentBit/8 : offsetBit/8])
+		got := byteOrder.Uint64(rawBite[start:end])
+
 		report.Got = fmt.Sprintf("%d", got)
-		binary.BigEndian.PutUint64(b, got)
+		byteOrder.PutUint64(b, got)
 		report.GotHex = fmt.Sprintf("%016x", b)
 		report.GotBin = fmt.Sprintf("%08b", b)
 
@@ -562,14 +622,14 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		var min, minHex, minBin = "", "", ""
 		if v.MinUint64 != nil {
 			min = fmt.Sprintf("%d", *v.MinUint64)
-			binary.BigEndian.PutUint64(b, *v.MinUint64)
+			byteOrder.PutUint64(b, *v.MinUint64)
 			minHex = fmt.Sprintf("%016x", b)
 			minBin = fmt.Sprintf("%08b", b)
 		}
 		var max, maxHex, maxBin = "", "", ""
 		if v.MaxUint64 != nil {
 			max = fmt.Sprintf("%d", *v.MaxUint64)
-			binary.BigEndian.PutUint64(b, uint64(*v.MaxUint64))
+			byteOrder.PutUint64(b, uint64(*v.MaxUint64))
 			maxHex = fmt.Sprintf("%016x", b)
 			maxBin = fmt.Sprintf("%08b", b)
 		}
@@ -577,15 +637,17 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf(FormatRange, minHex, maxHex)
 		report.ExpectedBin = fmt.Sprintf(FormatRange, minBin, maxBin)
 
-		offsetBit = currentBit + (currentBit % 8) + 64
+		start, end, offset := v.cursor(currentBit, 64, minBitSize, byteOrder)
+		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
 			return
 		}
 
-		got := binary.BigEndian.Uint64(rawBite[currentBit/8 : offsetBit/8])
+		got := byteOrder.Uint64(rawBite[start:end])
+
 		report.Got = fmt.Sprintf("%d", got)
-		binary.BigEndian.PutUint64(b, got)
+		byteOrder.PutUint64(b, got)
 		report.GotHex = fmt.Sprintf("%016x", b)
 		report.GotBin = fmt.Sprintf("%08b", b)
 
@@ -593,22 +655,23 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 
 	case Float32:
 		b := make([]byte, 4)
-		binary.BigEndian.PutUint32(b, math.Float32bits(*v.Float32))
+		byteOrder.PutUint32(b, math.Float32bits(*v.Float32))
 		report.Expected = fmt.Sprintf("%f", *v.Float32)
 		report.ExpectedHex = fmt.Sprintf("%08x", b)
 		report.ExpectedBin = fmt.Sprintf("%08b", b)
 
-		offsetBit = currentBit + (currentBit % 8) + 32
+		start, end, offset := v.cursor(currentBit, 32, minBitSize, byteOrder)
+		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
 			return
 		}
 
-		gotbit := binary.BigEndian.Uint32(rawBite[currentBit/8 : offsetBit/8])
+		gotbit := byteOrder.Uint32(rawBite[start:end])
 		got := math.Float32frombits(gotbit)
 
 		report.Got = fmt.Sprintf("%f", got)
-		binary.BigEndian.PutUint32(b, gotbit)
+		byteOrder.PutUint32(b, gotbit)
 		report.GotHex = fmt.Sprintf("%08x", b)
 		report.GotBin = fmt.Sprintf("%08b", b)
 
@@ -619,14 +682,14 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		var min, minHex, minBin = "", "", ""
 		if v.MinFloat32 != nil {
 			min = fmt.Sprintf("%f", *v.MinFloat32)
-			binary.BigEndian.PutUint32(b, math.Float32bits(*v.MinFloat32))
+			byteOrder.PutUint32(b, math.Float32bits(*v.MinFloat32))
 			minHex = fmt.Sprintf("%08x", b)
 			minBin = fmt.Sprintf("%08b", b)
 		}
 		var max, maxHex, maxBin = "", "", ""
 		if v.MaxFloat32 != nil {
 			max = fmt.Sprintf("%f", *v.MaxFloat32)
-			binary.BigEndian.PutUint32(b, math.Float32bits(*v.MaxFloat32))
+			byteOrder.PutUint32(b, math.Float32bits(*v.MaxFloat32))
 			maxHex = fmt.Sprintf("%08x", b)
 			maxBin = fmt.Sprintf("%08b", b)
 		}
@@ -634,17 +697,18 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf(FormatRange, minHex, maxHex)
 		report.ExpectedBin = fmt.Sprintf(FormatRange, minBin, maxBin)
 
-		offsetBit = currentBit + (currentBit % 8) + 32
+		start, end, offset := v.cursor(currentBit, 32, minBitSize, byteOrder)
+		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
 			return
 		}
 
-		gotbit := binary.BigEndian.Uint32(rawBite[currentBit/8 : offsetBit/8])
+		gotbit := byteOrder.Uint32(rawBite[start:end])
 		got := math.Float32frombits(gotbit)
 
 		report.Got = fmt.Sprintf("%f", got)
-		binary.BigEndian.PutUint32(b, gotbit)
+		byteOrder.PutUint32(b, gotbit)
 		report.GotHex = fmt.Sprintf("%08x", b)
 		report.GotBin = fmt.Sprintf("%08b", b)
 
@@ -652,22 +716,23 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 
 	case Float64:
 		b := make([]byte, 8)
-		binary.BigEndian.PutUint64(b, math.Float64bits(*v.Float64))
+		byteOrder.PutUint64(b, math.Float64bits(*v.Float64))
 		report.Expected = fmt.Sprintf("%f", *v.Float64)
 		report.ExpectedHex = fmt.Sprintf("%016x", b)
 		report.ExpectedBin = fmt.Sprintf("%08b", b)
 
-		offsetBit = currentBit + (currentBit % 8) + 64
+		start, end, offset := v.cursor(currentBit, 64, minBitSize, byteOrder)
+		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
 			return
 		}
 
-		gotbit := binary.BigEndian.Uint64(rawBite[currentBit/8 : offsetBit/8])
+		gotbit := byteOrder.Uint64(rawBite[start:end])
 		got := math.Float64frombits(gotbit)
 
 		report.Got = fmt.Sprintf("%f", got)
-		binary.BigEndian.PutUint64(b, gotbit)
+		byteOrder.PutUint64(b, gotbit)
 		report.GotHex = fmt.Sprintf("%016x", b)
 		report.GotBin = fmt.Sprintf("%08b", b)
 
@@ -678,14 +743,14 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		var min, minHex, minBin = "", "", ""
 		if v.MinFloat64 != nil {
 			min = fmt.Sprintf("%f", *v.MinFloat64)
-			binary.BigEndian.PutUint64(b, math.Float64bits(*v.MinFloat64))
+			byteOrder.PutUint64(b, math.Float64bits(*v.MinFloat64))
 			minHex = fmt.Sprintf("%016x", b)
 			minBin = fmt.Sprintf("%08b", b)
 		}
 		var max, maxHex, maxBin = "", "", ""
 		if v.MaxFloat64 != nil {
 			max = fmt.Sprintf("%f", *v.MaxFloat64)
-			binary.BigEndian.PutUint64(b, math.Float64bits(*v.MaxFloat64))
+			byteOrder.PutUint64(b, math.Float64bits(*v.MaxFloat64))
 			maxHex = fmt.Sprintf("%016x", b)
 			maxBin = fmt.Sprintf("%08b", b)
 		}
@@ -693,17 +758,18 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf(FormatRange, minHex, maxHex)
 		report.ExpectedBin = fmt.Sprintf(FormatRange, minBin, maxBin)
 
-		offsetBit = currentBit + (currentBit % 8) + 64
+		start, end, offset := v.cursor(currentBit, 64, minBitSize, byteOrder)
+		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
 			return
 		}
 
-		gotbit := binary.BigEndian.Uint64(rawBite[currentBit/8 : offsetBit/8])
+		gotbit := byteOrder.Uint64(rawBite[start:end])
 		got := math.Float64frombits(gotbit)
 
 		report.Got = fmt.Sprintf("%f", got)
-		binary.BigEndian.PutUint64(b, gotbit)
+		byteOrder.PutUint64(b, gotbit)
 		report.GotHex = fmt.Sprintf("%016x", b)
 		report.GotBin = fmt.Sprintf("%08b", b)
 
@@ -720,13 +786,15 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 			report.ExpectedBin = fmt.Sprint("0")
 		}
 
-		offsetBit = currentBit + 1
-		if len(rawBite)*8 < offsetBit {
+		start, _, offset := v.cursor(currentBit, 1, minBitSize, byteOrder)
+		offsetBit = offset
+		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
 			return
 		}
 
-		got := rawBite[currentBit/8]&(1<<(currentBit%8)) != 0
+		got := rawBite[start]&(1<<(currentBit%8)) != 0
+
 		report.Got = fmt.Sprintf("%t", got)
 		if got {
 			report.GotHex = fmt.Sprint("1")
@@ -744,13 +812,15 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf("%x", []byte(*v.String))
 		report.ExpectedBin = fmt.Sprintf("%b", []byte(*v.String))
 
-		offsetBit = currentBit + (currentBit % 8) + (len(*v.String) * 8)
+		start, end, offset := v.cursor(currentBit, len(*v.String)*8, minBitSize, byteOrder)
+		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
 			return
 		}
 
-		got := string(rawBite[currentBit/8 : offsetBit/8])
+		got := string(rawBite[start:end])
+
 		report.Got = fmt.Sprintf("%s", got)
 		report.GotHex = fmt.Sprintf("%x", rawBite[currentBit/8:offsetBit/8])
 		report.GotBin = fmt.Sprintf("%b", rawBite[currentBit/8:offsetBit/8])
@@ -766,13 +836,14 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf("%02x", expected)
 		report.ExpectedBin = fmt.Sprintf("%08b", expected)
 
-		offsetBit = currentBit + (currentBit % 8) + (len(expected) * 8)
+		start, end, offset := v.cursor(currentBit, len(expected)*8, minBitSize, byteOrder)
+		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
 			return
 		}
 
-		got := rawBite[currentBit/8 : offsetBit/8]
+		got := rawBite[start:end]
 
 		report.Got = fmt.Sprintf("% x", got)
 		report.GotHex = fmt.Sprintf("%02x", got)

@@ -92,8 +92,8 @@ func TestModbusSlave_Expect1Bit(t *testing.T) {
 
 func TestModbusSlave_Expect16Bit(t *testing.T) {
 	var param1 = true
-	var param2 uint8 = 0x17
-	var param3 uint8 = 0x18
+	var param2 uint8 = 0x18
+	var param3 uint8 = 0x17
 	var param4 = true
 	var param5 uint16 = 0x17_17
 	var param6 uint32 = 0x17_00_00_17
@@ -142,7 +142,7 @@ func TestModbusSlave_Expect16Bit(t *testing.T) {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect(reports[1].GotHex).Eq("17"); err != nil {
+	if err := gotest.Expect(reports[1].GotHex).Eq("18"); err != nil {
 		t.Error(err)
 	}
 
@@ -150,7 +150,7 @@ func TestModbusSlave_Expect16Bit(t *testing.T) {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect(reports[2].GotHex).Eq("18"); err != nil {
+	if err := gotest.Expect(reports[2].GotHex).Eq("17"); err != nil {
 		t.Error(err)
 	}
 

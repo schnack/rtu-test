@@ -77,7 +77,7 @@ func (mt *ModbusMasterTest) Check(report *ReportMasterTest) {
 		case ReadHoldingRegisters, ReadInputRegisters, WriteSingleRegister, WriteMultipleRegisters:
 			bitSize = 16
 		}
-		countBit, expected = v.Check(report.GotByte, report.GotTime, report.GotError, countBit, bitSize)
+		countBit, expected = v.Check(report.GotByte, report.GotTime, report.GotError, countBit, bitSize, binary.BigEndian)
 		if !expected.Pass {
 			report.Pass = false
 		}

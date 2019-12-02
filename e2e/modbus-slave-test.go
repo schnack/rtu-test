@@ -64,7 +64,7 @@ func (ms *ModbusSlaveTest) Check(f mbserver.Framer, nexts []string) (points int)
 			countBit := 0
 			var expected ReportExpected
 			for _, v := range ms.Data {
-				countBit, expected = v.Check(f.GetData()[2:4], 0, "", countBit, 8)
+				countBit, expected = v.Check(f.GetData()[2:4], 0, "", countBit, 8, binary.BigEndian)
 				if !expected.Pass {
 					return 0
 				}
@@ -77,7 +77,7 @@ func (ms *ModbusSlaveTest) Check(f mbserver.Framer, nexts []string) (points int)
 			countBit := 0
 			var expected ReportExpected
 			for _, v := range ms.Data {
-				countBit, expected = v.Check(f.GetData()[2:4], 0, "", countBit, 16)
+				countBit, expected = v.Check(f.GetData()[2:4], 0, "", countBit, 16, binary.BigEndian)
 				if !expected.Pass {
 					return 0
 				}
@@ -101,7 +101,7 @@ func (ms *ModbusSlaveTest) Check(f mbserver.Framer, nexts []string) (points int)
 				if ms.getFunction() == WriteMultipleRegisters {
 					bitSize = 16
 				}
-				countBit, expected = v.Check(f.GetData()[5:], 0, "", countBit, bitSize)
+				countBit, expected = v.Check(f.GetData()[5:], 0, "", countBit, bitSize, binary.BigEndian)
 				if !expected.Pass {
 					return 0
 				}

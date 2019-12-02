@@ -179,7 +179,7 @@ func (ms *ModbusSlave) Expect1Bit(s []byte, v []*Value, mu *sync.Mutex) (reports
 			}
 			address++
 		}
-		_, report := v[i].Check(buf, 0, "", 0, 8)
+		_, report := v[i].Check(buf, 0, "", 0, 8, binary.BigEndian)
 		reports = append(reports, report)
 	}
 	return
@@ -243,7 +243,7 @@ func (ms *ModbusSlave) Expect16Bit(s []uint16, v []*Value, mu *sync.Mutex) (repo
 			}
 		}
 
-		_, report := v[i].Check(buf, 0, "", countBit, 16)
+		_, report := v[i].Check(buf, 0, "", countBit, 16, binary.BigEndian)
 
 		switch v[i].Type() {
 		case Bool:
