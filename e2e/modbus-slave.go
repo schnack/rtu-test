@@ -57,9 +57,9 @@ func (ms *ModbusSlave) getServer() *mbserver.Server {
 	return s
 }
 
-func (ms *ModbusSlave) Run() {
+func (ms *ModbusSlave) Run() error {
 	s := ms.getServer()
-	err := s.ListenRTU(&serial.Config{
+	return s.ListenRTU(&serial.Config{
 		Address:  ms.Port,
 		BaudRate: ms.BoundRate,
 		DataBits: ms.DataBits,
@@ -67,13 +67,9 @@ func (ms *ModbusSlave) Run() {
 		Parity:   ms.Parity,
 		Timeout:  parseDuration(ms.Timeout),
 	})
-	if err != nil {
-		logrus.Fatalf("failed to listen, got %v\n", err)
-	}
 }
 
 func (ms *ModbusSlave) ActionHandler(s *mbserver.Server, f mbserver.Framer) (result []byte, exp *mbserver.Exception) {
-
 	reports := ReportSlaveTest{}
 
 	var test *ModbusSlaveTest
@@ -93,23 +89,34 @@ func (ms *ModbusSlave) ActionHandler(s *mbserver.Server, f mbserver.Framer) (res
 		}
 	}
 
-	if test != nil && test.Lifetime != nil {
-		*test.Lifetime--
+	if test != nil {
+		reports.Name = test.Name
+		if test.Skip != "" {
+			logrus.Warn(render(TestSKIP, reports))
+		}
 	}
 
-	// Before
-	if test != nil && test.BeforeWrite != nil {
-		if v, ok := test.BeforeWrite[CoilsTable]; ok {
-			ms.Write1Bit(s.Coils, v, &ms.muCoils)
+	if test != nil && test.Skip == "" {
+
+		(&Message{Message: test.Before}).PrintReportSlaveTest(reports)
+
+		if test.Lifetime != nil {
+			*test.Lifetime--
 		}
-		if v, ok := test.BeforeWrite[DiscreteInputTable]; ok {
-			ms.Write1Bit(s.DiscreteInputs, v, &ms.muDiscreteInput)
-		}
-		if v, ok := test.BeforeWrite[HoldingRegistersTable]; ok {
-			ms.Write16Bit(s.HoldingRegisters, v, &ms.muHoldingRegisters)
-		}
-		if v, ok := test.BeforeWrite[InputRegistersTable]; ok {
-			ms.Write16Bit(s.InputRegisters, v, &ms.muInputRegisters)
+
+		if test.BeforeWrite != nil {
+			if v, ok := test.BeforeWrite[CoilsTable]; ok {
+				ms.Write1Bit(s.Coils, v, &ms.muCoils)
+			}
+			if v, ok := test.BeforeWrite[DiscreteInputTable]; ok {
+				ms.Write1Bit(s.DiscreteInputs, v, &ms.muDiscreteInput)
+			}
+			if v, ok := test.BeforeWrite[HoldingRegistersTable]; ok {
+				ms.Write16Bit(s.HoldingRegisters, v, &ms.muHoldingRegisters)
+			}
+			if v, ok := test.BeforeWrite[InputRegistersTable]; ok {
+				ms.Write16Bit(s.InputRegisters, v, &ms.muInputRegisters)
+			}
 		}
 	}
 
@@ -132,43 +139,60 @@ func (ms *ModbusSlave) ActionHandler(s *mbserver.Server, f mbserver.Framer) (res
 		result, exp = mbserver.WriteHoldingRegisters(s, f)
 	}
 
-	if test != nil && test.Expected != nil {
-		reports.Name = test.Name
-		if v, ok := test.Expected[CoilsTable]; ok {
-			reports.ExpectedCoils = ms.Expect1Bit(s.Coils, v, &ms.muCoils)
-		}
-		if v, ok := test.Expected[DiscreteInputTable]; ok {
-			reports.ExpectedDiscreteInput = ms.Expect1Bit(s.DiscreteInputs, v, &ms.muDiscreteInput)
-		}
-		if v, ok := test.Expected[HoldingRegistersTable]; ok {
-			reports.ExpectedHoldingRegisters = ms.Expect16Bit(s.HoldingRegisters, v, &ms.muHoldingRegisters)
-		}
-		if v, ok := test.Expected[InputRegistersTable]; ok {
-			reports.ExpectedInputRegisters = ms.Expect16Bit(s.InputRegisters, v, &ms.muInputRegisters)
-		}
-	}
+	if test != nil && test.Skip == "" {
+		if test.Expected != nil {
+			logrus.Warn(render(TestRUN, reports))
 
-	// after
-	if test != nil && test.AfterWrite != nil {
-		if v, ok := test.AfterWrite[CoilsTable]; ok {
-			ms.Write1Bit(s.Coils, v, &ms.muCoils)
+			if v, ok := test.Expected[CoilsTable]; ok {
+				reports.ExpectedCoils, reports.Pass = ms.Expect1Bit(s.Coils, v, &ms.muCoils)
+			}
+			if v, ok := test.Expected[DiscreteInputTable]; ok {
+				reports.ExpectedDiscreteInput, reports.Pass = ms.Expect1Bit(s.DiscreteInputs, v, &ms.muDiscreteInput)
+			}
+			if v, ok := test.Expected[HoldingRegistersTable]; ok {
+				reports.ExpectedHoldingRegisters, reports.Pass = ms.Expect16Bit(s.HoldingRegisters, v, &ms.muHoldingRegisters)
+			}
+			if v, ok := test.Expected[InputRegistersTable]; ok {
+				reports.ExpectedInputRegisters, reports.Pass = ms.Expect16Bit(s.InputRegisters, v, &ms.muInputRegisters)
+			}
+
+			if reports.Pass {
+				logrus.Warn(render(TestPASS, reports))
+				(&Message{Message: test.Success}).PrintReportSlaveTest(reports)
+			} else {
+				logrus.Error(render(TestFAIL, reports))
+				(&Message{Message: test.Error}).PrintReportSlaveTest(reports)
+				if test.Fatal != "" {
+					logrus.Fatal(test.Fatal)
+				}
+			}
 		}
-		if v, ok := test.AfterWrite[DiscreteInputTable]; ok {
-			ms.Write1Bit(s.DiscreteInputs, v, &ms.muDiscreteInput)
+
+		if test.AfterWrite != nil {
+			if v, ok := test.AfterWrite[CoilsTable]; ok {
+				ms.Write1Bit(s.Coils, v, &ms.muCoils)
+			}
+			if v, ok := test.AfterWrite[DiscreteInputTable]; ok {
+				ms.Write1Bit(s.DiscreteInputs, v, &ms.muDiscreteInput)
+			}
+			if v, ok := test.AfterWrite[HoldingRegistersTable]; ok {
+				ms.Write16Bit(s.HoldingRegisters, v, &ms.muHoldingRegisters)
+			}
+			if v, ok := test.AfterWrite[InputRegistersTable]; ok {
+				ms.Write16Bit(s.InputRegisters, v, &ms.muInputRegisters)
+			}
 		}
-		if v, ok := test.AfterWrite[HoldingRegistersTable]; ok {
-			ms.Write16Bit(s.HoldingRegisters, v, &ms.muHoldingRegisters)
-		}
-		if v, ok := test.AfterWrite[InputRegistersTable]; ok {
-			ms.Write16Bit(s.InputRegisters, v, &ms.muInputRegisters)
-		}
+
+		(&Message{Message: test.After}).PrintReportSlaveTest(reports)
+
+		ms.currentTest = test
+		time.Sleep(parseDuration(test.TimeOut))
 	}
-	ms.currentTest = test
-	time.Sleep(parseDuration(ms.currentTest.TimeOut))
 	return
 }
 
-func (ms *ModbusSlave) Expect1Bit(s []byte, v []*Value, mu *sync.Mutex) (reports []ReportExpected) {
+func (ms *ModbusSlave) Expect1Bit(s []byte, v []*Value, mu *sync.Mutex) (reports []ReportExpected, pass bool) {
+	pass = true
 	mu.Lock()
 	defer mu.Unlock()
 	var address uint16 = 0
@@ -198,12 +222,17 @@ func (ms *ModbusSlave) Expect1Bit(s []byte, v []*Value, mu *sync.Mutex) (reports
 			address++
 		}
 		_, report := v[i].Check(buf, 0, "", 0, 8, binary.BigEndian)
+
+		if !report.Pass {
+			pass = false
+		}
 		reports = append(reports, report)
 	}
 	return
 }
 
-func (ms *ModbusSlave) Expect16Bit(s []uint16, v []*Value, mu *sync.Mutex) (reports []ReportExpected) {
+func (ms *ModbusSlave) Expect16Bit(s []uint16, v []*Value, mu *sync.Mutex) (reports []ReportExpected, pass bool) {
+	pass = true
 	mu.Lock()
 	defer mu.Unlock()
 	var address uint16 = 0
@@ -298,6 +327,9 @@ func (ms *ModbusSlave) Expect16Bit(s []uint16, v []*Value, mu *sync.Mutex) (repo
 			countBit = 0
 		}
 
+		if !report.Pass {
+			pass = false
+		}
 		reports = append(reports, report)
 	}
 	return

@@ -26,13 +26,14 @@ func Init() *Device {
 }
 
 type Device struct {
-	Version      string       `yaml:"version"`
-	Name         string       `yaml:"name"`
-	Log          string       `yaml:"log"`
-	LogLvl       string       `yaml:"logLvl"`
-	Description  string       `yaml:"description"`
-	ExitMessage  Message      `yaml:"exitMessage"`
-	ModbusMaster ModbusMaster `yaml:"modbusMaster"`
+	Version      string        `yaml:"version"`
+	Name         string        `yaml:"name"`
+	Log          string        `yaml:"log"`
+	LogLvl       string        `yaml:"logLvl"`
+	Description  string        `yaml:"description"`
+	ExitMessage  Message       `yaml:"exitMessage"`
+	ModbusMaster *ModbusMaster `yaml:"modbusMaster"`
+	ModbusSlave  *ModbusSlave  `yaml:"modbusSlave"`
 }
 
 func (d *Device) Load(s string) error {
@@ -97,13 +98,22 @@ func (d *Device) RunTest() {
 		logrus.SetOutput(file)
 	}
 
-	report := ReportGroups{
-		Name:        d.Name,
-		Description: d.Description,
-	}
-	logrus.RegisterExitHandler(func() { d.ExitMessage.PrintReportGroups(report) })
+	if d.ModbusMaster != nil {
+		report := ReportGroups{
+			Name:        d.Name,
+			Description: d.Description,
+		}
+		logrus.RegisterExitHandler(func() { d.ExitMessage.PrintReportMasterGroups(report) })
 
-	if err := d.ModbusMaster.Run(&report); err != nil {
-		logrus.Fatal(err)
+		if err := d.ModbusMaster.Run(&report); err != nil {
+			logrus.Fatal(err)
+		}
+	} else if d.ModbusSlave != nil {
+		if err := d.ModbusSlave.Run(); err != nil {
+			logrus.Fatal(err)
+		}
+	} else {
+		logrus.Fatal("configuration file not found")
 	}
+
 }

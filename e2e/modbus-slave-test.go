@@ -17,6 +17,7 @@ const (
 type ModbusSlaveTest struct {
 	Name        string              `yaml:"name"`
 	Skip        string              `yaml:"skip"`
+	Fatal       string              `yaml:"fatal"`
 	Before      string              `yaml:"before"`
 	Next        []string            `yaml:"next"`
 	Lifetime    *int                `yaml:"lifetime"`

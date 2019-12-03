@@ -11,7 +11,7 @@ type Message struct {
 	Pause   string `yaml:"pause"`
 }
 
-func (m *Message) PrintReportTest(report ReportMasterTest) {
+func (m *Message) PrintReportMasterTest(report ReportMasterTest) {
 	d := parseDuration(m.Pause)
 	report.Pause = d.String()
 
@@ -40,7 +40,17 @@ func (m *Message) PrintReportTest(report ReportMasterTest) {
 	}
 }
 
-func (m *Message) PrintReportGroup(report ReportGroup) {
+func (m *Message) PrintReportSlaveTest(report ReportSlaveTest) {
+	if m.Message != "" {
+		message := render(m.Message, report)
+		logrus.Info(message)
+		if Init().Log != LogStdout {
+			fmt.Println(message)
+		}
+	}
+}
+
+func (m *Message) PrintReportMasterGroup(report ReportGroup) {
 	d := parseDuration(m.Pause)
 	report.Pause = d.String()
 
@@ -69,7 +79,7 @@ func (m *Message) PrintReportGroup(report ReportGroup) {
 	}
 }
 
-func (m *Message) PrintReportGroups(reports ReportGroups) {
+func (m *Message) PrintReportMasterGroups(reports ReportGroups) {
 	d := parseDuration(m.Pause)
 
 	if m.Message != "" {

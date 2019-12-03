@@ -51,20 +51,20 @@ func (mt *ModbusMasterTest) Run(client modbus.Client) ReportMasterTest {
 		logrus.Warn(render(TestSKIP, report))
 		return report
 	}
-	mt.Before.PrintReportTest(report)
+	mt.Before.PrintReportMasterTest(report)
 	mt.Exec(client, &report)
 	mt.Check(&report)
 	if report.Pass {
 		logrus.Warn(render(TestPASS, report))
-		mt.Success.PrintReportTest(report)
+		mt.Success.PrintReportMasterTest(report)
 	} else {
 		logrus.Error(render(TestFAIL, report))
-		mt.Error.PrintReportTest(report)
+		mt.Error.PrintReportMasterTest(report)
 		if mt.Fatal != "" {
 			logrus.Fatal(mt.Fatal)
 		}
 	}
-	mt.After.PrintReportTest(report)
+	mt.After.PrintReportMasterTest(report)
 	return report
 }
 

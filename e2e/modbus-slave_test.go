@@ -35,9 +35,13 @@ func TestModbusSlave_Expect1Bit(t *testing.T) {
 		1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0,
 	}
 
-	reports := slave.Expect1Bit(b, values, new(sync.Mutex))
+	reports, pass := slave.Expect1Bit(b, values, new(sync.Mutex))
 
 	if err := gotest.Expect(len(reports)).Eq(6); err != nil {
+		t.Error(err)
+	}
+
+	if err := gotest.Expect(pass).True(); err != nil {
 		t.Error(err)
 	}
 
@@ -124,9 +128,13 @@ func TestModbusSlave_Expect16Bit(t *testing.T) {
 		0x0017, //7
 	}
 
-	reports := slave.Expect16Bit(b, values, new(sync.Mutex))
+	reports, pass := slave.Expect16Bit(b, values, new(sync.Mutex))
 
 	if err := gotest.Expect(len(reports)).Eq(7); err != nil {
+		t.Error(err)
+	}
+
+	if err := gotest.Expect(pass).True(); err != nil {
 		t.Error(err)
 	}
 
