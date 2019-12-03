@@ -74,6 +74,8 @@ func (ms *ModbusSlave) Run() {
 
 func (ms *ModbusSlave) ActionHandler(s *mbserver.Server, f mbserver.Framer) (result []byte, exp *mbserver.Exception) {
 
+	reports := ReportSlaveTest{}
+
 	var test *ModbusSlaveTest
 	max := 0
 	var next []string
@@ -128,6 +130,22 @@ func (ms *ModbusSlave) ActionHandler(s *mbserver.Server, f mbserver.Framer) (res
 		result, exp = mbserver.WriteMultipleCoils(s, f)
 	case WriteMultipleRegisters:
 		result, exp = mbserver.WriteHoldingRegisters(s, f)
+	}
+
+	if test != nil && test.Expected != nil {
+		reports.Name = test.Name
+		if v, ok := test.Expected[CoilsTable]; ok {
+			reports.ExpectedCoils = ms.Expect1Bit(s.Coils, v, &ms.muCoils)
+		}
+		if v, ok := test.Expected[DiscreteInputTable]; ok {
+			reports.ExpectedDiscreteInput = ms.Expect1Bit(s.DiscreteInputs, v, &ms.muDiscreteInput)
+		}
+		if v, ok := test.Expected[HoldingRegistersTable]; ok {
+			reports.ExpectedHoldingRegisters = ms.Expect16Bit(s.HoldingRegisters, v, &ms.muHoldingRegisters)
+		}
+		if v, ok := test.Expected[InputRegistersTable]; ok {
+			reports.ExpectedInputRegisters = ms.Expect16Bit(s.InputRegisters, v, &ms.muInputRegisters)
+		}
 	}
 
 	// after
