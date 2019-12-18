@@ -106,11 +106,11 @@ func (d *Device) RunTest() {
 		logrus.RegisterExitHandler(func() { d.ExitMessage.PrintReportMasterGroups(report) })
 
 		if err := d.ModbusMaster.Run(&report); err != nil {
-			logrus.Fatal(err)
+			logrus.Fatalf("Exit app master: %s", err)
 		}
 	} else if d.ModbusSlave != nil {
 		if err := d.ModbusSlave.Run(); err != nil {
-			logrus.Fatal(err)
+			logrus.Fatalf("Exit app slave: %s", err)
 		}
 	} else {
 		logrus.Fatal("configuration file not found")

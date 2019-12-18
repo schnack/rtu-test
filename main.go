@@ -42,11 +42,18 @@ func main() {
 	}
 
 	if *comport != "" {
-		d.ModbusMaster.Port = *comport
+		if d.ModbusMaster != nil {
+			d.ModbusMaster.Port = *comport
+		} else if d.ModbusSlave != nil {
+			d.ModbusSlave.Port = *comport
+		}
+
 	}
 
 	if *filter != "" {
-		d.ModbusMaster.Filter = *filter
+		if d.ModbusMaster != nil {
+			d.ModbusMaster.Filter = *filter
+		}
 	}
 
 	d.RunTest()
