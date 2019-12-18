@@ -2,7 +2,7 @@ package e2e
 
 import (
 	"github.com/schnack/gotest"
-	"sync"
+	"github.com/schnack/mbslave"
 	"testing"
 )
 
@@ -22,8 +22,9 @@ func TestModbusSlave_Expect1Bit(t *testing.T) {
 		{Name: "param5", Address: "0x001c", Uint32: &param5},
 		{Name: "param6", Address: "0x003d", Uint64: &param6},
 	}
-	slave := ModbusSlave{}
-	b := []byte{
+	dataModel := mbslave.NewDefaultDataModel(0x01)
+
+	for i, v := range []byte{
 		1,
 		0,
 		1, 1, 1, 0, 1, 0, 0, 0,
@@ -33,9 +34,13 @@ func TestModbusSlave_Expect1Bit(t *testing.T) {
 		1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0,
 		0,
 		1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0,
+	} {
+		_ = dataModel.SetCoils(uint16(i), v == 1)
 	}
 
-	reports, pass := slave.Expect1Bit(b, values, new(sync.Mutex))
+	slave := ModbusSlave{DataModel: dataModel}
+
+	reports, pass := slave.Expect1Bit(CoilsTable, values)
 
 	if err := gotest.Expect(len(reports)).Eq(6); err != nil {
 		t.Error(err)
@@ -102,7 +107,7 @@ func TestModbusSlave_Expect16Bit(t *testing.T) {
 	var param5 uint16 = 0x17_17
 	var param6 uint32 = 0x17_00_00_17
 	var param7 uint64 = 0x17_00_00_00_00_00_00_17
-	slave := ModbusSlave{}
+
 	values := []*Value{
 		{Name: "param1", Bool: &param1},
 		{Name: "param2", Address: "0x0002", Uint8: &param2},
@@ -112,7 +117,12 @@ func TestModbusSlave_Expect16Bit(t *testing.T) {
 		{Name: "param6", Address: "0x0006", Uint32: &param6},
 		{Name: "param7", Address: "0x0009", Uint64: &param7},
 	}
-	b := []uint16{
+
+	dataModel := mbslave.NewDefaultDataModel(0x01)
+
+	slave := ModbusSlave{DataModel: dataModel}
+
+	for i, v := range []uint16{
 		0x0001, //1
 		0,
 		0x1718, //2 - 3
@@ -126,9 +136,11 @@ func TestModbusSlave_Expect16Bit(t *testing.T) {
 		0,      //7
 		0,      //7
 		0x0017, //7
+	} {
+		_ = dataModel.SetHoldingRegisters(uint16(i), v)
 	}
 
-	reports, pass := slave.Expect16Bit(b, values, new(sync.Mutex))
+	reports, pass := slave.Expect16Bit(HoldingRegistersTable, values)
 
 	if err := gotest.Expect(len(reports)).Eq(7); err != nil {
 		t.Error(err)
@@ -212,12 +224,12 @@ func TestModbusSlave_Write1Bit(t *testing.T) {
 			{Name: "param5", Address: "0x001c", Uint32: &param5},
 			{Name: "param6", Address: "0x003d", Uint64: &param6},
 		},
+		DataModel: mbslave.NewDefaultDataModel(0x01),
 	}
-	b := make([]byte, 125)
 
-	slave.Write1Bit(b, slave.Coils, new(sync.Mutex))
+	slave.Write1Bit(CoilsTable, slave.Coils)
 
-	if err := gotest.Expect(b).Eq([]byte{
+	for i, v := range []byte{
 		1,
 		0,
 		1, 1, 1, 0, 1, 0, 0, 0,
@@ -227,8 +239,11 @@ func TestModbusSlave_Write1Bit(t *testing.T) {
 		1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0,
 		0,
 		1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0,
-	}); err != nil {
-		t.Error(err)
+	} {
+
+		if err := gotest.Expect(slave.DataModel.GetCoils(uint16(i))).Eq(v == 1); err != nil {
+			t.Error(err)
+		}
 	}
 }
 
@@ -241,7 +256,7 @@ func TestModbusSlave_Write16Bit(t *testing.T) {
 	var param6 uint32 = 0x17_00_00_17
 	var param7 uint64 = 0x17_00_00_00_00_00_00_17
 	slave := ModbusSlave{
-		Coils: []*Value{
+		HoldingRegisters: []*Value{
 			{Name: "param1", Bool: &param1},
 			{Name: "param2", Address: "0x0002", Uint8: &param2},
 			{Name: "param3", Uint8: &param3},
@@ -250,12 +265,11 @@ func TestModbusSlave_Write16Bit(t *testing.T) {
 			{Name: "param6", Address: "0x0006", Uint32: &param6},
 			{Name: "param7", Address: "0x0009", Uint64: &param7},
 		},
+		DataModel: mbslave.NewDefaultDataModel(0x01),
 	}
-	b := make([]uint16, 13)
+	slave.Write16Bit(HoldingRegistersTable, slave.HoldingRegisters)
 
-	slave.Write16Bit(b, slave.Coils, new(sync.Mutex))
-
-	if err := gotest.Expect(b).Eq([]uint16{
+	for i, v := range []uint16{
 		0x0001,
 		0,
 		0x1718,
@@ -269,7 +283,9 @@ func TestModbusSlave_Write16Bit(t *testing.T) {
 		0,
 		0,
 		0x0017,
-	}); err != nil {
-		t.Error(err)
+	} {
+		if err := gotest.Expect(slave.DataModel.GetHoldingRegisters(uint16(i))).Eq(v); err != nil {
+			t.Error(err)
+		}
 	}
 }

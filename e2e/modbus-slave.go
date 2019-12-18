@@ -3,9 +3,8 @@ package e2e
 import (
 	"encoding/binary"
 	"github.com/goburrow/serial"
+	"github.com/schnack/mbslave"
 	"github.com/sirupsen/logrus"
-	"github.com/tbrandon/mbserver"
-	"sync"
 	"time"
 )
 
@@ -32,34 +31,14 @@ type ModbusSlave struct {
 
 	Tests []*ModbusSlaveTest `yaml:"tests"`
 
-	muCoils            sync.Mutex `yaml:"-"`
-	muDiscreteInput    sync.Mutex `yaml:"-"`
-	muHoldingRegisters sync.Mutex `yaml:"-"`
-	muInputRegisters   sync.Mutex `yaml:"-"`
+	DataModel *mbslave.DefaultDataModel `yaml:"-"`
 
 	currentTest *ModbusSlaveTest `yaml:"-"`
 }
 
-func (ms *ModbusSlave) getServer() *mbserver.Server {
-	s := mbserver.NewServer()
-	ms.Write1Bit(s.Coils, ms.Coils, &ms.muCoils)
-	ms.Write1Bit(s.DiscreteInputs, ms.DiscreteInput, &ms.muDiscreteInput)
-	ms.Write16Bit(s.HoldingRegisters, ms.HoldingRegisters, &ms.muHoldingRegisters)
-	ms.Write16Bit(s.InputRegisters, ms.InputRegisters, &ms.muInputRegisters)
-	s.RegisterFunctionHandler(1, ms.ActionHandler)
-	s.RegisterFunctionHandler(2, ms.ActionHandler)
-	s.RegisterFunctionHandler(3, ms.ActionHandler)
-	s.RegisterFunctionHandler(4, ms.ActionHandler)
-	s.RegisterFunctionHandler(5, ms.ActionHandler)
-	s.RegisterFunctionHandler(6, ms.ActionHandler)
-	s.RegisterFunctionHandler(15, ms.ActionHandler)
-	s.RegisterFunctionHandler(16, ms.ActionHandler)
-	return s
-}
-
-func (ms *ModbusSlave) Run() error {
-	s := ms.getServer()
-	return s.ListenRTU(&serial.Config{
+func (ms *ModbusSlave) getServer() *mbslave.Server {
+	ms.DataModel = mbslave.NewDefaultDataModel(ms.SlaveId)
+	transport := mbslave.NewRtuTransport(serial.Config{
 		Address:  ms.Port,
 		BaudRate: ms.BoundRate,
 		DataBits: ms.DataBits,
@@ -67,9 +46,29 @@ func (ms *ModbusSlave) Run() error {
 		Parity:   ms.Parity,
 		Timeout:  parseDuration(ms.Timeout),
 	})
+	s := mbslave.NewServer(transport, ms.DataModel)
+
+	ms.Write1Bit(CoilsTable, ms.Coils)
+	ms.Write1Bit(DiscreteInputTable, ms.DiscreteInput)
+	ms.Write16Bit(HoldingRegistersTable, ms.HoldingRegisters)
+	ms.Write16Bit(InputRegistersTable, ms.InputRegisters)
+	ms.DataModel.SetFunction(mbslave.FuncReadCoils, ms.ActionHandler)
+	ms.DataModel.SetFunction(mbslave.FuncReadDiscreteInputs, ms.ActionHandler)
+	ms.DataModel.SetFunction(mbslave.FuncReadHoldingRegisters, ms.ActionHandler)
+	ms.DataModel.SetFunction(mbslave.FuncReadInputRegisters, ms.ActionHandler)
+	ms.DataModel.SetFunction(mbslave.FuncWriteSingleCoil, ms.ActionHandler)
+	ms.DataModel.SetFunction(mbslave.FuncWriteSingleRegister, ms.ActionHandler)
+	ms.DataModel.SetFunction(mbslave.FuncWriteMultipleCoils, ms.ActionHandler)
+	ms.DataModel.SetFunction(mbslave.FuncWriteMultipleRegisters, ms.ActionHandler)
+	return s
 }
 
-func (ms *ModbusSlave) ActionHandler(s *mbserver.Server, f mbserver.Framer) (result []byte, exp *mbserver.Exception) {
+func (ms *ModbusSlave) Run() error {
+	s := ms.getServer()
+	return s.Listen()
+}
+
+func (ms *ModbusSlave) ActionHandler(request mbslave.Request, response mbslave.Response) {
 	reports := ReportSlaveTest{}
 
 	var test *ModbusSlaveTest
@@ -81,7 +80,7 @@ func (ms *ModbusSlave) ActionHandler(s *mbserver.Server, f mbserver.Framer) (res
 	}
 
 	for i := range ms.Tests {
-		ball := ms.Tests[i].Check(f, next)
+		ball := ms.Tests[i].Check(request, next)
 
 		if ball != 0 && ball > max {
 			test = ms.Tests[i]
@@ -106,37 +105,37 @@ func (ms *ModbusSlave) ActionHandler(s *mbserver.Server, f mbserver.Framer) (res
 
 		if test.BeforeWrite != nil {
 			if v, ok := test.BeforeWrite[CoilsTable]; ok {
-				ms.Write1Bit(s.Coils, v, &ms.muCoils)
+				ms.Write1Bit(CoilsTable, v)
 			}
 			if v, ok := test.BeforeWrite[DiscreteInputTable]; ok {
-				ms.Write1Bit(s.DiscreteInputs, v, &ms.muDiscreteInput)
+				ms.Write1Bit(DiscreteInputTable, v)
 			}
 			if v, ok := test.BeforeWrite[HoldingRegistersTable]; ok {
-				ms.Write16Bit(s.HoldingRegisters, v, &ms.muHoldingRegisters)
+				ms.Write16Bit(HoldingRegistersTable, v)
 			}
 			if v, ok := test.BeforeWrite[InputRegistersTable]; ok {
-				ms.Write16Bit(s.InputRegisters, v, &ms.muInputRegisters)
+				ms.Write16Bit(InputRegistersTable, v)
 			}
 		}
 	}
 
-	switch ModbusFunction(f.GetFunction()) {
+	switch ModbusFunction(request.GetFunction()) {
 	case ReadCoils:
-		result, exp = mbserver.ReadCoils(s, f)
+		ms.DataModel.ReadCoils(request, response)
 	case ReadDiscreteInputs:
-		result, exp = mbserver.ReadDiscreteInputs(s, f)
+		ms.DataModel.ReadDiscreteInputs(request, response)
 	case ReadHoldingRegisters:
-		result, exp = mbserver.ReadHoldingRegisters(s, f)
+		ms.DataModel.ReadHoldingRegisters(request, response)
 	case ReadInputRegisters:
-		result, exp = mbserver.ReadInputRegisters(s, f)
+		ms.DataModel.ReadInputRegisters(request, response)
 	case WriteSingleCoil:
-		result, exp = mbserver.WriteSingleCoil(s, f)
+		ms.DataModel.WriteSingleCoil(request, response)
 	case WriteSingleRegister:
-		result, exp = mbserver.WriteHoldingRegister(s, f)
+		ms.DataModel.WriteSingleRegister(request, response)
 	case WriteMultipleCoils:
-		result, exp = mbserver.WriteMultipleCoils(s, f)
+		ms.DataModel.WriteMultipleCoils(request, response)
 	case WriteMultipleRegisters:
-		result, exp = mbserver.WriteHoldingRegisters(s, f)
+		ms.DataModel.WriteMultipleRegisters(request, response)
 	}
 
 	if test != nil && test.Skip == "" {
@@ -144,16 +143,16 @@ func (ms *ModbusSlave) ActionHandler(s *mbserver.Server, f mbserver.Framer) (res
 			logrus.Warn(render(TestRUN, reports))
 
 			if v, ok := test.Expected[CoilsTable]; ok {
-				reports.ExpectedCoils, reports.Pass = ms.Expect1Bit(s.Coils, v, &ms.muCoils)
+				reports.ExpectedCoils, reports.Pass = ms.Expect1Bit(CoilsTable, v)
 			}
 			if v, ok := test.Expected[DiscreteInputTable]; ok {
-				reports.ExpectedDiscreteInput, reports.Pass = ms.Expect1Bit(s.DiscreteInputs, v, &ms.muDiscreteInput)
+				reports.ExpectedDiscreteInput, reports.Pass = ms.Expect1Bit(DiscreteInputTable, v)
 			}
 			if v, ok := test.Expected[HoldingRegistersTable]; ok {
-				reports.ExpectedHoldingRegisters, reports.Pass = ms.Expect16Bit(s.HoldingRegisters, v, &ms.muHoldingRegisters)
+				reports.ExpectedHoldingRegisters, reports.Pass = ms.Expect16Bit(HoldingRegistersTable, v)
 			}
 			if v, ok := test.Expected[InputRegistersTable]; ok {
-				reports.ExpectedInputRegisters, reports.Pass = ms.Expect16Bit(s.InputRegisters, v, &ms.muInputRegisters)
+				reports.ExpectedInputRegisters, reports.Pass = ms.Expect16Bit(InputRegistersTable, v)
 			}
 
 			if reports.Pass {
@@ -170,16 +169,16 @@ func (ms *ModbusSlave) ActionHandler(s *mbserver.Server, f mbserver.Framer) (res
 
 		if test.AfterWrite != nil {
 			if v, ok := test.AfterWrite[CoilsTable]; ok {
-				ms.Write1Bit(s.Coils, v, &ms.muCoils)
+				ms.Write1Bit(CoilsTable, v)
 			}
 			if v, ok := test.AfterWrite[DiscreteInputTable]; ok {
-				ms.Write1Bit(s.DiscreteInputs, v, &ms.muDiscreteInput)
+				ms.Write1Bit(DiscreteInputTable, v)
 			}
 			if v, ok := test.AfterWrite[HoldingRegistersTable]; ok {
-				ms.Write16Bit(s.HoldingRegisters, v, &ms.muHoldingRegisters)
+				ms.Write16Bit(HoldingRegistersTable, v)
 			}
 			if v, ok := test.AfterWrite[InputRegistersTable]; ok {
-				ms.Write16Bit(s.InputRegisters, v, &ms.muInputRegisters)
+				ms.Write16Bit(InputRegistersTable, v)
 			}
 		}
 
@@ -191,11 +190,25 @@ func (ms *ModbusSlave) ActionHandler(s *mbserver.Server, f mbserver.Framer) (res
 	return
 }
 
-func (ms *ModbusSlave) Expect1Bit(s []byte, v []*Value, mu *sync.Mutex) (reports []ReportExpected, pass bool) {
+func (ms *ModbusSlave) Expect1Bit(table string, v []*Value) (reports []ReportExpected, pass bool) {
 	pass = true
-	mu.Lock()
-	defer mu.Unlock()
 	var address uint16 = 0
+
+	var getFunc func(address uint16) bool
+	var countRegisters int
+
+	switch table {
+	case CoilsTable:
+		countRegisters = ms.DataModel.LengthCoils()
+		getFunc = ms.DataModel.GetCoils
+	case DiscreteInputTable:
+		countRegisters = ms.DataModel.LengthDiscreteInputs()
+		getFunc = ms.DataModel.GetDiscreteInputs
+	default:
+		logrus.Fatalf("%s table is not supported", table)
+		return
+	}
+
 	for i := range v {
 		if v[i].Address != "" {
 			rawAddress, err := parseStringByte(v[i].Address)
@@ -213,10 +226,10 @@ func (ms *ModbusSlave) Expect1Bit(s []byte, v []*Value, mu *sync.Mutex) (reports
 		}
 
 		for ii := 0; ii < v[i].LengthBit(); ii++ {
-			if len(s) <= int(address) {
+			if countRegisters <= int(address) {
 				logrus.Fatal("ModBus tables overflow")
 			}
-			if s[address] != 0 {
+			if getFunc(address) {
 				buf[ii/8] |= 1 << (ii % 8)
 			}
 			address++
@@ -231,11 +244,22 @@ func (ms *ModbusSlave) Expect1Bit(s []byte, v []*Value, mu *sync.Mutex) (reports
 	return
 }
 
-func (ms *ModbusSlave) Expect16Bit(s []uint16, v []*Value, mu *sync.Mutex) (reports []ReportExpected, pass bool) {
+func (ms *ModbusSlave) Expect16Bit(table string, v []*Value) (reports []ReportExpected, pass bool) {
 	pass = true
-	mu.Lock()
-	defer mu.Unlock()
 	var address uint16 = 0
+
+	var getFunc func(address uint16) uint16
+
+	switch table {
+	case HoldingRegistersTable:
+		getFunc = ms.DataModel.GetHoldingRegisters
+	case InputRegistersTable:
+		getFunc = ms.DataModel.GetInputRegisters
+	default:
+		logrus.Fatalf("%s table is not supported", table)
+		return
+	}
+
 	countBit := 0
 	for i := range v {
 
@@ -282,7 +306,7 @@ func (ms *ModbusSlave) Expect16Bit(s []uint16, v []*Value, mu *sync.Mutex) (repo
 				continue
 			}
 			b := make([]byte, 2)
-			binary.BigEndian.PutUint16(b, s[address])
+			binary.BigEndian.PutUint16(b, getFunc(address))
 			buf[ii-1] = b[0]
 			buf[ii] = b[1]
 			if len(buf)-1 != ii {
@@ -335,10 +359,24 @@ func (ms *ModbusSlave) Expect16Bit(s []uint16, v []*Value, mu *sync.Mutex) (repo
 	return
 }
 
-func (ms *ModbusSlave) Write1Bit(s []byte, v []*Value, mu *sync.Mutex) {
-	mu.Lock()
-	defer mu.Unlock()
+func (ms *ModbusSlave) Write1Bit(table string, v []*Value) {
 	var address uint16 = 0
+
+	var setFunc func(address uint16, value bool) error
+	var countRegisters int
+
+	switch table {
+	case CoilsTable:
+		countRegisters = ms.DataModel.LengthCoils()
+		setFunc = ms.DataModel.SetCoils
+	case DiscreteInputTable:
+		countRegisters = ms.DataModel.LengthDiscreteInputs()
+		setFunc = ms.DataModel.SetDiscreteInputs
+	default:
+		logrus.Fatalf("%s table is not supported", table)
+		return
+	}
+
 	for i := range v {
 		if v[i].Address != "" {
 			rawAddress, err := parseStringByte(v[i].Address)
@@ -350,21 +388,21 @@ func (ms *ModbusSlave) Write1Bit(s []byte, v []*Value, mu *sync.Mutex) {
 
 		data := v[i].Write()
 		for _, b := range data {
-			if len(s) <= int(address) {
+			if countRegisters <= int(address) {
 				logrus.Fatal("ModBus tables overflow")
 			}
 			if v[i].Type() == Bool {
-				s[address] = b
+				if err := setFunc(address, b != 0); err != nil {
+					logrus.Fatalf("%s", err)
+				}
 				address++
 			} else {
 				for ii := 0; ii < 8; ii++ {
-					if len(s) <= int(address) {
+					if countRegisters <= int(address) {
 						logrus.Fatal("ModBus tables overflow")
 					}
-					if (b & (1 << ii)) != 0 {
-						s[address] = 1
-					} else {
-						s[address] = 0
+					if err := setFunc(address, (b&(1<<ii)) != 0); err != nil {
+						logrus.Fatalf("%s", err)
 					}
 					address++
 				}
@@ -373,10 +411,23 @@ func (ms *ModbusSlave) Write1Bit(s []byte, v []*Value, mu *sync.Mutex) {
 	}
 }
 
-func (ms *ModbusSlave) Write16Bit(s []uint16, v []*Value, mu *sync.Mutex) {
-	mu.Lock()
-	defer mu.Unlock()
+func (ms *ModbusSlave) Write16Bit(table string, v []*Value) {
 	var address uint16 = 0
+
+	var setFunc func(address uint16, value uint16) error
+	var countRegisters int
+
+	switch table {
+	case HoldingRegistersTable:
+		countRegisters = ms.DataModel.LengthHoldingRegisters()
+		setFunc = ms.DataModel.SetHoldingRegisters
+	case InputRegistersTable:
+		countRegisters = ms.DataModel.LengthInputRegisters()
+		setFunc = ms.DataModel.SetInputRegisters
+	default:
+		logrus.Fatalf("%s table is not supported", table)
+		return
+	}
 
 	var vBytes uint16 = 0
 	current := 0
@@ -385,10 +436,12 @@ func (ms *ModbusSlave) Write16Bit(s []uint16, v []*Value, mu *sync.Mutex) {
 		if v[i].Address != "" {
 			// Сбрасываем счетчик бит
 			if current != 0 {
-				if len(s) <= int(address) {
+				if countRegisters <= int(address) {
 					logrus.Fatal("ModBus tables overflow")
 				}
-				s[address] = vBytes
+				if err := setFunc(address, vBytes); err != nil {
+					logrus.Fatalf("%s", err)
+				}
 				address++
 				vBytes = 0
 				current = 0
@@ -401,10 +454,12 @@ func (ms *ModbusSlave) Write16Bit(s []uint16, v []*Value, mu *sync.Mutex) {
 			address = binary.BigEndian.Uint16(rawAddress)
 
 		} else if current >= 16 {
-			if len(s) <= int(address) {
+			if countRegisters <= int(address) {
 				logrus.Fatal("ModBus tables overflow")
 			}
-			s[address] = vBytes
+			if err := setFunc(address, vBytes); err != nil {
+				logrus.Fatalf("%s", err)
+			}
 			address++
 			vBytes = 0
 			current = 0
@@ -421,10 +476,12 @@ func (ms *ModbusSlave) Write16Bit(s []uint16, v []*Value, mu *sync.Mutex) {
 			}
 
 			if current < 16 && current != 0 && !(len(data) == 1 && current == 8) {
-				if len(s) <= int(address) {
+				if countRegisters <= int(address) {
 					logrus.Fatal("ModBus tables overflow")
 				}
-				s[address] = vBytes
+				if err := setFunc(address, vBytes); err != nil {
+					logrus.Fatalf("%s", err)
+				}
 				address++
 				vBytes = 0
 				current = 0
@@ -432,10 +489,12 @@ func (ms *ModbusSlave) Write16Bit(s []uint16, v []*Value, mu *sync.Mutex) {
 
 			for _, b := range data {
 				if current >= 16 {
-					if len(s) <= int(address) {
+					if countRegisters <= int(address) {
 						logrus.Fatal("ModBus tables overflow")
 					}
-					s[address] = vBytes
+					if err := setFunc(address, vBytes); err != nil {
+						logrus.Fatalf("%s", err)
+					}
 					address++
 					vBytes = 0
 					current = 0
@@ -450,9 +509,11 @@ func (ms *ModbusSlave) Write16Bit(s []uint16, v []*Value, mu *sync.Mutex) {
 		}
 	}
 	if current != 0 {
-		if len(s) <= int(address) {
+		if countRegisters <= int(address) {
 			logrus.Fatal("ModBus tables overflow")
 		}
-		s[address] = vBytes
+		if err := setFunc(address, vBytes); err != nil {
+			logrus.Fatalf("%s", err)
+		}
 	}
 }

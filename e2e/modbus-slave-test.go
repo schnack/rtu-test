@@ -2,7 +2,7 @@ package e2e
 
 import (
 	"encoding/binary"
-	"github.com/tbrandon/mbserver"
+	"github.com/schnack/mbslave"
 	"strconv"
 	"strings"
 )
@@ -36,24 +36,24 @@ type ModbusSlaveTest struct {
 }
 
 // Для поиска нужного теста
-func (ms *ModbusSlaveTest) Check(f mbserver.Framer, nexts []string) (points int) {
+func (ms *ModbusSlaveTest) Check(request mbslave.Request, nexts []string) (points int) {
 
 	if (ms.Lifetime != nil && *ms.Lifetime <= 0) || ms.Skip != "" {
 		return
 	}
 
-	if ms.getFunction() == NilFunction && ms.getFunction() == ModbusFunction(f.GetFunction()) {
+	if ms.getFunction() == NilFunction && ms.getFunction() == ModbusFunction(request.GetFunction()) {
 		return 0
 	}
 
-	if ms.Address == nil && *ms.Address != binary.BigEndian.Uint16(f.GetData()[0:2]) {
+	if ms.Address == nil && *ms.Address != request.GetAddress() {
 		return 0
 	}
 
 	switch ms.getFunction() {
 	case ReadDiscreteInputs, ReadCoils, ReadInputRegisters, ReadHoldingRegisters:
 		if ms.Quantity != nil {
-			if *ms.Quantity == binary.BigEndian.Uint16(f.GetData()[2:4]) {
+			if *ms.Quantity == request.GetQuantity() {
 				points += DataPoint + QuantityPoint
 			} else {
 				return 0
@@ -65,7 +65,7 @@ func (ms *ModbusSlaveTest) Check(f mbserver.Framer, nexts []string) (points int)
 			countBit := 0
 			var expected ReportExpected
 			for _, v := range ms.Data {
-				countBit, expected = v.Check(f.GetData()[2:4], 0, "", countBit, 8, binary.BigEndian)
+				countBit, expected = v.Check(request.GetData(), 0, "", countBit, 8, binary.BigEndian)
 				if !expected.Pass {
 					return 0
 				}
@@ -78,7 +78,7 @@ func (ms *ModbusSlaveTest) Check(f mbserver.Framer, nexts []string) (points int)
 			countBit := 0
 			var expected ReportExpected
 			for _, v := range ms.Data {
-				countBit, expected = v.Check(f.GetData()[2:4], 0, "", countBit, 16, binary.BigEndian)
+				countBit, expected = v.Check(request.GetData(), 0, "", countBit, 16, binary.BigEndian)
 				if !expected.Pass {
 					return 0
 				}
@@ -88,7 +88,7 @@ func (ms *ModbusSlaveTest) Check(f mbserver.Framer, nexts []string) (points int)
 		points += FunctionAndAddressPoint
 	case WriteMultipleCoils, WriteMultipleRegisters:
 		if ms.Quantity != nil {
-			if *ms.Quantity == binary.BigEndian.Uint16(f.GetData()[2:4]) {
+			if *ms.Quantity == request.GetQuantity() {
 				points += QuantityPoint
 			} else {
 				return 0
@@ -102,7 +102,7 @@ func (ms *ModbusSlaveTest) Check(f mbserver.Framer, nexts []string) (points int)
 				if ms.getFunction() == WriteMultipleRegisters {
 					bitSize = 16
 				}
-				countBit, expected = v.Check(f.GetData()[5:], 0, "", countBit, bitSize, binary.BigEndian)
+				countBit, expected = v.Check(request.GetData(), 0, "", countBit, bitSize, binary.BigEndian)
 				if !expected.Pass {
 					return 0
 				}

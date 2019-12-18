@@ -2,7 +2,7 @@ package e2e
 
 import (
 	"github.com/schnack/gotest"
-	"github.com/tbrandon/mbserver"
+	"github.com/schnack/mbslave"
 	"testing"
 )
 
@@ -17,12 +17,12 @@ func TestModbusSlaveTest_Check(t *testing.T) {
 		Quantity: &quantity,
 		Data:     nil,
 	}
-	f, err := mbserver.NewRTUFrame([]byte{0xb1, 0x02, 0x00, 0x00, 0x00, 0x01, 0xa3, 0xfa})
-	if err := gotest.Expect(err).Eq(nil); err != nil {
+	request := mbslave.NewRtuRequest([]byte{0xb1, 0x02, 0x00, 0x00, 0x00, 0x01, 0xa3, 0xfa})
+	if err := gotest.Expect(request.Parse()).NotError(); err != nil {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect(mt.Check(f, []string{})).Eq(111); err != nil {
+	if err := gotest.Expect(mt.Check(request, []string{})).Eq(111); err != nil {
 		t.Error(err)
 	}
 }
