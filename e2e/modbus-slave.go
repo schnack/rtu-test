@@ -65,7 +65,107 @@ func (ms *ModbusSlave) getServer() *mbslave.Server {
 
 func (ms *ModbusSlave) Run() error {
 	s := ms.getServer()
+	ms.autorun()
 	return s.Listen()
+}
+
+func (ms *ModbusSlave) autorun() {
+	for _, test := range ms.Tests {
+		if test.AutoRun == "" || test.Skip != "" {
+			continue
+		}
+		go func(t *ModbusSlaveTest) {
+			tiker := time.NewTicker(parseDuration(t.AutoRun))
+			for _ = range tiker.C {
+				if t.Lifetime != nil {
+					if *t.Lifetime <= 0 {
+						tiker.Stop()
+						return
+					}
+					*t.Lifetime--
+				}
+			}
+		}(test)
+	}
+}
+
+func (ms *ModbusSlave) before(test *ModbusSlaveTest, reports ReportSlaveTest) {
+	if test == nil || test.Skip != "" {
+		return
+	}
+
+	(&Message{Message: test.Before}).PrintReportSlaveTest(reports)
+
+	if test.BeforeWrite == nil {
+		return
+	}
+	if v, ok := test.BeforeWrite[CoilsTable]; ok {
+		ms.Write1Bit(CoilsTable, v)
+	}
+	if v, ok := test.BeforeWrite[DiscreteInputTable]; ok {
+		ms.Write1Bit(DiscreteInputTable, v)
+	}
+	if v, ok := test.BeforeWrite[HoldingRegistersTable]; ok {
+		ms.Write16Bit(HoldingRegistersTable, v)
+	}
+	if v, ok := test.BeforeWrite[InputRegistersTable]; ok {
+		ms.Write16Bit(InputRegistersTable, v)
+	}
+}
+
+func (ms *ModbusSlave) expected(test *ModbusSlaveTest, reports ReportSlaveTest) {
+	if test == nil || test.Skip != "" || test.Expected == nil {
+		return
+	}
+
+	logrus.Warn(render(TestRUN, reports))
+
+	if v, ok := test.Expected[CoilsTable]; ok {
+		reports.ExpectedCoils, reports.Pass = ms.Expect1Bit(CoilsTable, v)
+	}
+	if v, ok := test.Expected[DiscreteInputTable]; ok {
+		reports.ExpectedDiscreteInput, reports.Pass = ms.Expect1Bit(DiscreteInputTable, v)
+	}
+	if v, ok := test.Expected[HoldingRegistersTable]; ok {
+		reports.ExpectedHoldingRegisters, reports.Pass = ms.Expect16Bit(HoldingRegistersTable, v)
+	}
+	if v, ok := test.Expected[InputRegistersTable]; ok {
+		reports.ExpectedInputRegisters, reports.Pass = ms.Expect16Bit(InputRegistersTable, v)
+	}
+
+	if reports.Pass {
+		logrus.Warn(render(TestPASS, reports))
+		(&Message{Message: test.Success}).PrintReportSlaveTest(reports)
+	} else {
+		logrus.Error(render(TestFAIL, reports))
+		(&Message{Message: test.Error}).PrintReportSlaveTest(reports)
+		if test.Fatal != "" {
+			logrus.Fatal(test.Fatal)
+		}
+	}
+}
+
+func (ms *ModbusSlave) after(test *ModbusSlaveTest, reports ReportSlaveTest) {
+	if test == nil || test.Skip != "" {
+		return
+	}
+
+	if test.AfterWrite != nil {
+		if v, ok := test.AfterWrite[CoilsTable]; ok {
+			ms.Write1Bit(CoilsTable, v)
+		}
+		if v, ok := test.AfterWrite[DiscreteInputTable]; ok {
+			ms.Write1Bit(DiscreteInputTable, v)
+		}
+		if v, ok := test.AfterWrite[HoldingRegistersTable]; ok {
+			ms.Write16Bit(HoldingRegistersTable, v)
+		}
+		if v, ok := test.AfterWrite[InputRegistersTable]; ok {
+			ms.Write16Bit(InputRegistersTable, v)
+		}
+	}
+
+	(&Message{Message: test.After}).PrintReportSlaveTest(reports)
 }
 
 func (ms *ModbusSlave) ActionHandler(request mbslave.Request, response mbslave.Response) {
@@ -92,32 +192,14 @@ func (ms *ModbusSlave) ActionHandler(request mbslave.Request, response mbslave.R
 		reports.Name = test.Name
 		if test.Skip != "" {
 			logrus.Warn(render(TestSKIP, reports))
-		}
-	}
-
-	if test != nil && test.Skip == "" {
-
-		(&Message{Message: test.Before}).PrintReportSlaveTest(reports)
-
-		if test.Lifetime != nil {
-			*test.Lifetime--
-		}
-
-		if test.BeforeWrite != nil {
-			if v, ok := test.BeforeWrite[CoilsTable]; ok {
-				ms.Write1Bit(CoilsTable, v)
-			}
-			if v, ok := test.BeforeWrite[DiscreteInputTable]; ok {
-				ms.Write1Bit(DiscreteInputTable, v)
-			}
-			if v, ok := test.BeforeWrite[HoldingRegistersTable]; ok {
-				ms.Write16Bit(HoldingRegistersTable, v)
-			}
-			if v, ok := test.BeforeWrite[InputRegistersTable]; ok {
-				ms.Write16Bit(InputRegistersTable, v)
+		} else {
+			if test.Lifetime != nil {
+				*test.Lifetime--
 			}
 		}
 	}
+
+	ms.before(test, reports)
 
 	switch ModbusFunction(request.GetFunction()) {
 	case ReadCoils:
@@ -137,6 +219,8 @@ func (ms *ModbusSlave) ActionHandler(request mbslave.Request, response mbslave.R
 	case WriteMultipleRegisters:
 		ms.DataModel.WriteMultipleRegisters(request, response)
 	}
+
+	ms.expected(test, reports)
 
 	if test != nil && test.Skip == "" {
 		if test.Expected != nil {
