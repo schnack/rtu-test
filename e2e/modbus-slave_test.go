@@ -3,6 +3,7 @@ package e2e
 import (
 	"github.com/schnack/gotest"
 	"github.com/schnack/mbslave"
+	"math"
 	"testing"
 )
 
@@ -22,7 +23,14 @@ func TestModbusSlave_Expect1Bit(t *testing.T) {
 		{Name: "param5", Address: "0x001c", Uint32: &param5},
 		{Name: "param6", Address: "0x003d", Uint64: &param6},
 	}
-	dataModel := mbslave.NewDefaultDataModel(0x01)
+
+	dataModel := mbslave.NewDefaultDataModel(&mbslave.Config{
+		SlaveId:              0x01,
+		SizeCoils:            math.MaxUint16,
+		SizeHoldingRegisters: math.MaxUint16,
+		SizeInputRegisters:   math.MaxUint16,
+		SizeDiscreteInputs:   math.MaxUint16,
+	})
 
 	for i, v := range []byte{
 		1,
@@ -118,7 +126,13 @@ func TestModbusSlave_Expect16Bit(t *testing.T) {
 		{Name: "param7", Address: "0x0009", Uint64: &param7},
 	}
 
-	dataModel := mbslave.NewDefaultDataModel(0x01)
+	dataModel := mbslave.NewDefaultDataModel(&mbslave.Config{
+		SlaveId:              0x01,
+		SizeCoils:            math.MaxUint16,
+		SizeHoldingRegisters: math.MaxUint16,
+		SizeInputRegisters:   math.MaxUint16,
+		SizeDiscreteInputs:   math.MaxUint16,
+	})
 
 	slave := ModbusSlave{DataModel: dataModel}
 
@@ -224,7 +238,13 @@ func TestModbusSlave_Write1Bit(t *testing.T) {
 			{Name: "param5", Address: "0x001c", Uint32: &param5},
 			{Name: "param6", Address: "0x003d", Uint64: &param6},
 		},
-		DataModel: mbslave.NewDefaultDataModel(0x01),
+		DataModel: mbslave.NewDefaultDataModel(&mbslave.Config{
+			SlaveId:              0x01,
+			SizeCoils:            math.MaxUint16,
+			SizeHoldingRegisters: math.MaxUint16,
+			SizeInputRegisters:   math.MaxUint16,
+			SizeDiscreteInputs:   math.MaxUint16,
+		}),
 	}
 
 	slave.Write1Bit(CoilsTable, slave.Coils)
@@ -265,7 +285,13 @@ func TestModbusSlave_Write16Bit(t *testing.T) {
 			{Name: "param6", Address: "0x0006", Uint32: &param6},
 			{Name: "param7", Address: "0x0009", Uint64: &param7},
 		},
-		DataModel: mbslave.NewDefaultDataModel(0x01),
+		DataModel: mbslave.NewDefaultDataModel(&mbslave.Config{
+			SlaveId:              0x01,
+			SizeCoils:            math.MaxUint16,
+			SizeHoldingRegisters: math.MaxUint16,
+			SizeInputRegisters:   math.MaxUint16,
+			SizeDiscreteInputs:   math.MaxUint16,
+		}),
 	}
 	slave.Write16Bit(HoldingRegistersTable, slave.HoldingRegisters)
 

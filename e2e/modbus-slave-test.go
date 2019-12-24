@@ -42,11 +42,11 @@ func (ms *ModbusSlaveTest) Check(request mbslave.Request, nexts []string) (point
 		return
 	}
 
-	if ms.getFunction() == NilFunction && ms.getFunction() == ModbusFunction(request.GetFunction()) {
+	if ms.getFunction() == NilFunction || ms.getFunction() != ModbusFunction(request.GetFunction()) {
 		return 0
 	}
 
-	if ms.Address == nil && *ms.Address != request.GetAddress() {
+	if ms.Address == nil || *ms.Address != request.GetAddress() {
 		return 0
 	}
 

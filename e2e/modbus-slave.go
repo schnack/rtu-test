@@ -2,9 +2,10 @@ package e2e
 
 import (
 	"encoding/binary"
-	"github.com/goburrow/serial"
 	"github.com/schnack/mbslave"
 	"github.com/sirupsen/logrus"
+	"math"
+	"strings"
 	"time"
 )
 
@@ -16,13 +17,13 @@ const (
 )
 
 type ModbusSlave struct {
-	SlaveId   uint8  `yaml:"slaveId"`
-	Port      string `yaml:"port"`
-	BoundRate int    `yaml:"boundRate"`
-	DataBits  int    `yaml:"dataBits"`
-	Parity    string `yaml:"parity"`
-	StopBits  int    `yaml:"stopBits"`
-	Timeout   string `yaml:"timeout"`
+	SlaveId        uint8  `yaml:"slaveId"`
+	Port           string `yaml:"port"`
+	BoundRate      int    `yaml:"boundRate"`
+	DataBits       int    `yaml:"dataBits"`
+	Parity         string `yaml:"parity"`
+	StopBits       int    `yaml:"stopBits"`
+	SilentInterval string `yaml:"silentInterval"`
 
 	Coils            []*Value `yaml:"coils"`
 	DiscreteInput    []*Value `yaml:"discreteInput"`
@@ -37,15 +38,41 @@ type ModbusSlave struct {
 }
 
 func (ms *ModbusSlave) getServer() *mbslave.Server {
-	ms.DataModel = mbslave.NewDefaultDataModel(ms.SlaveId)
-	transport := mbslave.NewRtuTransport(serial.Config{
-		Address:  ms.Port,
-		BaudRate: ms.BoundRate,
-		DataBits: ms.DataBits,
-		StopBits: ms.StopBits,
-		Parity:   ms.Parity,
-		Timeout:  parseDuration(ms.Timeout),
-	})
+	//# Parity: N - None, E - Even, O - Odd (default E)
+	parity := mbslave.EvenParity
+	switch strings.ToLower(ms.Parity) {
+	case "n":
+		parity = mbslave.NoParity
+	case "e":
+		parity = mbslave.EvenParity
+	case "o":
+		parity = mbslave.OddParity
+	}
+
+	stopBits := mbslave.TwoStopBits
+
+	switch ms.StopBits {
+	case 1:
+		stopBits = mbslave.OneStopBit
+	case 2:
+		stopBits = mbslave.TwoStopBits
+	}
+
+	config := &mbslave.Config{
+		Port:                 ms.Port,
+		BaudRate:             ms.BoundRate,
+		DataBits:             ms.DataBits,
+		Parity:               parity,
+		StopBits:             stopBits,
+		SilentInterval:       parseDuration(ms.SilentInterval),
+		SlaveId:              ms.SlaveId,
+		SizeDiscreteInputs:   math.MaxUint16,
+		SizeCoils:            math.MaxUint16,
+		SizeInputRegisters:   math.MaxUint16,
+		SizeHoldingRegisters: math.MaxUint16,
+	}
+	ms.DataModel = mbslave.NewDefaultDataModel(config)
+	transport := mbslave.NewRtuTransport(config)
 	s := mbslave.NewServer(transport, ms.DataModel)
 
 	ms.Write1Bit(CoilsTable, ms.Coils)
@@ -75,7 +102,14 @@ func (ms *ModbusSlave) autorun() {
 			continue
 		}
 		go func(t *ModbusSlaveTest) {
-			tiker := time.NewTicker(parseDuration(t.AutoRun))
+			autorun := strings.Split(t.AutoRun, "/")
+			delay := autorun[0]
+			timer := autorun[len(autorun)-1]
+			time.Sleep(parseDuration(delay))
+			tiker := time.NewTicker(parseDuration(timer))
+			reports := ReportSlaveTest{
+				Name: t.Name,
+			}
 			for _ = range tiker.C {
 				if t.Lifetime != nil {
 					if *t.Lifetime <= 0 {
@@ -84,6 +118,11 @@ func (ms *ModbusSlave) autorun() {
 					}
 					*t.Lifetime--
 				}
+
+				ms.before(t, reports)
+				ms.expected(t, reports)
+				ms.after(t, reports)
+
 			}
 		}(test)
 	}
@@ -118,7 +157,7 @@ func (ms *ModbusSlave) expected(test *ModbusSlaveTest, reports ReportSlaveTest) 
 		return
 	}
 
-	logrus.Warn(render(TestRUN, reports))
+	logrus.Warn(render(TestSlaveRUN, reports))
 
 	if v, ok := test.Expected[CoilsTable]; ok {
 		reports.ExpectedCoils, reports.Pass = ms.Expect1Bit(CoilsTable, v)
@@ -134,10 +173,10 @@ func (ms *ModbusSlave) expected(test *ModbusSlaveTest, reports ReportSlaveTest) 
 	}
 
 	if reports.Pass {
-		logrus.Warn(render(TestPASS, reports))
+		logrus.Warn(render(TestSlavePASS, reports))
 		(&Message{Message: test.Success}).PrintReportSlaveTest(reports)
 	} else {
-		logrus.Error(render(TestFAIL, reports))
+		logrus.Error(render(TestSlaveFAIL, reports))
 		(&Message{Message: test.Error}).PrintReportSlaveTest(reports)
 		if test.Fatal != "" {
 			logrus.Fatal(test.Fatal)
@@ -191,7 +230,7 @@ func (ms *ModbusSlave) ActionHandler(request mbslave.Request, response mbslave.R
 	if test != nil {
 		reports.Name = test.Name
 		if test.Skip != "" {
-			logrus.Warn(render(TestSKIP, reports))
+			logrus.Warn(render(TestSlaveSkip, reports))
 		} else {
 			if test.Lifetime != nil {
 				*test.Lifetime--
@@ -221,53 +260,9 @@ func (ms *ModbusSlave) ActionHandler(request mbslave.Request, response mbslave.R
 	}
 
 	ms.expected(test, reports)
+	ms.after(test, reports)
 
 	if test != nil && test.Skip == "" {
-		if test.Expected != nil {
-			logrus.Warn(render(TestRUN, reports))
-
-			if v, ok := test.Expected[CoilsTable]; ok {
-				reports.ExpectedCoils, reports.Pass = ms.Expect1Bit(CoilsTable, v)
-			}
-			if v, ok := test.Expected[DiscreteInputTable]; ok {
-				reports.ExpectedDiscreteInput, reports.Pass = ms.Expect1Bit(DiscreteInputTable, v)
-			}
-			if v, ok := test.Expected[HoldingRegistersTable]; ok {
-				reports.ExpectedHoldingRegisters, reports.Pass = ms.Expect16Bit(HoldingRegistersTable, v)
-			}
-			if v, ok := test.Expected[InputRegistersTable]; ok {
-				reports.ExpectedInputRegisters, reports.Pass = ms.Expect16Bit(InputRegistersTable, v)
-			}
-
-			if reports.Pass {
-				logrus.Warn(render(TestPASS, reports))
-				(&Message{Message: test.Success}).PrintReportSlaveTest(reports)
-			} else {
-				logrus.Error(render(TestFAIL, reports))
-				(&Message{Message: test.Error}).PrintReportSlaveTest(reports)
-				if test.Fatal != "" {
-					logrus.Fatal(test.Fatal)
-				}
-			}
-		}
-
-		if test.AfterWrite != nil {
-			if v, ok := test.AfterWrite[CoilsTable]; ok {
-				ms.Write1Bit(CoilsTable, v)
-			}
-			if v, ok := test.AfterWrite[DiscreteInputTable]; ok {
-				ms.Write1Bit(DiscreteInputTable, v)
-			}
-			if v, ok := test.AfterWrite[HoldingRegistersTable]; ok {
-				ms.Write16Bit(HoldingRegistersTable, v)
-			}
-			if v, ok := test.AfterWrite[InputRegistersTable]; ok {
-				ms.Write16Bit(InputRegistersTable, v)
-			}
-		}
-
-		(&Message{Message: test.After}).PrintReportSlaveTest(reports)
-
 		ms.currentTest = test
 		time.Sleep(parseDuration(test.TimeOut))
 	}

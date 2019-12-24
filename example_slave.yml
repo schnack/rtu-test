@@ -13,7 +13,7 @@ modbusSlave:
   dataBits: 8
   parity: N         # Parity: N - None, E - Even, O - Odd (default E)
   stopBits: 2
-  timeout: 20s
+  silentInterval: 50ms
 
   # Starting value
   coils:
@@ -53,8 +53,8 @@ modbusSlave:
       # Задержка перед ответом
       timeout: 2s
 
-      # Повторный запуск
-      autorun: 2s
+      # Повторный запуск "задержка старта"/"таймаут повтора"
+      autorun: 5s/2s
 
       # или команда
       function: write multiple registers
