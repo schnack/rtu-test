@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"github.com/sirupsen/logrus"
 	"os"
@@ -56,7 +57,7 @@ func main() {
 		}
 	}
 
-	d.RunTest()
+	d.RunTest(context.Background())
 	//
 	logrus.Exit(0)
 }

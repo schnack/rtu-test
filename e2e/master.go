@@ -1,6 +1,7 @@
 package e2e
 
 import (
+	"context"
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"go.bug.st/serial"
@@ -58,13 +59,16 @@ func (m *Master) getPort() (serial.Port, error) {
 	})
 }
 
-func (m *Master) Run(reports *ReportGroups) error {
+func (m *Master) Run(ctx context.Context, reports *ReportGroups) error {
 	// TODO Доработать этот функционал
 	port, err := m.getPort()
 	if err != nil {
 		return fmt.Errorf("port error %s", err)
 	}
 	defer port.Close()
+
+	// TODO Для передачи детям и переопределния
+	ctx = context.WithValue(ctx, "const", m.Const)
 
 	filterGroup := ""
 	filterTest := ""

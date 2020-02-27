@@ -1,6 +1,7 @@
 package e2e
 
 import (
+	"context"
 	"fmt"
 	"github.com/go-yaml/yaml"
 	"github.com/shiena/ansicolor"
@@ -34,6 +35,7 @@ type Device struct {
 	ExitMessage  Message       `yaml:"exitMessage"`
 	ModbusMaster *ModbusMaster `yaml:"modbusMaster"`
 	ModbusSlave  *ModbusSlave  `yaml:"modbusSlave"`
+	Master       *Master       `yaml:"master"`
 }
 
 func (d *Device) Load(s string) error {
@@ -49,7 +51,7 @@ func (d *Device) Load(s string) error {
 	return nil
 }
 
-func (d *Device) RunTest() {
+func (d *Device) RunTest(ctx context.Context) {
 	format := &logrus.TextFormatter{}
 
 	logrus.SetFormatter(format)
@@ -106,11 +108,20 @@ func (d *Device) RunTest() {
 		logrus.RegisterExitHandler(func() { d.ExitMessage.PrintReportMasterGroups(report) })
 
 		if err := d.ModbusMaster.Run(&report); err != nil {
-			logrus.Fatalf("Exit app master: %s", err)
+			logrus.Fatalf("Exit app modbus master: %s", err)
 		}
 	} else if d.ModbusSlave != nil {
 		if err := d.ModbusSlave.Run(); err != nil {
-			logrus.Fatalf("Exit app slave: %s", err)
+			logrus.Fatalf("Exit app modbus slave: %s", err)
+		}
+	} else if d.Master != nil {
+		report := ReportGroups{
+			Name:        d.Name,
+			Description: d.Description,
+		}
+		logrus.RegisterExitHandler(func() { d.ExitMessage.PrintReportMasterGroups(report) })
+		if err := d.Master.Run(ctx, &report); err != nil {
+			logrus.Fatalf("Exit app master: %s", err)
 		}
 	} else {
 		logrus.Fatal("configuration file not found")
