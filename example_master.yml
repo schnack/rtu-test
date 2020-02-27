@@ -13,8 +13,8 @@ master:
   port: /dev/ttyUSB0
   boundRate: 115200
   dataBits: 8
-  parity: N         # Parity: N - None, E - Even, O - Odd (default E)
-  stopBits: 2
+  parity: N         # Parity: N - None, E - Even, O - Odd (default N)
+  stopBits: 2       # 1 2, 15 = 1.5
   timeout: 20s
 
   filter:           # Default:TestName
@@ -44,6 +44,8 @@ master:
   # Обращение к значениям происходит с помощью len#write
   len:
     dateSize:
+      # Количество байт для определения размера
+      size: 1
       # считает длину с установленным staffing
       staffing: true
       data:
@@ -120,11 +122,8 @@ master:
             uint32: 2
 
         expected:
-          - name: no error
-            error:
-          - name: execution time
-            time: 1s
           - name: quantity
+            uint: 19
 
         success:
           message: "the message on successful completion of the test"

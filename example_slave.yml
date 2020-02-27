@@ -133,6 +133,7 @@ slave:
           - name: execution time
             time: 1s
           - name: quantity
+            uint16: 0xffff
 
         success: "the message on successful completion of the test"
         error: "the message about the failed test execution"
