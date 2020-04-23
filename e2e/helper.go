@@ -19,6 +19,7 @@ func render(tmpl string, data interface{}) string {
 	return buff.String()
 }
 
+// parseStringByte - Превращает текстовое представления байт в настоящие байты
 func parseStringByte(sb string) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	byteClear := strings.ReplaceAll(strings.ReplaceAll(sb, " ", ""), "0x", "")
@@ -58,7 +59,7 @@ func countBit(v []*Value, is16bit bool) (bits uint16) {
 			if bits%8 != 0 {
 				bits += 8 - bits%8
 			}
-			byteData := w.Write()
+			byteData := w.Write(binary.BigEndian)
 			bits += 8 * uint16(len(byteData))
 		}
 	}
@@ -93,72 +94,13 @@ func valueToByte(v []*Value) (data []byte) {
 				vByte = 0
 				i = 0
 			}
-			data = append(data, w.Write()...)
+			data = append(data, w.Write(binary.BigEndian)...)
 		}
 	}
 	if i != 0 {
 		data = append(data, vByte)
 		vByte = 0
 		i = 0
-	}
-	return
-}
-
-func valueToByte1(v []*Value, base int) (data []byte) {
-	var i int
-	var vByte uint8
-	var vByte16 []byte
-	switch base {
-	case 16:
-		vByte16 = make([]byte, 2)
-	case 32:
-		vByte16 = make([]byte, 4)
-	case 64:
-		vByte16 = make([]byte, 8)
-	default:
-		vByte16 = make([]byte, 1)
-	}
-	var ii = 0
-	for _, w := range v {
-		switch w.Type() {
-		case Bool:
-			if *w.Bool {
-				vByte = vByte | 1<<i
-			}
-			i++
-			if i > 7 {
-				vByte16[ii] = vByte
-				ii++
-				vByte16 = append(data, vByte)
-				vByte = 0
-				i = 0
-			}
-		case Int8, Uint8:
-			if i != 0 {
-				data = append(data, vByte)
-				vByte = 0
-				i = 0
-			}
-			data = append(data, w.Write()...)
-		default:
-			if i != 0 {
-				data = append(data, vByte)
-				vByte = 0
-				i = 0
-			}
-			if len(data)%2 != 0 {
-				data = append(data, 0)
-			}
-			data = append(data, w.Write()...)
-		}
-	}
-	if i != 0 {
-		data = append(data, vByte)
-		vByte = 0
-		i = 0
-	}
-	if len(data)%2 != 0 {
-		data = append(data, 0)
 	}
 	return
 }
@@ -187,7 +129,7 @@ func valueToByte16(v []*Value) (data []byte) {
 				vByte = 0
 				i = 0
 			}
-			data = append(data, w.Write()...)
+			data = append(data, w.Write(binary.BigEndian)...)
 		default:
 			if i != 0 {
 				data = append(data, vByte)
@@ -197,7 +139,7 @@ func valueToByte16(v []*Value) (data []byte) {
 			if len(data)%2 != 0 {
 				data = append(data, 0)
 			}
-			data = append(data, w.Write()...)
+			data = append(data, w.Write(binary.BigEndian)...)
 		}
 	}
 	if i != 0 {
@@ -211,6 +153,7 @@ func valueToByte16(v []*Value) (data []byte) {
 	return
 }
 
+// Получает таймер строкой и возвращает объект таймера
 func parseDuration(d string) time.Duration {
 	switch {
 	case d == "":

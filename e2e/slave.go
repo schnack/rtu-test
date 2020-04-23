@@ -1,0 +1,251 @@
+package e2e
+
+import (
+	"bufio"
+	"encoding/binary"
+	"github.com/sirupsen/logrus"
+	"strings"
+)
+
+type Slave struct {
+	Port           string `yaml:"port"`
+	BoundRate      int    `yaml:"boundRate"`
+	DataBits       int    `yaml:"dataBits"`
+	Parity         string `yaml:"parity"`
+	StopBits       int    `yaml:"stopBits"`
+	SilentInterval string `yaml:"silentInterval"`
+	ByteOrder      string `yaml:"byteOrder"`
+
+	Const       map[string][]string `yaml:"const"`
+	Staffing    *Staffing           `yaml:"staffing"`
+	MaxLen      int                 `yaml:"maxLen"`
+	Len         *Len                `yaml:"len"`
+	Crc         *Crc                `yaml:"crc"`
+	WriteFormat []string            `yaml:"writeFormat"`
+	ReadFormat  []string            `yaml:"readFormat"`
+	ErrorFormat []string            `yaml:"errorFormat"`
+
+	SlaveTest []SlaveTest `yaml:"test"`
+}
+
+// ParseReadFormat создает сплиттер для поиска фреймов в потоке данных rs
+func (s *Slave) ParseReadFormat() (start []byte, lenPosition, suffixLen int, end []byte) {
+	prefixLen := 0
+	// позволяет собирать стартовые байты
+	findStart := true
+	// Если суффикс сработал перед len то фаталка
+	suffixTrigger := false
+	for _, data := range s.ReadFormat {
+		// Если нет специальной вставки то определяем всю строку как стартовые байты
+		if strings.Contains(data, "#") {
+			// =======  Собирается хедер с фиксированной длиной переменные начинаются с _ ===========
+			// Должен прибавлять к переменной prefixLen
+			// ============================
+
+			// Длина данные позволяет определить длину фрейма без стоповых бит
+			// #len должен быть первым после констант или типов с фиксированной длиной
+			if strings.HasPrefix(data, "_len_#") {
+				if suffixTrigger {
+					logrus.Fatal("the suffix was used before _len_")
+				}
+				if s.Len == nil {
+					logrus.Fatal("Data len not found in config")
+				}
+				lenPosition += len(start) + prefixLen
+			}
+
+			if strings.Contains(data, "_#") {
+				suffixTrigger = true
+			}
+
+			// ======== Собирается суфикс с фиксированной длиной переменные заканчиваются на _ =============
+			if strings.HasPrefix(data, "crc_#") {
+				isSuffix := true
+				for _, data := range s.Len.Read {
+					if data == "crc#" {
+						isSuffix = false
+						break
+					}
+				}
+				if isSuffix {
+					suffixLen += s.Crc.Len()
+				}
+			}
+			// ===========================
+
+			// Отменяем дальнейшую сборку стартовых битов
+			findStart = false
+			// Если конец пакета не константа то пытаемся ориентироваться по длине пакета
+			end = []byte{}
+
+			continue
+		}
+		// Ищем стартовые байты в константах
+		if constanta, ok := s.Const[data]; ok {
+			for _, stringBytes := range constanta {
+				data, err := parseStringByte(stringBytes)
+				if err != nil {
+					logrus.Fatal(err)
+				}
+				if findStart {
+					start = append(start, data...)
+				} else {
+					end = append(end, data...)
+				}
+			}
+		} else {
+			logrus.Fatalf("Constant not found %s", constanta)
+		}
+
+	}
+
+	// Если не надйен шаблон начала пакета
+	if len(start) == 0 {
+		logrus.Fatal("Start byte not found")
+	}
+	// Если не найден шаблон конца пакета или хотябы длина
+	if lenPosition == 0 || len(end) == 0 {
+		logrus.Fatal("end byte or len not found")
+	}
+	return
+}
+
+func (s *Slave) Run() error {
+	return nil
+}
+
+//func (rt *RtuTransport) SilentInterval() (frameDelay time.Duration) {
+//	if rt.Config.SilentInterval.Nanoseconds() != 0 {
+//		frameDelay = rt.Config.SilentInterval
+//	} else if rt.BaudRate <= 0 || rt.BaudRate > 19200 {
+//		frameDelay = 1750 * time.Microsecond
+//	} else {
+//		frameDelay = time.Duration(35000000/rt.BaudRate) * time.Microsecond
+//	}
+//	return
+//}
+
+// GetSplit - Функция пытается собрать фрейм на основе данных из ReadFormat
+func (s *Slave) GetSplit(start []byte, lenPosition, suffixLen int, end []byte) bufio.SplitFunc {
+	return func(data []byte, atEOF bool) (int, []byte, error) {
+
+		positionEnd := 0
+		// Если мы можем определить длину пакета
+		if lenPosition > 0 {
+			if len(data) < lenPosition+s.Len.CountBytes {
+				// Если отсуствуют данные для чтения
+				if atEOF {
+					return 0, data[:0], bufio.ErrFinalToken
+				}
+				return 0, nil, nil
+			}
+			// определяем порядок байт
+			var order binary.ByteOrder = binary.BigEndian
+			if s.ByteOrder == "little" {
+				order = binary.LittleEndian
+			}
+			// TODO надо тестировать возможно ошибся в размерах
+			// Определяем длину
+			length := 0
+
+			if s.Len.Staffing {
+				// TODO тут нужно убить stafing byte перед определением длины
+			}
+			switch s.Len.CountBytes {
+			case 2:
+				length = int(order.Uint16(data[lenPosition : lenPosition+s.Len.CountBytes]))
+			case 4:
+				length = int(order.Uint32(data[lenPosition : lenPosition+s.Len.CountBytes]))
+			case 8:
+				length = int(order.Uint64(data[lenPosition : lenPosition+s.Len.CountBytes]))
+			default:
+				length = int(uint8(data[lenPosition]))
+			}
+
+			if len(data) < length+suffixLen+len(end) {
+				// Если отсуствуют данные для чтения
+				if atEOF {
+					return 0, data[:0], bufio.ErrFinalToken
+				}
+				return 0, nil, nil
+			}
+			positionEnd = lenPosition + length + suffixLen + 1
+		}
+
+		// Проверяем что в буфере достаточно данных для начала пакета
+		if len(data) < len(start)+len(end) {
+			// Если отсуствуют данные для чтения
+			if atEOF {
+				return 0, data[:0], bufio.ErrFinalToken
+			}
+			return 0, nil, nil
+		}
+
+		// Проверяем начало пакета
+		for i := range start {
+			if data[i] != start[i] {
+				// Если отсуствуют данные для чтения
+				if atEOF {
+					return 0, data[:0], bufio.ErrFinalToken
+				}
+				return i + 1, nil, nil
+			}
+		}
+
+		// Мы незнаем где точно должна быть финальная константа
+		if positionEnd == 0 {
+			// курсор end
+			pos := 0
+			for i := len(start); i < len(data) && i < s.MaxLen; i++ {
+				if data[i] == end[pos] {
+					// если есть совпадения то плюсуем
+					pos++
+				} else {
+					// если не совпало то возможно это данные -> двигаемся дальше
+					pos = 0
+				}
+				// нашли последний финальный хвост -> возвращаем фрейм
+				if pos == len(end) {
+					// Фрейм полностью собран
+					if atEOF {
+						return i, data[:i], bufio.ErrFinalToken
+					}
+					return i, data[:i], nil
+				}
+			}
+			// Если данные превысили верхнюю планку пакета
+			if len(data) > s.MaxLen {
+				// Если отсуствуют данные для чтения
+				if atEOF {
+					return 0, data[:0], bufio.ErrFinalToken
+				}
+				return 1, nil, nil
+			}
+			// Если отсуствуют данные для чтения
+			if atEOF {
+				return 0, data[:0], bufio.ErrFinalToken
+			}
+			// Пока не нашли конец пакета... ждем продолжения
+			return 0, nil, nil
+		} else {
+			// Знаем точное наступление end остается только сверить корректность end
+			for i := range end {
+				// Ошибка в окончании пытаемся сдвинуться на 1 байт дальше
+				if data[positionEnd+i] != end[i] {
+					// Если отсуствуют данные для чтения
+					if atEOF {
+						return 0, data[:0], bufio.ErrFinalToken
+					}
+					return 1, nil, nil
+				}
+			}
+
+			// Фрейм полностью собран
+			if atEOF {
+				return positionEnd + len(end), data[:positionEnd+len(end)], bufio.ErrFinalToken
+			}
+			return positionEnd + len(end), data[:positionEnd+len(end)], nil
+		}
+
+	}
+}

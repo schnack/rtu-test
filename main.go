@@ -28,20 +28,24 @@ func main() {
 		fileNames = append(fileNames, "test.yml")
 	}
 
+	// Загружаем конфигурацию
 	for _, fileName := range fileNames {
 		if err := d.Load(fileName); err != nil {
 			logrus.Fatal(err)
 		}
 	}
 
+	// Заменяем путь для вывода лога
 	if *logs != "" {
 		d.Log = *logs
 	}
 
+	// Заменяем уровень лога
 	if *logLvl != "" {
 		d.LogLvl = *logLvl
 	}
 
+	// Заменяем comport
 	if *comport != "" {
 		if d.ModbusMaster != nil {
 			d.ModbusMaster.Port = *comport
@@ -51,12 +55,14 @@ func main() {
 
 	}
 
+	// Заменяем фильтр
 	if *filter != "" {
 		if d.ModbusMaster != nil {
 			d.ModbusMaster.Filter = *filter
 		}
 	}
 
+	// Запускаем тесты
 	d.RunTest(context.Background())
 	//
 	logrus.Exit(0)

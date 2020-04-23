@@ -19,6 +19,8 @@ master:
 
   filter:           # Default:TestName
 
+  # Порядок байт
+  byteOrder: "big-endian" # little-endian
 
   # Не изменяемые параметры можно обращаться просто start
   const:
@@ -56,8 +58,6 @@ master:
     write:
       # Алгоритм crc
       algorithm: mod256
-      # Экранировать данные staffing байтом перед подсчетом
-      staffing: true
       data:
         - addressMaster
         - addressSlave

@@ -14,6 +14,8 @@ slave:
   stopBits: 2
   silentInterval: 50ms
 
+  # Порядок байт
+  byteOrder: "big" # little
 
   # Не изменяемые параметры можно обращаться просто start
   const:
@@ -24,9 +26,9 @@ slave:
       - 0xFE
       - 0xFC
     addressMaster:
-      -0x01
+      - 0x01
     addressSlave:
-      -0x02
+      - 0x02
 
   # Параметры staffing байта и константы которые подлежат экранированию
   staffing:
@@ -36,43 +38,50 @@ slave:
       - start
       - stop
 
+  maxLen: 255
   # Обращение к значениям происходит с помощью len#write
   len:
-    dateSize:
-      # считает длину с установленным staffing
-      staffing: true
-      data:
-        - test#write
+    # считает длину с установленным staffing
+    staffing: true
+    # Длина длины в байтах
+    coundBytes: 1
+    read:
+      - test#expected
+    write:
+      - test#writed
+    error:
+      - test#error
 
   # Обращение к значениям происходит с помощью crc#write
   crc:
-    write:
-      # Алгоритм crc
-      algorithm: mod256
-      # Экранировать данные staffing байтом перед подсчетом
-      staffing: true
-      data:
-        - addressMaster
-        - addressSlave
-        - len#dateSize
-        - test#write
+    # Алгоритм crc
+    algorithm: mod256
+    # Экранировать данные staffing байтом перед подсчетом не влияет на длину
+    staffing: true
     read:
-      algorithm: mod256
-      staffing: true
-      data:
-        - addressMaster
-        - addressSlave
-        - len#dateSize
-        - test#write
+      - addressSlave
+      - addressMaster
+      - _len_#
+      - test_#
+    write:
+      - addressMaster
+      - addressSlave
+      - _len_#
+      - test_#
+    error:
+      - addressMaster
+      - addressSlave
+      - _len_#
+      - test_#
 
   # Тут происходит не явное обработка staffing. Поля что входят в pattern не экранируются
   writeFormat:
     - start
     - addressMaster
     - addressSlave
-    - len#dateSize
-    - test#write
-    - crc#write
+    - _len_#
+    - test_#
+    - crc_#
     - stop
 
   # Тут происходит не явное удаление staffing. Поля что входят в pattern не преобразуются
@@ -80,9 +89,9 @@ slave:
     - start
     - addressMaster
     - addressSlave
-    - len#dateSize
-    - test#expected
-    - crc#read
+    - _len_#
+    - test_#
+    - crc_#
     - stop
 
   # Тут происходит не явное удаление staffing. Поля что входят в pattern не преобразуются
@@ -90,15 +99,16 @@ slave:
     - start
     - addressMaster
     - addressSlave
-    - len#dateSize
-    - test#expected
-    - crc#read
+    - _len_#
+    - test_#
+    - crc_#
     - stop
 
   tests:
 
     Default:
       - name: TestName  # Test Name
+        skip: пока пропустить
 
         # Сообщение перед тестом
         before: "the message after the test"
@@ -107,7 +117,7 @@ slave:
         next:
           - TestName
 
-        skip: пока пропустить
+
         fatal: exit
 
         # Количество запусков
@@ -116,9 +126,11 @@ slave:
         # Задержка перед ответом
         timeout: 2s
 
-        # Проверка что запрос пришел действительно для этого теста
+        # Определяет что запрос пришел для этого теста. Подставляется в поле test#expected
         pattern:
           - name: "param1"
+            # начиная с какого бита это значение по умолчанию 0
+            address: 0x00
             uint8: 8
 
         write:
@@ -126,6 +138,12 @@ slave:
             uint16: 1
           - name: "param2"
             uint32: 2
+
+        writeError:
+          - name: "param1"
+              uint16: 1
+          - name: "param2"
+              uint32: 2
 
         expected:
           - name: no error

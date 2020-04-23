@@ -35,9 +35,11 @@ type Device struct {
 	ExitMessage  Message       `yaml:"exitMessage"`
 	ModbusMaster *ModbusMaster `yaml:"modbusMaster"`
 	ModbusSlave  *ModbusSlave  `yaml:"modbusSlave"`
+	Slave        *Slave        `yaml:"slave"`
 	Master       *Master       `yaml:"master"`
 }
 
+// Load - загружает конфигурацию лога
 func (d *Device) Load(s string) error {
 	file, err := os.Open(s)
 	if err != nil {
@@ -55,7 +57,7 @@ func (d *Device) RunTest(ctx context.Context) {
 	format := &logrus.TextFormatter{}
 
 	logrus.SetFormatter(format)
-
+	// Настраиваем уровень логирования
 	switch d.LogLvl {
 	case "trace":
 		logrus.SetLevel(logrus.TraceLevel)
@@ -100,30 +102,30 @@ func (d *Device) RunTest(ctx context.Context) {
 		logrus.SetOutput(file)
 	}
 
-	if d.ModbusMaster != nil {
+	switch {
+	case d.ModbusMaster != nil:
 		report := ReportGroups{
 			Name:        d.Name,
 			Description: d.Description,
 		}
+		// Вывод отчета в конце выполнения программы
 		logrus.RegisterExitHandler(func() { d.ExitMessage.PrintReportMasterGroups(report) })
 
+		// Запуск тестов
 		if err := d.ModbusMaster.Run(&report); err != nil {
 			logrus.Fatalf("Exit app modbus master: %s", err)
 		}
-	} else if d.ModbusSlave != nil {
+	case d.ModbusSlave != nil:
 		if err := d.ModbusSlave.Run(); err != nil {
 			logrus.Fatalf("Exit app modbus slave: %s", err)
 		}
-	} else if d.Master != nil {
-		report := ReportGroups{
-			Name:        d.Name,
-			Description: d.Description,
+	case d.Slave != nil:
+		if err := d.Slave.Run(); err != nil {
+			logrus.Fatalf("Exit app slave: %s", err)
 		}
-		logrus.RegisterExitHandler(func() { d.ExitMessage.PrintReportMasterGroups(report) })
-		if err := d.Master.Run(ctx, &report); err != nil {
-			logrus.Fatalf("Exit app master: %s", err)
-		}
-	} else {
+	case d.Master != nil:
+		// TODO
+	default:
 		logrus.Fatal("configuration file not found")
 	}
 

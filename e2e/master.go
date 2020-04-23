@@ -16,6 +16,7 @@ type Master struct {
 	StopBits  int    `yaml:"stopBits"`
 	Timeout   string `yaml:"timeout"`
 	Filter    string `yaml:"filter"`
+	ByteOrder string `yaml:"byteOrder"`
 
 	Const       map[string][]string `yaml:"const"`
 	Staffing    *Staffing           `yaml:"staffing"`
@@ -90,7 +91,7 @@ func (m *Master) Run(ctx context.Context, reports *ReportGroups) error {
 			if filterTest != "" && filterTest != "all" && filterTest != test.Name {
 				continue
 			}
-			report.Tests = append(report.Tests, test.Run(port))
+			//report.Tests = append(report.Tests, test.Run(port))
 			// При необходимости закрываем порт
 			if test.Disconnect {
 				port.Close()

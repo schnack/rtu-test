@@ -347,7 +347,7 @@ func (ms *ModbusSlave) Expect16Bit(table string, v []*Value) (reports []ReportEx
 			case Bool:
 			case Uint8, Int8:
 			case String, Byte:
-				if len(v[i].Write()) == 1 && countBit%8 != 0 {
+				if len(v[i].Write(binary.BigEndian)) == 1 && countBit%8 != 0 {
 					countBit += 8 - (countBit % 8)
 				} else {
 					address++
@@ -412,7 +412,7 @@ func (ms *ModbusSlave) Expect16Bit(table string, v []*Value) (reports []ReportEx
 				countBit = 0
 			}
 		case String, Byte:
-			if len(v[i].Write()) == 1 {
+			if len(v[i].Write(binary.BigEndian)) == 1 {
 				if countBit%8 != 0 {
 					countBit += 8 - (countBit % 8)
 				}
@@ -465,7 +465,7 @@ func (ms *ModbusSlave) Write1Bit(table string, v []*Value) {
 			address = binary.BigEndian.Uint16(rawAddress)
 		}
 
-		data := v[i].Write()
+		data := v[i].Write(binary.BigEndian)
 		for _, b := range data {
 			if countRegisters <= int(address) {
 				logrus.Fatal("ModBus tables overflow")
@@ -549,7 +549,7 @@ func (ms *ModbusSlave) Write16Bit(table string, v []*Value) {
 			vBytes |= 1 << current
 			current++
 		default:
-			data := v[i].Write()
+			data := v[i].Write(binary.BigEndian)
 			if current < 8 && current != 0 {
 				current += 8 - (current % 8)
 			}

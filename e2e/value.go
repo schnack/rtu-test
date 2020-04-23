@@ -128,13 +128,15 @@ type Value struct {
 
 	Byte *string `yaml:"byte"`
 
-	// Особый тип
-	Time  *string `yaml:"time"`
+	// Особый Максимальное время выполнения
+	Time *string `yaml:"time"`
+	// Проверяем ошибку
 	Error *string `yaml:"error"`
 }
 
 const FormatRange = "%s..%s"
 
+// LengthBit - Длина значения в байтах
 func (v *Value) LengthBit() int {
 	switch v.Type() {
 	case Bool:
@@ -148,14 +150,21 @@ func (v *Value) LengthBit() int {
 	case Int64, Int64Range, Uint64, Uint64Range, Float64, Float64Range:
 		return 64
 	case String:
-		return len(v.Write()) * 8
+		return len(v.Write(binary.BigEndian)) * 8
 	case Byte:
-		return len(v.Write()) * 8
+		return len(v.Write(binary.BigEndian)) * 8
 	default:
 		return 0
 	}
 }
 
+// cursor - Используется для отслеживания положения бита при проверки булевых значений
+// currentBit - текущий бит в массиве байтов
+// bitSize - размер значения
+// basicBitSize - размер исходного значения
+// startBit - индекс массива байтов
+// endBit - конечный индекс массива байтов
+// offsetBit - смещение в битах
 func (v *Value) cursor(currentBit, bitSize, basicBitSize int, byteOrder binary.ByteOrder) (startBit, endBit, offsetBit int) {
 	if currentBit%bitSize != 0 {
 		currentBit += bitSize - (currentBit % bitSize)
@@ -184,11 +193,12 @@ func (v *Value) cursor(currentBit, bitSize, basicBitSize int, byteOrder binary.B
 	return
 }
 
+// Check - Осуществляет проверку данных
 // rawBite - []byte полученные от устройства
 // rawTime - время выполнения команды
 // rawError - текст ошибки
 // currentBit - курсор бита
-// minBitSize - размер данных хранимых в табличке модбас 8 или 16
+// minBitSize - размер данных хранимых в табличке модбас 8 до 64 (дополняет нулями если тип например bool)
 // orderByte - порядок байт
 func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, currentBit int, minBitSize int, byteOrder binary.ByteOrder) (offsetBit int, report ReportExpected) {
 	report.Name = v.Name
@@ -887,9 +897,10 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 	return
 }
 
-func (v *Value) ReportWrite() ReportWrite {
+// ReportWrite - возвращает отчет о записанных данных
+func (v *Value) ReportWrite(byteOrder binary.ByteOrder) ReportWrite {
 	report := ReportWrite{Name: v.Name, Type: v.Type().String()}
-	b := v.Write()
+	b := v.Write(byteOrder)
 	switch v.Type() {
 	case Int8:
 		report.Data = fmt.Sprintf("%d", *v.Int8)
@@ -966,58 +977,59 @@ func (v *Value) ReportWrite() ReportWrite {
 	return report
 }
 
-func (v *Value) Write() (b []byte) {
+// Write - Возвращает значение в байтах
+func (v *Value) Write(byteOrder binary.ByteOrder) (b []byte) {
 
 	buf := new(bytes.Buffer)
 	switch v.Type() {
 	case Int8:
-		if err := binary.Write(buf, binary.BigEndian, v.Int8); err != nil {
+		if err := binary.Write(buf, byteOrder, v.Int8); err != nil {
 			logrus.Fatal(err)
 		}
 	case Int16:
-		if err := binary.Write(buf, binary.BigEndian, v.Int16); err != nil {
+		if err := binary.Write(buf, byteOrder, v.Int16); err != nil {
 			logrus.Fatal(err)
 		}
 	case Int32:
-		if err := binary.Write(buf, binary.BigEndian, v.Int32); err != nil {
+		if err := binary.Write(buf, byteOrder, v.Int32); err != nil {
 			logrus.Fatal(err)
 		}
 	case Int64:
-		if err := binary.Write(buf, binary.BigEndian, v.Int64); err != nil {
+		if err := binary.Write(buf, byteOrder, v.Int64); err != nil {
 			logrus.Fatal(err)
 		}
 	case Uint8:
-		if err := binary.Write(buf, binary.BigEndian, v.Uint8); err != nil {
+		if err := binary.Write(buf, byteOrder, v.Uint8); err != nil {
 			logrus.Fatal(err)
 		}
 
 	case Uint16:
-		if err := binary.Write(buf, binary.BigEndian, v.Uint16); err != nil {
+		if err := binary.Write(buf, byteOrder, v.Uint16); err != nil {
 			logrus.Fatal(err)
 		}
 
 	case Uint32:
-		if err := binary.Write(buf, binary.BigEndian, v.Uint32); err != nil {
+		if err := binary.Write(buf, byteOrder, v.Uint32); err != nil {
 			logrus.Fatal(err)
 		}
 
 	case Uint64:
-		if err := binary.Write(buf, binary.BigEndian, v.Uint64); err != nil {
+		if err := binary.Write(buf, byteOrder, v.Uint64); err != nil {
 			logrus.Fatal(err)
 		}
 
 	case Float32:
-		if err := binary.Write(buf, binary.BigEndian, v.Float32); err != nil {
+		if err := binary.Write(buf, byteOrder, v.Float32); err != nil {
 			logrus.Fatal(err)
 		}
 
 	case Float64:
-		if err := binary.Write(buf, binary.BigEndian, v.Float64); err != nil {
+		if err := binary.Write(buf, byteOrder, v.Float64); err != nil {
 			logrus.Fatal(err)
 		}
 
 	case Bool:
-		if err := binary.Write(buf, binary.BigEndian, v.Bool); err != nil {
+		if err := binary.Write(buf, byteOrder, v.Bool); err != nil {
 			logrus.Fatal(err)
 		}
 
@@ -1034,6 +1046,7 @@ func (v *Value) Write() (b []byte) {
 	return buf.Bytes()
 }
 
+/// Type - возвращает тип текущего значения
 func (v *Value) Type() TypeValue {
 	switch {
 	case v.Int8 != nil:

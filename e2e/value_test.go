@@ -1,19 +1,43 @@
 package e2e
 
 import (
-	binary2 "encoding/binary"
+	"encoding/binary"
 	"fmt"
 	"github.com/schnack/gotest"
+	"github.com/stretchr/testify/suite"
 	"testing"
 	"time"
 )
+
+func TestValue(t *testing.T) {
+	suite.Run(t, new(ValueTestSuit))
+}
+
+type ValueTestSuit struct {
+	suite.Suite
+}
+
+func (s *ValueTestSuit) TestCursor() {
+	v := Value{}
+
+	start, end, offset := v.cursor(0, 1, 16, binary.LittleEndian)
+	s.Equal(0, start)
+	s.Equal(1, end)
+	s.Equal(1, offset)
+
+	start, end, offset = v.cursor(0, 1, 64, binary.BigEndian)
+	s.Equal(7, start)
+	s.Equal(8, end)
+	s.Equal(1, offset)
+
+}
 
 func TestValue_CheckTime(t *testing.T) {
 	var param string = "2ms"
 	v := Value{Name: "Test", Time: &param}
 	raw := []byte{0x01, 0x02}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 
 	if err := gotest.Expect(offset).Eq(0); err != nil {
 		t.Error(err)
@@ -46,7 +70,7 @@ func TestValue_CheckTime(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Nanosecond, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Nanosecond, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(0); err != nil {
 		t.Error(err)
 	}
@@ -63,7 +87,7 @@ func TestValue_CheckError(t *testing.T) {
 	v := Value{Name: "Test", Error: &param}
 	raw := []byte{}
 
-	offset, report := v.Check(raw, time.Second, "test", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "test", 0, 8, binary.BigEndian)
 
 	if err := gotest.Expect(offset).Eq(0); err != nil {
 		t.Error(err)
@@ -96,7 +120,7 @@ func TestValue_CheckError(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Nanosecond, "error", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Nanosecond, "error", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(0); err != nil {
 		t.Error(err)
 	}
@@ -113,7 +137,7 @@ func TestValue_CheckInt8(t *testing.T) {
 	v := Value{Name: "Test", Int8: &param}
 	raw := []byte{0x01, 0x02}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 
 	if err := gotest.Expect(offset).Eq(8); err != nil {
 		t.Error(err)
@@ -146,7 +170,7 @@ func TestValue_CheckInt8(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -164,7 +188,7 @@ func TestValue_CheckInt8Range(t *testing.T) {
 	v := Value{Name: "Test", MinInt8: &paramMin, MaxInt8: &paramMax}
 	raw := []byte{0x01, 0x02, 0x03, 0x04, 0x05}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(8); err != nil {
 		t.Error(err)
 	}
@@ -196,7 +220,7 @@ func TestValue_CheckInt8Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -207,7 +231,7 @@ func TestValue_CheckInt8Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(24); err != nil {
 		t.Error(err)
 	}
@@ -218,7 +242,7 @@ func TestValue_CheckInt8Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -229,7 +253,7 @@ func TestValue_CheckInt8Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(40); err != nil {
 		t.Error(err)
 	}
@@ -246,7 +270,7 @@ func TestValue_CheckInt8Min(t *testing.T) {
 	v := Value{Name: "Test", MinInt8: &paramMin}
 	raw := []byte{0x01, 0x02, 0x03}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(8); err != nil {
 		t.Error(err)
 	}
@@ -278,7 +302,7 @@ func TestValue_CheckInt8Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -289,7 +313,7 @@ func TestValue_CheckInt8Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(24); err != nil {
 		t.Error(err)
 	}
@@ -306,7 +330,7 @@ func TestValue_CheckInt8Max(t *testing.T) {
 	v := Value{Name: "Test", MaxInt8: &paramMax}
 	raw := []byte{0x01, 0x02, 0x03}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(8); err != nil {
 		t.Error(err)
 	}
@@ -338,7 +362,7 @@ func TestValue_CheckInt8Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -349,7 +373,7 @@ func TestValue_CheckInt8Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(24); err != nil {
 		t.Error(err)
 	}
@@ -368,7 +392,7 @@ func TestValue_CheckInt16(t *testing.T) {
 		0x00, 0x01,
 		0x00, 0x02}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
@@ -401,7 +425,7 @@ func TestValue_CheckInt16(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -424,7 +448,7 @@ func TestValue_CheckInt16Range(t *testing.T) {
 		0, 0x04,
 		0, 0x05}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -456,7 +480,7 @@ func TestValue_CheckInt16Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -467,7 +491,7 @@ func TestValue_CheckInt16Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(48); err != nil {
 		t.Error(err)
 	}
@@ -478,7 +502,7 @@ func TestValue_CheckInt16Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -489,7 +513,7 @@ func TestValue_CheckInt16Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(80); err != nil {
 		t.Error(err)
 	}
@@ -509,7 +533,7 @@ func TestValue_CheckInt16Min(t *testing.T) {
 		0, 0x02,
 		0, 0x03}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -541,7 +565,7 @@ func TestValue_CheckInt16Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -552,7 +576,7 @@ func TestValue_CheckInt16Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(48); err != nil {
 		t.Error(err)
 	}
@@ -572,7 +596,7 @@ func TestValue_CheckInt16Max(t *testing.T) {
 		0, 0x02,
 		0, 0x03}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -604,7 +628,7 @@ func TestValue_CheckInt16Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -615,7 +639,7 @@ func TestValue_CheckInt16Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(48); err != nil {
 		t.Error(err)
 	}
@@ -634,7 +658,7 @@ func TestValue_CheckInt32(t *testing.T) {
 		0x00, 0x00, 0x00, 0x01,
 		0x00, 0x00, 0x00, 0x02}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
@@ -667,7 +691,7 @@ func TestValue_CheckInt32(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -691,7 +715,7 @@ func TestValue_CheckInt32Range(t *testing.T) {
 		0, 0, 0, 5,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -723,7 +747,7 @@ func TestValue_CheckInt32Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -734,7 +758,7 @@ func TestValue_CheckInt32Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(96); err != nil {
 		t.Error(err)
 	}
@@ -745,7 +769,7 @@ func TestValue_CheckInt32Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
@@ -756,7 +780,7 @@ func TestValue_CheckInt32Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(160); err != nil {
 		t.Error(err)
 	}
@@ -777,7 +801,7 @@ func TestValue_CheckInt32Min(t *testing.T) {
 		0, 0, 0, 3,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -809,7 +833,7 @@ func TestValue_CheckInt32Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -820,7 +844,7 @@ func TestValue_CheckInt32Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(96); err != nil {
 		t.Error(err)
 	}
@@ -841,7 +865,7 @@ func TestValue_CheckInt32Max(t *testing.T) {
 		0, 0, 0, 3,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -873,7 +897,7 @@ func TestValue_CheckInt32Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -884,7 +908,7 @@ func TestValue_CheckInt32Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(96); err != nil {
 		t.Error(err)
 	}
@@ -904,7 +928,7 @@ func TestValue_CheckInt64(t *testing.T) {
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
@@ -937,7 +961,7 @@ func TestValue_CheckInt64(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
@@ -961,7 +985,7 @@ func TestValue_CheckInt64Range(t *testing.T) {
 		0, 0, 0, 0, 0, 0, 0, 5,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -993,7 +1017,7 @@ func TestValue_CheckInt64Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
@@ -1004,7 +1028,7 @@ func TestValue_CheckInt64Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(192); err != nil {
 		t.Error(err)
 	}
@@ -1015,7 +1039,7 @@ func TestValue_CheckInt64Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(256); err != nil {
 		t.Error(err)
 	}
@@ -1026,7 +1050,7 @@ func TestValue_CheckInt64Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(320); err != nil {
 		t.Error(err)
 	}
@@ -1047,7 +1071,7 @@ func TestValue_CheckInt64Min(t *testing.T) {
 		0, 0, 0, 0, 0, 0, 0, 3,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -1079,7 +1103,7 @@ func TestValue_CheckInt64Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
@@ -1090,7 +1114,7 @@ func TestValue_CheckInt64Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(192); err != nil {
 		t.Error(err)
 	}
@@ -1111,7 +1135,7 @@ func TestValue_CheckInt64Max(t *testing.T) {
 		0, 0, 0, 0, 0, 0, 0, 3,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -1143,7 +1167,7 @@ func TestValue_CheckInt64Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
@@ -1154,7 +1178,7 @@ func TestValue_CheckInt64Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(192); err != nil {
 		t.Error(err)
 	}
@@ -1171,7 +1195,7 @@ func TestValue_CheckUint8(t *testing.T) {
 	v := Value{Name: "Test", Uint8: &param}
 	raw := []byte{0x01, 0x02}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 
 	if err := gotest.Expect(offset).Eq(8); err != nil {
 		t.Error(err)
@@ -1204,7 +1228,7 @@ func TestValue_CheckUint8(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -1222,7 +1246,7 @@ func TestValue_CheckUint8Range(t *testing.T) {
 	v := Value{Name: "Test", MinUint8: &paramMin, MaxUint8: &paramMax}
 	raw := []byte{0x01, 0x02, 0x03, 0x04, 0x05}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(8); err != nil {
 		t.Error(err)
 	}
@@ -1254,7 +1278,7 @@ func TestValue_CheckUint8Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -1265,7 +1289,7 @@ func TestValue_CheckUint8Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(24); err != nil {
 		t.Error(err)
 	}
@@ -1276,7 +1300,7 @@ func TestValue_CheckUint8Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -1287,7 +1311,7 @@ func TestValue_CheckUint8Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(40); err != nil {
 		t.Error(err)
 	}
@@ -1304,7 +1328,7 @@ func TestValue_CheckUint8Min(t *testing.T) {
 	v := Value{Name: "Test", MinUint8: &paramMin}
 	raw := []byte{0x01, 0x02, 0x03}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(8); err != nil {
 		t.Error(err)
 	}
@@ -1336,7 +1360,7 @@ func TestValue_CheckUint8Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -1347,7 +1371,7 @@ func TestValue_CheckUint8Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(24); err != nil {
 		t.Error(err)
 	}
@@ -1364,7 +1388,7 @@ func TestValue_CheckUint8Max(t *testing.T) {
 	v := Value{Name: "Test", MaxUint8: &paramMax}
 	raw := []byte{0x01, 0x02, 0x03}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(8); err != nil {
 		t.Error(err)
 	}
@@ -1396,7 +1420,7 @@ func TestValue_CheckUint8Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -1407,7 +1431,7 @@ func TestValue_CheckUint8Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(24); err != nil {
 		t.Error(err)
 	}
@@ -1424,7 +1448,7 @@ func TestValue_CheckUint16(t *testing.T) {
 	v := Value{Name: "Test", Uint16: &param}
 	raw := []byte{0x00, 0x01, 0x00, 0x02}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
@@ -1457,7 +1481,7 @@ func TestValue_CheckUint16(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -1480,7 +1504,7 @@ func TestValue_CheckUint16Range(t *testing.T) {
 		0, 0x04,
 		0, 0x05}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -1512,7 +1536,7 @@ func TestValue_CheckUint16Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -1523,7 +1547,7 @@ func TestValue_CheckUint16Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(48); err != nil {
 		t.Error(err)
 	}
@@ -1534,7 +1558,7 @@ func TestValue_CheckUint16Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -1545,7 +1569,7 @@ func TestValue_CheckUint16Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(80); err != nil {
 		t.Error(err)
 	}
@@ -1565,7 +1589,7 @@ func TestValue_CheckUint16Min(t *testing.T) {
 		0, 0x02,
 		0, 0x03}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -1597,7 +1621,7 @@ func TestValue_CheckUint16Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -1608,7 +1632,7 @@ func TestValue_CheckUint16Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(48); err != nil {
 		t.Error(err)
 	}
@@ -1628,7 +1652,7 @@ func TestValue_CheckUint16Max(t *testing.T) {
 		0, 0x02,
 		0, 0x03}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(16); err != nil {
 		t.Error(err)
 	}
@@ -1660,7 +1684,7 @@ func TestValue_CheckUint16Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -1671,7 +1695,7 @@ func TestValue_CheckUint16Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(48); err != nil {
 		t.Error(err)
 	}
@@ -1690,7 +1714,7 @@ func TestValue_CheckUint32(t *testing.T) {
 		0x00, 0x00, 0x00, 0x01,
 		0x00, 0x00, 0x00, 0x02}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
@@ -1723,7 +1747,7 @@ func TestValue_CheckUint32(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -1747,7 +1771,7 @@ func TestValue_CheckUint32Range(t *testing.T) {
 		0, 0, 0, 5,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -1779,7 +1803,7 @@ func TestValue_CheckUint32Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -1790,7 +1814,7 @@ func TestValue_CheckUint32Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(96); err != nil {
 		t.Error(err)
 	}
@@ -1801,7 +1825,7 @@ func TestValue_CheckUint32Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
@@ -1812,7 +1836,7 @@ func TestValue_CheckUint32Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(160); err != nil {
 		t.Error(err)
 	}
@@ -1833,7 +1857,7 @@ func TestValue_CheckUint32Min(t *testing.T) {
 		0, 0, 0, 3,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -1865,7 +1889,7 @@ func TestValue_CheckUint32Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -1876,7 +1900,7 @@ func TestValue_CheckUint32Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(96); err != nil {
 		t.Error(err)
 	}
@@ -1897,7 +1921,7 @@ func TestValue_CheckUint32Max(t *testing.T) {
 		0, 0, 0, 3,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -1929,7 +1953,7 @@ func TestValue_CheckUint32Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -1940,7 +1964,7 @@ func TestValue_CheckUint32Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(96); err != nil {
 		t.Error(err)
 	}
@@ -1960,7 +1984,7 @@ func TestValue_CheckUint64(t *testing.T) {
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
@@ -1993,7 +2017,7 @@ func TestValue_CheckUint64(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
@@ -2017,7 +2041,7 @@ func TestValue_CheckUint64Range(t *testing.T) {
 		0, 0, 0, 0, 0, 0, 0, 5,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -2049,7 +2073,7 @@ func TestValue_CheckUint64Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
@@ -2060,7 +2084,7 @@ func TestValue_CheckUint64Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(192); err != nil {
 		t.Error(err)
 	}
@@ -2071,7 +2095,7 @@ func TestValue_CheckUint64Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(256); err != nil {
 		t.Error(err)
 	}
@@ -2082,7 +2106,7 @@ func TestValue_CheckUint64Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(320); err != nil {
 		t.Error(err)
 	}
@@ -2103,7 +2127,7 @@ func TestValue_CheckUint64Min(t *testing.T) {
 		0, 0, 0, 0, 0, 0, 0, 3,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -2135,7 +2159,7 @@ func TestValue_CheckUint64Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
@@ -2146,7 +2170,7 @@ func TestValue_CheckUint64Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(192); err != nil {
 		t.Error(err)
 	}
@@ -2167,7 +2191,7 @@ func TestValue_CheckUint64Max(t *testing.T) {
 		0, 0, 0, 0, 0, 0, 0, 3,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -2199,7 +2223,7 @@ func TestValue_CheckUint64Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
@@ -2210,7 +2234,7 @@ func TestValue_CheckUint64Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(192); err != nil {
 		t.Error(err)
 	}
@@ -2230,7 +2254,7 @@ func TestValue_CheckFloat32(t *testing.T) {
 		0x40, 0x19, 0x99, 0x9A,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
@@ -2263,7 +2287,7 @@ func TestValue_CheckFloat32(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -2287,7 +2311,7 @@ func TestValue_CheckFloat32Range(t *testing.T) {
 		0x40, 0x20, 0x00, 0x00,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -2319,7 +2343,7 @@ func TestValue_CheckFloat32Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -2330,7 +2354,7 @@ func TestValue_CheckFloat32Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(96); err != nil {
 		t.Error(err)
 	}
@@ -2341,7 +2365,7 @@ func TestValue_CheckFloat32Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
@@ -2352,7 +2376,7 @@ func TestValue_CheckFloat32Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(160); err != nil {
 		t.Error(err)
 	}
@@ -2373,7 +2397,7 @@ func TestValue_CheckFloat32Min(t *testing.T) {
 		0x40, 0x13, 0x33, 0x33,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -2405,7 +2429,7 @@ func TestValue_CheckFloat32Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -2416,7 +2440,7 @@ func TestValue_CheckFloat32Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(96); err != nil {
 		t.Error(err)
 	}
@@ -2437,7 +2461,7 @@ func TestValue_CheckFloat32Max(t *testing.T) {
 		0x40, 0x13, 0x33, 0x33,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(32); err != nil {
 		t.Error(err)
 	}
@@ -2469,7 +2493,7 @@ func TestValue_CheckFloat32Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -2480,7 +2504,7 @@ func TestValue_CheckFloat32Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(96); err != nil {
 		t.Error(err)
 	}
@@ -2500,7 +2524,7 @@ func TestValue_CheckFloat64(t *testing.T) {
 		0x40, 0x03, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
@@ -2533,7 +2557,7 @@ func TestValue_CheckFloat64(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
@@ -2557,7 +2581,7 @@ func TestValue_CheckFloat64Range(t *testing.T) {
 		0x40, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -2589,7 +2613,7 @@ func TestValue_CheckFloat64Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
@@ -2600,7 +2624,7 @@ func TestValue_CheckFloat64Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(192); err != nil {
 		t.Error(err)
 	}
@@ -2611,7 +2635,7 @@ func TestValue_CheckFloat64Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(256); err != nil {
 		t.Error(err)
 	}
@@ -2622,7 +2646,7 @@ func TestValue_CheckFloat64Range(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(320); err != nil {
 		t.Error(err)
 	}
@@ -2643,7 +2667,7 @@ func TestValue_CheckFloat64Min(t *testing.T) {
 		0x40, 0x02, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -2675,7 +2699,7 @@ func TestValue_CheckFloat64Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
@@ -2686,7 +2710,7 @@ func TestValue_CheckFloat64Min(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(192); err != nil {
 		t.Error(err)
 	}
@@ -2707,7 +2731,7 @@ func TestValue_CheckFloat64Max(t *testing.T) {
 		0x40, 0x02, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(64); err != nil {
 		t.Error(err)
 	}
@@ -2739,7 +2763,7 @@ func TestValue_CheckFloat64Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(128); err != nil {
 		t.Error(err)
 	}
@@ -2750,7 +2774,7 @@ func TestValue_CheckFloat64Max(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(192); err != nil {
 		t.Error(err)
 	}
@@ -2767,7 +2791,7 @@ func TestValue_CheckBool(t *testing.T) {
 	v := Value{Name: "Test", Bool: &param}
 	raw := []byte{0b00000000, 0b00000101}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 16, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 16, binary.BigEndian)
 
 	if err := gotest.Expect(offset).Eq(1); err != nil {
 		t.Error(err)
@@ -2800,7 +2824,7 @@ func TestValue_CheckBool(t *testing.T) {
 		t.Error(err)
 	}
 	param = false
-	offset, report = v.Check(raw, time.Second, "", offset, 16, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 16, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(2); err != nil {
 		t.Error(err)
 	}
@@ -2811,7 +2835,7 @@ func TestValue_CheckBool(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 16, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 16, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(3); err != nil {
 		t.Error(err)
 	}
@@ -2831,7 +2855,7 @@ func TestValue_CheckString(t *testing.T) {
 		104, 101, 108, 109, 111,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 
 	if err := gotest.Expect(offset).Eq(40); err != nil {
 		t.Error(err)
@@ -2864,7 +2888,7 @@ func TestValue_CheckString(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(80); err != nil {
 		t.Error(err)
 	}
@@ -2884,7 +2908,7 @@ func TestValue_CheckByte(t *testing.T) {
 		0x01, 0x00, 0x04,
 	}
 
-	offset, report := v.Check(raw, time.Second, "", 0, 8, binary2.BigEndian)
+	offset, report := v.Check(raw, time.Second, "", 0, 8, binary.BigEndian)
 
 	if err := gotest.Expect(offset).Eq(24); err != nil {
 		t.Error(err)
@@ -2917,7 +2941,7 @@ func TestValue_CheckByte(t *testing.T) {
 		t.Error(err)
 	}
 
-	offset, report = v.Check(raw, time.Second, "", offset, 8, binary2.BigEndian)
+	offset, report = v.Check(raw, time.Second, "", offset, 8, binary.BigEndian)
 	if err := gotest.Expect(offset).Eq(48); err != nil {
 		t.Error(err)
 	}
@@ -2931,7 +2955,7 @@ func TestValue_CheckByte(t *testing.T) {
 
 func TestValue_WriteInt8(t *testing.T) {
 	var v int8 = 1
-	b := (&Value{Name: "test", Int8: &v}).Write()
+	b := (&Value{Name: "test", Int8: &v}).Write(binary.BigEndian)
 	if err := gotest.Expect(b).Eq([]byte{1}); err != nil {
 		t.Error(err)
 	}
@@ -2939,7 +2963,7 @@ func TestValue_WriteInt8(t *testing.T) {
 
 func TestValue_WriteInt16(t *testing.T) {
 	var v int16 = 1
-	b := (&Value{Name: "test", Int16: &v}).Write()
+	b := (&Value{Name: "test", Int16: &v}).Write(binary.BigEndian)
 	if err := gotest.Expect(b).Eq([]byte{0, 1}); err != nil {
 		t.Error(err)
 	}
@@ -2947,7 +2971,7 @@ func TestValue_WriteInt16(t *testing.T) {
 
 func TestValue_WriteInt32(t *testing.T) {
 	var v int32 = 1
-	b := (&Value{Name: "test", Int32: &v}).Write()
+	b := (&Value{Name: "test", Int32: &v}).Write(binary.BigEndian)
 	if err := gotest.Expect(b).Eq([]byte{0, 0, 0, 1}); err != nil {
 		t.Error(err)
 	}
@@ -2955,7 +2979,7 @@ func TestValue_WriteInt32(t *testing.T) {
 
 func TestValue_WriteInt64(t *testing.T) {
 	var v int64 = 1
-	b := (&Value{Name: "test", Int64: &v}).Write()
+	b := (&Value{Name: "test", Int64: &v}).Write(binary.BigEndian)
 	if err := gotest.Expect(b).Eq([]byte{0, 0, 0, 0, 0, 0, 0, 1}); err != nil {
 		t.Error(err)
 	}
@@ -2963,7 +2987,7 @@ func TestValue_WriteInt64(t *testing.T) {
 
 func TestValue_WriteUint8(t *testing.T) {
 	var v uint8 = 1
-	b := (&Value{Name: "test", Uint8: &v}).Write()
+	b := (&Value{Name: "test", Uint8: &v}).Write(binary.BigEndian)
 	if err := gotest.Expect(b).Eq([]byte{1}); err != nil {
 		t.Error(err)
 	}
@@ -2971,7 +2995,7 @@ func TestValue_WriteUint8(t *testing.T) {
 
 func TestValue_WriteUint16(t *testing.T) {
 	var v uint16 = 1
-	b := (&Value{Name: "test", Uint16: &v}).Write()
+	b := (&Value{Name: "test", Uint16: &v}).Write(binary.BigEndian)
 	if err := gotest.Expect(b).Eq([]byte{0, 1}); err != nil {
 		t.Error(err)
 	}
@@ -2979,7 +3003,7 @@ func TestValue_WriteUint16(t *testing.T) {
 
 func TestValue_WriteUint32(t *testing.T) {
 	var v uint32 = 1
-	b := (&Value{Uint32: &v}).Write()
+	b := (&Value{Uint32: &v}).Write(binary.BigEndian)
 	if err := gotest.Expect(b).Eq([]byte{0, 0, 0, 1}); err != nil {
 		t.Error(err)
 	}
@@ -2987,7 +3011,7 @@ func TestValue_WriteUint32(t *testing.T) {
 
 func TestValue_WriteUint64(t *testing.T) {
 	var v uint64 = 1
-	b := (&Value{Name: "test", Uint64: &v}).Write()
+	b := (&Value{Name: "test", Uint64: &v}).Write(binary.BigEndian)
 	if err := gotest.Expect(b).Eq([]byte{0, 0, 0, 0, 0, 0, 0, 1}); err != nil {
 		t.Error(err)
 	}
@@ -2995,7 +3019,7 @@ func TestValue_WriteUint64(t *testing.T) {
 
 func TestValue_WriteFloat32(t *testing.T) {
 	var v float32 = 1.2
-	b := (&Value{Name: "test", Float32: &v}).Write()
+	b := (&Value{Name: "test", Float32: &v}).Write(binary.BigEndian)
 	if err := gotest.Expect(b).Eq([]byte{63, 153, 153, 154}); err != nil {
 		t.Error(err)
 	}
@@ -3003,7 +3027,7 @@ func TestValue_WriteFloat32(t *testing.T) {
 
 func TestValue_WriteFloat64(t *testing.T) {
 	var v float64 = 1.2
-	b := (&Value{Name: "test", Float64: &v}).Write()
+	b := (&Value{Name: "test", Float64: &v}).Write(binary.BigEndian)
 	if err := gotest.Expect(b).Eq([]byte{63, 243, 51, 51, 51, 51, 51, 51}); err != nil {
 		t.Error(err)
 	}
@@ -3011,7 +3035,7 @@ func TestValue_WriteFloat64(t *testing.T) {
 
 func TestValue_WriteBoolTrue(t *testing.T) {
 	var v bool = true
-	b := (&Value{Name: "test", Bool: &v}).Write()
+	b := (&Value{Name: "test", Bool: &v}).Write(binary.BigEndian)
 	if err := gotest.Expect(b).Eq([]byte{1}); err != nil {
 		t.Error(err)
 	}
@@ -3019,7 +3043,7 @@ func TestValue_WriteBoolTrue(t *testing.T) {
 
 func TestValue_WriteBoolFalse(t *testing.T) {
 	var v bool = false
-	b := (&Value{Name: "test", Bool: &v}).Write()
+	b := (&Value{Name: "test", Bool: &v}).Write(binary.BigEndian)
 	if err := gotest.Expect(b).Eq([]byte{0}); err != nil {
 		t.Error(err)
 	}
@@ -3027,7 +3051,7 @@ func TestValue_WriteBoolFalse(t *testing.T) {
 
 func TestValue_WriteString(t *testing.T) {
 	var v string = "test"
-	b := (&Value{Name: "test", String: &v}).Write()
+	b := (&Value{Name: "test", String: &v}).Write(binary.BigEndian)
 	if err := gotest.Expect(b).Eq([]byte{116, 101, 115, 116}); err != nil {
 		t.Error(err)
 	}
@@ -3035,7 +3059,7 @@ func TestValue_WriteString(t *testing.T) {
 
 func TestValue_WriteByte(t *testing.T) {
 	var v string = "0x01 0x0001 0x000002"
-	b := (&Value{Name: "test", Byte: &v}).Write()
+	b := (&Value{Name: "test", Byte: &v}).Write(binary.BigEndian)
 	if err := gotest.Expect(b).Eq([]byte{1, 0, 1, 0, 0, 2}); err != nil {
 		t.Error(err)
 	}
@@ -3043,7 +3067,7 @@ func TestValue_WriteByte(t *testing.T) {
 
 func TestValue_ReportWriteInt8(t *testing.T) {
 	var v int8 = 1
-	report := (&Value{Name: "test", Int8: &v}).ReportWrite()
+	report := (&Value{Name: "test", Int8: &v}).ReportWrite(binary.BigEndian)
 
 	if err := gotest.Expect(report.Type).Eq(Int8.String()); err != nil {
 		t.Error(err)
@@ -3064,7 +3088,7 @@ func TestValue_ReportWriteInt8(t *testing.T) {
 
 func TestValue_ReportWriteInt16(t *testing.T) {
 	var v int16 = 1
-	report := (&Value{Name: "test", Int16: &v}).ReportWrite()
+	report := (&Value{Name: "test", Int16: &v}).ReportWrite(binary.BigEndian)
 
 	if err := gotest.Expect(report.Type).Eq(Int16.String()); err != nil {
 		t.Error(err)
@@ -3085,7 +3109,7 @@ func TestValue_ReportWriteInt16(t *testing.T) {
 
 func TestValue_ReportWriteInt32(t *testing.T) {
 	var v int32 = 1
-	report := (&Value{Name: "test", Int32: &v}).ReportWrite()
+	report := (&Value{Name: "test", Int32: &v}).ReportWrite(binary.BigEndian)
 
 	if err := gotest.Expect(report.Type).Eq(Int32.String()); err != nil {
 		t.Error(err)
@@ -3106,7 +3130,7 @@ func TestValue_ReportWriteInt32(t *testing.T) {
 
 func TestValue_ReportWriteInt64(t *testing.T) {
 	var v int64 = 1
-	report := (&Value{Name: "test", Int64: &v}).ReportWrite()
+	report := (&Value{Name: "test", Int64: &v}).ReportWrite(binary.BigEndian)
 
 	if err := gotest.Expect(report.Type).Eq(Int64.String()); err != nil {
 		t.Error(err)
@@ -3127,7 +3151,7 @@ func TestValue_ReportWriteInt64(t *testing.T) {
 
 func TestValue_ReportWriteUint8(t *testing.T) {
 	var v uint8 = 1
-	report := (&Value{Name: "test", Uint8: &v}).ReportWrite()
+	report := (&Value{Name: "test", Uint8: &v}).ReportWrite(binary.BigEndian)
 
 	if err := gotest.Expect(report.Type).Eq(Uint8.String()); err != nil {
 		t.Error(err)
@@ -3148,7 +3172,7 @@ func TestValue_ReportWriteUint8(t *testing.T) {
 
 func TestValue_ReportWriteUint16(t *testing.T) {
 	var v uint16 = 1
-	report := (&Value{Name: "test", Uint16: &v}).ReportWrite()
+	report := (&Value{Name: "test", Uint16: &v}).ReportWrite(binary.BigEndian)
 
 	if err := gotest.Expect(report.Type).Eq(Uint16.String()); err != nil {
 		t.Error(err)
@@ -3169,7 +3193,7 @@ func TestValue_ReportWriteUint16(t *testing.T) {
 
 func TestValue_ReportWriteUint32(t *testing.T) {
 	var v uint32 = 1
-	report := (&Value{Name: "test", Uint32: &v}).ReportWrite()
+	report := (&Value{Name: "test", Uint32: &v}).ReportWrite(binary.BigEndian)
 
 	if err := gotest.Expect(report.Type).Eq(Uint32.String()); err != nil {
 		t.Error(err)
@@ -3191,7 +3215,7 @@ func TestValue_ReportWriteUint32(t *testing.T) {
 
 func TestValue_ReportWriteUint64(t *testing.T) {
 	var v uint64 = 1
-	report := (&Value{Name: "test", Uint64: &v}).ReportWrite()
+	report := (&Value{Name: "test", Uint64: &v}).ReportWrite(binary.BigEndian)
 
 	if err := gotest.Expect(report.Type).Eq(Uint64.String()); err != nil {
 		t.Error(err)
@@ -3212,7 +3236,7 @@ func TestValue_ReportWriteUint64(t *testing.T) {
 
 func TestValue_ReportWriteFloat32(t *testing.T) {
 	var v float32 = 1.2
-	report := (&Value{Name: "test", Float32: &v}).ReportWrite()
+	report := (&Value{Name: "test", Float32: &v}).ReportWrite(binary.BigEndian)
 
 	if err := gotest.Expect(report.Type).Eq(Float32.String()); err != nil {
 		t.Error(err)
@@ -3233,7 +3257,7 @@ func TestValue_ReportWriteFloat32(t *testing.T) {
 
 func TestValue_ReportWriteFloat64(t *testing.T) {
 	var v float64 = 1.2
-	report := (&Value{Name: "test", Float64: &v}).ReportWrite()
+	report := (&Value{Name: "test", Float64: &v}).ReportWrite(binary.BigEndian)
 
 	if err := gotest.Expect(report.Type).Eq(Float64.String()); err != nil {
 		t.Error(err)
@@ -3254,7 +3278,7 @@ func TestValue_ReportWriteFloat64(t *testing.T) {
 
 func TestValue_ReportWriteBoolTrue(t *testing.T) {
 	var v bool = true
-	report := (&Value{Name: "test", Bool: &v}).ReportWrite()
+	report := (&Value{Name: "test", Bool: &v}).ReportWrite(binary.BigEndian)
 
 	if err := gotest.Expect(report.Type).Eq(Bool.String()); err != nil {
 		t.Error(err)
@@ -3275,7 +3299,7 @@ func TestValue_ReportWriteBoolTrue(t *testing.T) {
 
 func TestValue_ReportWriteBoolFalse(t *testing.T) {
 	var v bool = false
-	report := (&Value{Name: "test", Bool: &v}).ReportWrite()
+	report := (&Value{Name: "test", Bool: &v}).ReportWrite(binary.BigEndian)
 
 	if err := gotest.Expect(report.Type).Eq(Bool.String()); err != nil {
 		t.Error(err)
@@ -3296,7 +3320,7 @@ func TestValue_ReportWriteBoolFalse(t *testing.T) {
 
 func TestValue_ReportWriteString(t *testing.T) {
 	var v string = "test"
-	report := (&Value{Name: "test", String: &v}).ReportWrite()
+	report := (&Value{Name: "test", String: &v}).ReportWrite(binary.BigEndian)
 
 	if err := gotest.Expect(report.Type).Eq(String.String()); err != nil {
 		t.Error(err)
@@ -3317,7 +3341,7 @@ func TestValue_ReportWriteString(t *testing.T) {
 
 func TestValue_ReportWriteByte(t *testing.T) {
 	var v string = "0x01 0x0001 0x000002"
-	report := (&Value{Name: "test", Byte: &v}).ReportWrite()
+	report := (&Value{Name: "test", Byte: &v}).ReportWrite(binary.BigEndian)
 
 	if err := gotest.Expect(report.Type).Eq(Byte.String()); err != nil {
 		t.Error(err)

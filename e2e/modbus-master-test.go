@@ -117,7 +117,7 @@ func (mt *ModbusMasterTest) Exec(client modbus.Client, report *ReportMasterTest)
 		report.GotTime = time.Since(startTime)
 	case WriteMultipleCoils:
 		for _, w := range mt.Write {
-			report.Write = append(report.Write, w.ReportWrite())
+			report.Write = append(report.Write, w.ReportWrite(binary.BigEndian))
 		}
 		startTime := time.Now()
 		if report.GotByte, err = client.WriteMultipleCoils(*mt.Address, mt.getQuantity(), valueToByte(mt.Write)); err != nil {
@@ -138,7 +138,7 @@ func (mt *ModbusMasterTest) Exec(client modbus.Client, report *ReportMasterTest)
 		report.GotTime = time.Since(startTime)
 	case WriteSingleRegister:
 		for _, w := range mt.Write {
-			report.Write = append(report.Write, w.ReportWrite())
+			report.Write = append(report.Write, w.ReportWrite(binary.BigEndian))
 		}
 		startTime := time.Now()
 		if report.GotByte, err = client.WriteSingleRegister(*mt.Address, binary.BigEndian.Uint16(valueToByte16(mt.Write))); err != nil {
@@ -147,7 +147,7 @@ func (mt *ModbusMasterTest) Exec(client modbus.Client, report *ReportMasterTest)
 		report.GotTime = time.Since(startTime)
 	case WriteMultipleRegisters:
 		for _, w := range mt.Write {
-			report.Write = append(report.Write, w.ReportWrite())
+			report.Write = append(report.Write, w.ReportWrite(binary.BigEndian))
 		}
 		startTime := time.Now()
 		if report.GotByte, err = client.WriteMultipleRegisters(*mt.Address, mt.getQuantity(), valueToByte16(mt.Write)); err != nil {
