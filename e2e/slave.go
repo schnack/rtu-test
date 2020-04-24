@@ -7,25 +7,29 @@ import (
 	"strings"
 )
 
+const (
+	ActionRead  = "read"
+	ActionWrite = "write"
+	ActionError = "Error"
+)
+
 type Slave struct {
-	Port           string `yaml:"port"`
-	BoundRate      int    `yaml:"boundRate"`
-	DataBits       int    `yaml:"dataBits"`
-	Parity         string `yaml:"parity"`
-	StopBits       int    `yaml:"stopBits"`
-	SilentInterval string `yaml:"silentInterval"`
-	ByteOrder      string `yaml:"byteOrder"`
-
-	Const       map[string][]string `yaml:"const"`
-	Staffing    *Staffing           `yaml:"staffing"`
-	MaxLen      int                 `yaml:"maxLen"`
-	Len         *Len                `yaml:"len"`
-	Crc         *Crc                `yaml:"crc"`
-	WriteFormat []string            `yaml:"writeFormat"`
-	ReadFormat  []string            `yaml:"readFormat"`
-	ErrorFormat []string            `yaml:"errorFormat"`
-
-	SlaveTest []SlaveTest `yaml:"test"`
+	Port           string              `yaml:"port"`
+	BoundRate      int                 `yaml:"boundRate"`
+	DataBits       int                 `yaml:"dataBits"`
+	Parity         string              `yaml:"parity"`
+	StopBits       int                 `yaml:"stopBits"`
+	SilentInterval string              `yaml:"silentInterval"`
+	ByteOrder      string              `yaml:"byteOrder"`
+	Const          map[string][]string `yaml:"const"`
+	Staffing       *Staffing           `yaml:"staffing"`
+	MaxLen         int                 `yaml:"maxLen"`
+	Len            *Len                `yaml:"len"`
+	Crc            *Crc                `yaml:"crc"`
+	WriteFormat    []string            `yaml:"writeFormat"`
+	ReadFormat     []string            `yaml:"readFormat"`
+	ErrorFormat    []string            `yaml:"errorFormat"`
+	SlaveTest      []SlaveTest         `yaml:"test"`
 }
 
 // ParseReadFormat создает сплиттер для поиска фреймов в потоке данных rs
@@ -38,15 +42,15 @@ func (s *Slave) ParseReadFormat() (start []byte, lenPosition, suffixLen int, end
 	for _, data := range s.ReadFormat {
 		// Если нет специальной вставки то определяем всю строку как стартовые байты
 		if strings.Contains(data, "#") {
-			// =======  Собирается хедер с фиксированной длиной переменные начинаются с _ ===========
+			// =======  Собирается хедер с фиксированной длиной  ===========
 			// Должен прибавлять к переменной prefixLen
 			// ============================
 
 			// Длина данные позволяет определить длину фрейма без стоповых бит
 			// #len должен быть первым после констант или типов с фиксированной длиной
-			if strings.HasPrefix(data, "_len_#") {
+			if strings.HasPrefix(data, "len#") {
 				if suffixTrigger {
-					logrus.Fatal("the suffix was used before _len_")
+					logrus.Fatal("the suffix was used before len")
 				}
 				if s.Len == nil {
 					logrus.Fatal("Data len not found in config")
@@ -54,12 +58,14 @@ func (s *Slave) ParseReadFormat() (start []byte, lenPosition, suffixLen int, end
 				lenPosition += len(start) + prefixLen
 			}
 
-			if strings.Contains(data, "_#") {
+			// ======== Собирается суфикс ============
+			if strings.HasPrefix(data, "data#") {
 				suffixTrigger = true
+				suffixLen += 0
 			}
 
-			// ======== Собирается суфикс с фиксированной длиной переменные заканчиваются на _ =============
-			if strings.HasPrefix(data, "crc_#") {
+			if strings.HasPrefix(data, "crc#") {
+				suffixTrigger = true
 				isSuffix := true
 				for _, data := range s.Len.Read {
 					if data == "crc#" {
@@ -112,6 +118,126 @@ func (s *Slave) ParseReadFormat() (start []byte, lenPosition, suffixLen int, end
 
 func (s *Slave) Run() error {
 	return nil
+}
+
+// TODO crc  подсчет
+
+// CalcLen - Подсчитывает длину согласно шаблону
+// action - read, write, error
+// data - чистые данные из теста (writeError, expected, write) без staffing byte
+func (s *Slave) CalcLen(action string, data []byte) (int, []byte) {
+	if s.Len == nil {
+		logrus.Fatal("Length is not specified in the configuration")
+	}
+
+	countByte := 0
+	var format []string
+
+	switch action {
+	case ActionRead:
+		format = s.Len.Read
+	case ActionWrite:
+		format = s.Len.Write
+	case ActionError:
+		format = s.Len.Error
+	default:
+		logrus.Fatalf("Action not found %s", action)
+	}
+
+	for _, name := range format {
+		if strings.Contains(name, "#") {
+			// Подсчитываем шаблоны
+			if strings.HasPrefix(name, "data#") {
+				if s.Len.Staffing {
+					countByte += len(s.AddStaffing(data))
+				} else {
+					countByte += len(data)
+				}
+			}
+			continue
+		}
+
+		if constanta, ok := s.Const[name]; ok {
+			for _, stringBytes := range constanta {
+				dataConst, err := parseStringByte(stringBytes)
+				if err != nil {
+					logrus.Fatal(err)
+				}
+				countByte += len(dataConst)
+			}
+		} else {
+			logrus.Fatalf("Constant not found %s", constanta)
+		}
+	}
+
+	// определяем порядок байт
+	var order binary.ByteOrder = binary.BigEndian
+	if s.ByteOrder == "little" {
+		order = binary.LittleEndian
+	}
+
+	b := make([]byte, s.Len.CountBytes)
+
+	switch s.Len.CountBytes {
+	case 1:
+		b[0] = uint8(countByte)
+	case 2:
+		order.PutUint16(b, uint16(countByte))
+	case 4:
+		order.PutUint32(b, uint32(countByte))
+	case 8:
+		order.PutUint64(b, uint64(countByte))
+	default:
+		logrus.Fatalf("error countByte to len %d", s.Len.CountBytes)
+	}
+
+	return countByte, b
+}
+
+// AddStaffing -  Добавляет staffing byte к data
+func (s *Slave) AddStaffing(data []byte) (out []byte) {
+
+	if s.Staffing == nil || len(s.Staffing.Byte) == 0 || len(s.Staffing.Pattern) == 0 {
+		return data
+	}
+
+	staffingByte, err := parseStringByte(s.Staffing.Byte)
+	if err != nil || len(staffingByte) == 0 {
+		logrus.Fatalf("Staffing byte error %s", err)
+	}
+
+	// Собираем шаблоны которые надо экранировать
+	var staffingPatterns []byte
+	for _, name := range s.Staffing.Pattern {
+		if constanta, ok := s.Const[name]; ok {
+			for _, stringBytes := range constanta {
+				dataConst, err := parseStringByte(stringBytes)
+				if err != nil {
+					logrus.Fatal(err)
+				}
+				staffingPatterns = append(staffingPatterns, dataConst...)
+			}
+		} else {
+			logrus.Fatalf("Constant not found %s", constanta)
+		}
+	}
+
+	// Добавляем стаффинг байт если попался символ из шаблона
+	for _, d := range data {
+		isAddStuffing := false
+		for _, p := range staffingPatterns {
+			if d == p {
+				isAddStuffing = true
+				break
+			}
+		}
+		if isAddStuffing {
+			out = append(out, d, staffingByte[0])
+		} else {
+			out = append(out, d)
+		}
+	}
+	return
 }
 
 //func (rt *RtuTransport) SilentInterval() (frameDelay time.Duration) {

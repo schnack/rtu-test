@@ -32,8 +32,7 @@ slave:
 
   # Параметры staffing байта и константы которые подлежат экранированию
   staffing:
-    byte:
-      - 0x00
+    byte: 0x00
     pattern:
       - start
       - stop
@@ -43,14 +42,14 @@ slave:
   len:
     # считает длину с установленным staffing
     staffing: true
-    # Длина длины в байтах
+    # Длина длины в байтах 1 2 4 8
     coundBytes: 1
     read:
-      - test#expected
+      - test#
     write:
-      - test#writed
+      - test#
     error:
-      - test#error
+      - test#
 
   # Обращение к значениям происходит с помощью crc#write
   crc:
@@ -61,27 +60,27 @@ slave:
     read:
       - addressSlave
       - addressMaster
-      - _len_#
-      - test_#
+      - len#
+      - data#
     write:
       - addressMaster
       - addressSlave
-      - _len_#
-      - test_#
+      - len#
+      - data#
     error:
       - addressMaster
       - addressSlave
-      - _len_#
-      - test_#
+      - len#
+      - data#
 
   # Тут происходит не явное обработка staffing. Поля что входят в pattern не экранируются
   writeFormat:
     - start
     - addressMaster
     - addressSlave
-    - _len_#
-    - test_#
-    - crc_#
+    - len#
+    - data#
+    - crc#
     - stop
 
   # Тут происходит не явное удаление staffing. Поля что входят в pattern не преобразуются
@@ -89,9 +88,9 @@ slave:
     - start
     - addressMaster
     - addressSlave
-    - _len_#
-    - test_#
-    - crc_#
+    - len#
+    - data#
+    - crc#
     - stop
 
   # Тут происходит не явное удаление staffing. Поля что входят в pattern не преобразуются
@@ -99,9 +98,9 @@ slave:
     - start
     - addressMaster
     - addressSlave
-    - _len_#
-    - test_#
-    - crc_#
+    - len#
+    - data#
+    - crc#
     - stop
 
   tests:
