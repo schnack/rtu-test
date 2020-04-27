@@ -131,3 +131,44 @@ func (s *SlaveTestSuit) TestCalcLen() {
 	s.Equal(2, count)
 	s.Equal([]byte{0x0, 0x2}, b)
 }
+
+func (s *SlaveTestSuit) TestCalcCrc() {
+	v := Slave{
+		ByteOrder: "big",
+		Const: map[string][]string{
+			"start": {"0xcf", "0xbf"},
+			"end":   {"0xff", "0xef"},
+		},
+		Staffing: &Staffing{
+			Byte:    "0x00",
+			Pattern: []string{"start", "end"},
+		},
+		Len: &Len{
+			Staffing:   true,
+			CountBytes: 2,
+			Read:       []string{"data#", "end"},
+			Write:      []string{"data#"},
+			Error:      []string{"end"},
+		},
+		Crc: &Crc{
+			Algorithm: "mod256",
+			Staffing:  false,
+			Read:      []string{"data#", "end"},
+			Write:     []string{"data#"},
+			Error:     []string{"end"},
+		},
+	}
+
+	b := v.CalcCrc(ActionRead, []byte{1, 2, 3, 4})
+	s.Equal([]byte{0xf8}, b)
+
+	// с добавлением стаффинга
+	b = v.CalcCrc(ActionRead, []byte{1, 2, 3, 0xef, 4})
+	s.Equal([]byte{0xe7}, b)
+
+	b = v.CalcCrc(ActionWrite, []byte{1, 2, 3, 4})
+	s.Equal([]byte{0x0a}, b)
+
+	b = v.CalcCrc(ActionError, []byte{1, 2, 3, 4})
+	s.Equal([]byte{0xee}, b)
+}

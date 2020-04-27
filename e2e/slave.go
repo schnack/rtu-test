@@ -120,7 +120,54 @@ func (s *Slave) Run() error {
 	return nil
 }
 
-// TODO crc  подсчет
+// CalcCrc - Подсчитывает контрольную сумму согласно шаблону.
+// action - read, write, error
+// data - чистые данные из теста (writeError, expected, write) без staffing byte
+func (s *Slave) CalcCrc(action string, data []byte) []byte {
+	if s.Crc == nil {
+		logrus.Fatal("Crc is not specified in the configuration")
+	}
+
+	var tmpData []byte
+	var format []string
+
+	switch action {
+	case ActionRead:
+		format = s.Len.Read
+	case ActionWrite:
+		format = s.Len.Write
+	case ActionError:
+		format = s.Len.Error
+	default:
+		logrus.Fatalf("Action not found %s", action)
+	}
+
+	for _, name := range format {
+		if strings.Contains(name, "#") {
+			if strings.HasPrefix(name, "len#") {
+				_, l := s.CalcLen(action, data)
+				tmpData = append(tmpData, l...)
+			}
+			if strings.HasPrefix(name, "data#") {
+				tmpData = append(tmpData, data...)
+			}
+			continue
+		}
+		if constanta, ok := s.Const[name]; ok {
+			for _, stringBytes := range constanta {
+				dataConst, err := parseStringByte(stringBytes)
+				if err != nil {
+					logrus.Fatal(err)
+				}
+				tmpData = append(tmpData, dataConst...)
+			}
+		} else {
+			logrus.Fatalf("Constant not found %s", constanta)
+		}
+	}
+
+	return s.Crc.Calc(tmpData)
+}
 
 // CalcLen - Подсчитывает длину согласно шаблону
 // action - read, write, error
