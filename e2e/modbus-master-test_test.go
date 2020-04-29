@@ -105,7 +105,7 @@ func TestModbusTest_ExecReadCoils(t *testing.T) {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect(report.GotTime > 1).Eq(true); err != nil {
+	if err := gotest.Expect(report.GotTime >= 0).Eq(true); err != nil {
 		t.Error(err)
 	}
 
@@ -140,7 +140,7 @@ func TestModbusTest_ExecReadDiscreteInputs(t *testing.T) {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect(report.GotTime > 1).Eq(true); err != nil {
+	if err := gotest.Expect(report.GotTime >= 0).Eq(true); err != nil {
 		t.Error(err)
 	}
 
@@ -175,7 +175,7 @@ func TestModbusTest_ExecReadHoldingRegisters(t *testing.T) {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect(report.GotTime > 1).Eq(true); err != nil {
+	if err := gotest.Expect(report.GotTime >= 0).Eq(true); err != nil {
 		t.Error(err)
 	}
 
@@ -210,7 +210,7 @@ func TestModbusTest_ExecReadInputRegisters(t *testing.T) {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect(report.GotTime > 1).Eq(true); err != nil {
+	if err := gotest.Expect(report.GotTime >= 0).Eq(true); err != nil {
 		t.Error(err)
 	}
 
@@ -247,7 +247,7 @@ func TestModbusTest_ExecWriteSingleCoil(t *testing.T) {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect(report.GotTime > 1).Eq(true); err != nil {
+	if err := gotest.Expect(report.GotTime >= 0).Eq(true); err != nil {
 		t.Error(err)
 	}
 
@@ -290,7 +290,7 @@ func TestModbusTest_ExecWriteSingleRegister(t *testing.T) {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect(report.GotTime > 1).Eq(true); err != nil {
+	if err := gotest.Expect(report.GotTime >= 0).Eq(true); err != nil {
 		t.Error(err)
 	}
 
@@ -335,7 +335,7 @@ func TestModbusTest_ExecWriteMultipleCoils(t *testing.T) {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect(report.GotTime > 1).Eq(true); err != nil {
+	if err := gotest.Expect(report.GotTime >= 0).Eq(true); err != nil {
 		t.Error(err)
 	}
 
@@ -380,7 +380,7 @@ func TestModbusTest_ExecWriteMultipleRegisters(t *testing.T) {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect(report.GotTime > 1).Eq(true); err != nil {
+	if err := gotest.Expect(report.GotTime >= 0).Eq(true); err != nil {
 		t.Error(err)
 	}
 
