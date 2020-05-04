@@ -117,6 +117,19 @@ func (s *Slave) ParseReadFormat() (start []byte, lenPosition, suffixLen int, end
 }
 
 func (s *Slave) Run() error {
+	port := NewSerialPort(&SerialPortConfig{
+		Port:     s.Port,
+		BaudRate: s.BoundRate,
+		DataBits: s.DataBits,
+		Parity:   s.Parity,
+		StopBits: s.StopBits,
+	})
+	listen := bufio.NewScanner(port)
+	//listen.Split(s.GetSplit())
+	for listen.Scan() {
+		listen.Bytes()
+		// TODO
+	}
 	return nil
 }
 
