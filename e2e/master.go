@@ -18,13 +18,13 @@ type Master struct {
 	Filter    string `yaml:"filter"`
 	ByteOrder string `yaml:"byteOrder"`
 
-	Const       map[string][]string `yaml:"const"`
-	Staffing    *Staffing           `yaml:"staffing"`
-	Len         map[string]*Len     `yaml:"len"`
-	Crc         map[string]*Crc     `yaml:"crc"`
-	WriteFormat []string            `yaml:"writeFormat"`
-	ReadFormat  []string            `yaml:"readFormat"`
-	ErrorFormat []string            `yaml:"errorFormat"`
+	Const       map[string][]string  `yaml:"const"`
+	Staffing    *Staffing            `yaml:"staffing"`
+	Len         map[string]*LenBytes `yaml:"len"`
+	Crc         map[string]*Crc      `yaml:"crc"`
+	WriteFormat []string             `yaml:"writeFormat"`
+	ReadFormat  []string             `yaml:"readFormat"`
+	ErrorFormat []string             `yaml:"errorFormat"`
 
 	Tests map[string][]*MasterTest `yaml:"tests"`
 }

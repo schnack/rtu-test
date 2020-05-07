@@ -13,13 +13,13 @@ type MasterTest struct {
 	Disconnect bool     `yaml:"disconnect"`
 
 	// Заменяет глобальные настройки
-	Const       map[string][]string `yaml:"const"`
-	Staffing    *Staffing           `yaml:"staffing"`
-	Len         map[string]*Len     `yaml:"len"`
-	Crc         map[string]*Crc     `yaml:"crc"`
-	WriteFormat []string            `yaml:"writeFormat"`
-	ReadFormat  []string            `yaml:"readFormat"`
-	ErrorFormat []string            `yaml:"errorFormat"`
+	Const       map[string][]string  `yaml:"const"`
+	Staffing    *Staffing            `yaml:"staffing"`
+	Len         map[string]*LenBytes `yaml:"len"`
+	Crc         map[string]*Crc      `yaml:"crc"`
+	WriteFormat []string             `yaml:"writeFormat"`
+	ReadFormat  []string             `yaml:"readFormat"`
+	ErrorFormat []string             `yaml:"errorFormat"`
 }
 
 //func (mt *MasterTest) Run(port serial.Port) ReportMasterTest {

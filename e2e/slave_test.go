@@ -20,7 +20,7 @@ func (s *SlaveTestSuit) TestParseReadFormat() {
 			"start": {"0x01", "0x02"},
 			"end":   {"0x03", "0x04"},
 		},
-		Len: &Len{
+		Len: &LenBytes{
 			Staffing:   true,
 			CountBytes: 1,
 			Read:       []string{"data#"},
@@ -45,7 +45,7 @@ func (s *SlaveTestSuit) TestGetSpkit() {
 	v := Slave{
 		ByteOrder: "big",
 		MaxLen:    255,
-		Len: &Len{
+		Len: &LenBytes{
 			Staffing:   true,
 			CountBytes: 1,
 			Read:       []string{"data#"},
@@ -105,7 +105,7 @@ func (s *SlaveTestSuit) TestCalcLen() {
 			Byte:    "0x00",
 			Pattern: []string{"start", "end"},
 		},
-		Len: &Len{
+		Len: &LenBytes{
 			Staffing:   true,
 			CountBytes: 2,
 			Read:       []string{"data#", "end"},
@@ -143,7 +143,7 @@ func (s *SlaveTestSuit) TestCalcCrc() {
 			Byte:    "0x00",
 			Pattern: []string{"start", "end"},
 		},
-		Len: &Len{
+		Len: &LenBytes{
 			Staffing:   true,
 			CountBytes: 2,
 			Read:       []string{"data#", "end"},

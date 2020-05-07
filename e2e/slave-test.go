@@ -17,3 +17,20 @@ type SlaveTest struct {
 	Error      Message `yaml:"error"`
 	After      Message `yaml:"after"`
 }
+
+// Проверяем пакет принадлежит этому тесту или нет с использованием Pattern
+func (s *SlaveTest) Check(data []byte) bool {
+
+	return false
+}
+
+// Запускает тест и поверяет значение
+func (s *SlaveTest) Exec(data []byte, report *ReportSlaveTest) {
+
+	return
+}
+
+// Возвращает данны для записи в компорт
+func (s *SlaveTest) WriteData() []byte {
+	return nil
+}

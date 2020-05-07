@@ -24,7 +24,7 @@ type Slave struct {
 	Const          map[string][]string `yaml:"const"`
 	Staffing       *Staffing           `yaml:"staffing"`
 	MaxLen         int                 `yaml:"maxLen"`
-	Len            *Len                `yaml:"len"`
+	Len            *LenBytes           `yaml:"len"`
 	Crc            *Crc                `yaml:"crc"`
 	WriteFormat    []string            `yaml:"writeFormat"`
 	ReadFormat     []string            `yaml:"readFormat"`
@@ -61,19 +61,14 @@ func (s *Slave) ParseReadFormat() (start []byte, lenPosition, suffixLen int, end
 			// ======== Собирается суфикс ============
 			if strings.HasPrefix(data, "data#") {
 				suffixTrigger = true
-				suffixLen += 0
+				if !s.Len.Contains(ActionRead, "data#") {
+					suffixLen += 0
+				}
 			}
 
 			if strings.HasPrefix(data, "crc#") {
 				suffixTrigger = true
-				isSuffix := true
-				for _, data := range s.Len.Read {
-					if data == "crc#" {
-						isSuffix = false
-						break
-					}
-				}
-				if isSuffix {
+				if !s.Len.Contains(ActionRead, "crc#") {
 					suffixLen += s.Crc.Len()
 				}
 			}
@@ -125,7 +120,11 @@ func (s *Slave) Run() error {
 		StopBits: s.StopBits,
 	})
 	listen := bufio.NewScanner(port)
-	//listen.Split(s.GetSplit())
+	// Собираем сканер пакетов,
+	start, lenPosition, suffixLen, end := s.ParseReadFormat()
+	listen.Split(s.GetSplit(start, lenPosition, suffixLen, end))
+
+	// Включаем прослушку ком порта
 	for listen.Scan() {
 		listen.Bytes()
 		// TODO
@@ -312,6 +311,10 @@ func (s *Slave) AddStaffing(data []byte) (out []byte) {
 //}
 
 // GetSplit - Функция пытается собрать фрейм на основе данных из ReadFormat
+// Start - фиксированные байты
+// lenPosition - позиция байтов длины
+// suffixLen - Длина окончания которое не входит в len
+// end - филированная концовка
 func (s *Slave) GetSplit(start []byte, lenPosition, suffixLen int, end []byte) bufio.SplitFunc {
 	return func(data []byte, atEOF bool) (int, []byte, error) {
 
