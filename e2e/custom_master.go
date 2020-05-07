@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-type Master struct {
+type CustomMaster struct {
 	Port      string `yaml:"port"`
 	BoundRate int    `yaml:"boundRate"`
 	DataBits  int    `yaml:"dataBits"`
@@ -27,10 +27,10 @@ type Master struct {
 	ReadFormat  []string             `yaml:"readFormat"`
 	ErrorFormat []string             `yaml:"errorFormat"`
 
-	Tests map[string][]*MasterTest `yaml:"tests"`
+	Tests map[string][]*CustomMasterTest `yaml:"tests"`
 }
 
-func (m *Master) getPort() (serial.Port, error) {
+func (m *CustomMaster) getPort() (serial.Port, error) {
 	parity := serial.NoParity
 	switch m.Parity {
 	case "N":
@@ -61,7 +61,7 @@ func (m *Master) getPort() (serial.Port, error) {
 	})
 }
 
-func (m *Master) Run(ctx context.Context, reports *reports2.ReportGroups) error {
+func (m *CustomMaster) Run(ctx context.Context, reports *reports2.ReportGroups) error {
 	// TODO Доработать этот функционал
 	port, err := m.getPort()
 	if err != nil {

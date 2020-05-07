@@ -1,6 +1,6 @@
 package e2e
 
-type MasterTest struct {
+type CustomMasterTest struct {
 	Name       string   `yaml:"name"`
 	Skip       string   `yaml:"skip"`
 	Before     Message  `yaml:"before"`
@@ -22,7 +22,7 @@ type MasterTest struct {
 	ErrorFormat []string             `yaml:"errorFormat"`
 }
 
-//func (mt *MasterTest) Run(port serial.Port) ReportMasterTest {
+//func (mt *CustomMasterTest) Run(port serial.Port) ReportMasterTest {
 //	// TODO Требует реализации
 //
 //	scanner := bufio.NewScanner(port)

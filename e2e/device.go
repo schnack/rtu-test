@@ -37,7 +37,7 @@ type Device struct {
 	ModbusMaster *ModbusMaster `yaml:"modbusMaster"`
 	ModbusSlave  *ModbusSlave  `yaml:"modbusSlave"`
 	Slave        *CustomSlave  `yaml:"slave"`
-	Master       *Master       `yaml:"master"`
+	Master       *CustomMaster `yaml:"master"`
 }
 
 // Load - загружает конфигурацию лога
