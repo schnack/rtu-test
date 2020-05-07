@@ -2,7 +2,6 @@ package slave
 
 import (
 	"rtu-test/e2e/common"
-	"rtu-test/e2e/modbus/slave"
 )
 
 type CustomSlaveTest struct {
@@ -25,17 +24,35 @@ type CustomSlaveTest struct {
 
 // Проверяем пакет принадлежит этому тесту или нет с использованием Pattern
 func (s *CustomSlaveTest) Check(data []byte) bool {
-
+	// TODO проверим принадлежит ли пакет этому тесту
 	return false
 }
 
 // Запускает тест и поверяет значение
-func (s *CustomSlaveTest) Exec(data []byte, report *slave.ReportSlaveTest) {
-
+func (s *CustomSlaveTest) Exec(data []byte, report *ReportCustomSlaveTest) {
+	//TODO Выполнение самого теста
 	return
 }
 
 // Возвращает данны для записи в компорт
-func (s *CustomSlaveTest) WriteData() []byte {
+func (s *CustomSlaveTest) ReturnData() []byte {
+	// TODO подготовка данных для ответа устройству
 	return nil
+}
+
+func (s *CustomSlaveTest) ReturnError() []byte {
+	// TODO подготовка ошибки для устройства
+	return nil
+}
+
+// Генерирует объект отчета для этого теста. Начальные данные можно использовать в сообщении before
+func (s *CustomSlaveTest) GetReport() *ReportCustomSlaveTest {
+	return &ReportCustomSlaveTest{
+		Name:     s.Name,
+		Pass:     false,
+		Skip:     s.Skip,
+		Write:    nil,
+		Expected: nil,
+		GotByte:  nil,
+	}
 }

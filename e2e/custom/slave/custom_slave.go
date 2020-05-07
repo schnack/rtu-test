@@ -6,6 +6,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"rtu-test/e2e/common"
 	"rtu-test/e2e/custom/module"
+	"rtu-test/e2e/display"
 	"rtu-test/e2e/transport"
 	"strings"
 )
@@ -17,22 +18,22 @@ const (
 )
 
 type CustomSlave struct {
-	Port           string              `yaml:"port"`
-	BoundRate      int                 `yaml:"boundRate"`
-	DataBits       int                 `yaml:"dataBits"`
-	Parity         string              `yaml:"parity"`
-	StopBits       int                 `yaml:"stopBits"`
-	SilentInterval string              `yaml:"silentInterval"`
-	ByteOrder      string              `yaml:"byteOrder"`
-	Const          map[string][]string `yaml:"const"`
-	Staffing       *module.Staffing    `yaml:"staffing"`
-	MaxLen         int                 `yaml:"maxLen"`
-	Len            *module.LenBytes    `yaml:"len"`
-	Crc            *module.Crc         `yaml:"crc"`
-	WriteFormat    []string            `yaml:"writeFormat"`
-	ReadFormat     []string            `yaml:"readFormat"`
-	ErrorFormat    []string            `yaml:"errorFormat"`
-	SlaveTest      []CustomSlaveTest   `yaml:"test"`
+	Port            string              `yaml:"port"`
+	BoundRate       int                 `yaml:"boundRate"`
+	DataBits        int                 `yaml:"dataBits"`
+	Parity          string              `yaml:"parity"`
+	StopBits        int                 `yaml:"stopBits"`
+	SilentInterval  string              `yaml:"silentInterval"`
+	ByteOrder       string              `yaml:"byteOrder"`
+	Const           map[string][]string `yaml:"const"`
+	Staffing        *module.Staffing    `yaml:"staffing"`
+	MaxLen          int                 `yaml:"maxLen"`
+	Len             *module.LenBytes    `yaml:"len"`
+	Crc             *module.Crc         `yaml:"crc"`
+	WriteFormat     []string            `yaml:"writeFormat"`
+	ReadFormat      []string            `yaml:"readFormat"`
+	ErrorFormat     []string            `yaml:"errorFormat"`
+	CustomSlaveTest []CustomSlaveTest   `yaml:"test"`
 }
 
 // ParseReadFormat создает сплиттер для поиска фреймов в потоке данных rs
@@ -114,6 +115,7 @@ func (s *CustomSlave) ParseReadFormat() (start []byte, lenPosition, suffixLen in
 	return
 }
 
+// Запускает тест на выполнение
 func (s *CustomSlave) Run() error {
 	port := transport.NewSerialPort(&transport.SerialPortConfig{
 		Port:     s.Port,
@@ -129,9 +131,42 @@ func (s *CustomSlave) Run() error {
 
 	// Включаем прослушку ком порта
 	for listen.Scan() {
-		for i := range s.SlaveTest {
-			if s.SlaveTest[i].Check(listen.Bytes()) {
-				//s.CustomSlaveTest[i].Exec(listen.Bytes(), )
+		for i := range s.CustomSlaveTest {
+			if s.CustomSlaveTest[i].Check(listen.Bytes()) {
+
+				// Получаем отчет для использования в сообщениях
+				report := s.CustomSlaveTest[i].GetReport()
+				report.GotByte = listen.Bytes()
+
+				// Сообщение перед тестом
+				display.Console().Print(&s.CustomSlaveTest[i].Before, report)
+
+				// Готовим ответ для устройства. Ошибка в приоритете
+				if len(s.CustomSlaveTest[i].WriteError) > 0 {
+					// Отвечаем тестируемому устройству
+					if _, err := port.Write(s.CustomSlaveTest[i].ReturnError()); err != nil {
+						logrus.Fatalf("write answer error: %s", err.Error())
+					}
+				} else if len(s.CustomSlaveTest[i].Write) > 0 {
+					// Отвечаем тестируемому устройству
+					if _, err := port.Write(s.CustomSlaveTest[i].ReturnData()); err != nil {
+						logrus.Fatalf("write answer error: %s", err.Error())
+					}
+				}
+
+				// Проверяем результат
+				s.CustomSlaveTest[i].Exec(listen.Bytes(), report)
+				//
+
+				// отчет о проделанном тесте
+				if report.Pass {
+					display.Console().Print(&s.CustomSlaveTest[i].Success, report)
+				} else {
+					display.Console().Print(&s.CustomSlaveTest[i].Error, report)
+				}
+
+				// Сообщение после теста
+				display.Console().Print(&s.CustomSlaveTest[i].After, report)
 			}
 		}
 	}

@@ -104,54 +104,52 @@ slave:
     - stop
 
   tests:
+    - name: TestName  # Test Name
+      skip: пока пропустить
 
-    Default:
-      - name: TestName  # Test Name
-        skip: пока пропустить
+      # Сообщение перед тестом
+      before: "the message after the test"
 
-        # Сообщение перед тестом
-        before: "the message after the test"
-
-        # Строги порядок выполнения команд
-        next:
-          - TestName
+      # Строги порядок выполнения команд
+      next:
+        - TestName
 
 
-        fatal: exit
+      fatal: exit
 
-        # Количество запусков
-        lifetime: 1
+      # Количество запусков
+      lifetime: 1
 
-        # Задержка перед ответом
-        timeout: 2s
+      # Задержка перед ответом
+      timeout: 2s
 
-        # Определяет что запрос пришел для этого теста. Подставляется в поле test#expected
-        pattern:
-          - name: "param1"
-            # начиная с какого бита это значение по умолчанию 0
-            address: 0x00
-            uint8: 8
+      # Определяет что запрос пришел для этого теста. Подставляется в поле test#expected
+      pattern:
+        - name: "param1"
+          # начиная с какого бита это значение по умолчанию 0
+          address: 0x00
+          uint8: 8
 
-        write:
-          - name: "param1"
+      write:
+        - name: "param1"
+          uint16: 1
+        - name: "param2"
+          uint32: 2
+
+      writeError:
+        - name: "param1"
             uint16: 1
-          - name: "param2"
+        - name: "param2"
             uint32: 2
 
-        writeError:
-          - name: "param1"
-              uint16: 1
-          - name: "param2"
-              uint32: 2
+      expected:
+        - name: no error
+          error:
+        - name: execution time
+          time: 1s
+        - name: quantity
+          uint16: 0xffff
 
-        expected:
-          - name: no error
-            error:
-          - name: execution time
-            time: 1s
-          - name: quantity
-            uint16: 0xffff
-
-        success: "the message on successful completion of the test"
-        error: "the message about the failed test execution"
-        after: "the message after the test"
+      success: "the message on successful completion of the test"
+      error: "the message about the failed test execution"
+      after: "the message after the test"
