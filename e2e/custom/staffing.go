@@ -1,4 +1,4 @@
-package e2e
+package custom
 
 type Staffing struct {
 	Byte    string   `yaml:"byte"`

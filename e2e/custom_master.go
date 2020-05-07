@@ -6,6 +6,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"go.bug.st/serial"
 	"rtu-test/e2e/common"
+	"rtu-test/e2e/custom"
 	reports2 "rtu-test/e2e/reports"
 	"rtu-test/e2e/template"
 	"strings"
@@ -21,13 +22,13 @@ type CustomMaster struct {
 	Filter    string `yaml:"filter"`
 	ByteOrder string `yaml:"byteOrder"`
 
-	Const       map[string][]string  `yaml:"const"`
-	Staffing    *Staffing            `yaml:"staffing"`
-	Len         map[string]*LenBytes `yaml:"len"`
-	Crc         map[string]*Crc      `yaml:"crc"`
-	WriteFormat []string             `yaml:"writeFormat"`
-	ReadFormat  []string             `yaml:"readFormat"`
-	ErrorFormat []string             `yaml:"errorFormat"`
+	Const       map[string][]string    `yaml:"const"`
+	Staffing    *custom.Staffing       `yaml:"staffing"`
+	Len         map[string]*LenBytes   `yaml:"len"`
+	Crc         map[string]*custom.Crc `yaml:"crc"`
+	WriteFormat []string               `yaml:"writeFormat"`
+	ReadFormat  []string               `yaml:"readFormat"`
+	ErrorFormat []string               `yaml:"errorFormat"`
 
 	Tests map[string][]*CustomMasterTest `yaml:"tests"`
 }
