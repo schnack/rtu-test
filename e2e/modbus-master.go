@@ -6,6 +6,7 @@ import (
 	"log"
 	"rtu-test/e2e/common"
 	reports2 "rtu-test/e2e/reports"
+	"rtu-test/e2e/template"
 	"strings"
 )
 
@@ -67,7 +68,7 @@ func (mc *ModbusMaster) Run(reports *reports2.ReportGroups) error {
 			continue
 		}
 		report := reports2.ReportGroup{Name: group}
-		logrus.Warnf(common.Render(TestGROUP, report))
+		logrus.Warnf(common.Render(template.TestGROUP, report))
 		for _, test := range tests {
 			if filterTest != "" && filterTest != "all" && filterTest != test.Name {
 				continue

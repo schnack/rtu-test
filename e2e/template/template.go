@@ -1,4 +1,4 @@
-package e2e
+package template
 
 const TestGROUP = `>>> GROUP      {{.Name}}`
 const TestSKIP = `--- SKIP       {{.Name}} ({{.GotTime}})

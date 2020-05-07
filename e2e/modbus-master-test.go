@@ -7,6 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"rtu-test/e2e/common"
 	"rtu-test/e2e/reports"
+	"rtu-test/e2e/template"
 	"strconv"
 	"strings"
 	"time"
@@ -48,19 +49,19 @@ func (mt *ModbusMasterTest) Run(client modbus.Client) reports.ReportMasterTest {
 	}
 
 	report := reports.ReportMasterTest{Name: mt.Name, Pass: true, Skip: mt.Skip}
-	logrus.Warn(common.Render(TestRUN, report))
+	logrus.Warn(common.Render(template.TestRUN, report))
 	if report.Skip != "" {
-		logrus.Warn(common.Render(TestSKIP, report))
+		logrus.Warn(common.Render(template.TestSKIP, report))
 		return report
 	}
 	mt.Before.PrintReportMasterTest(report)
 	mt.Exec(client, &report)
 	mt.Check(&report)
 	if report.Pass {
-		logrus.Warn(common.Render(TestPASS, report))
+		logrus.Warn(common.Render(template.TestPASS, report))
 		mt.Success.PrintReportMasterTest(report)
 	} else {
-		logrus.Error(common.Render(TestFAIL, report))
+		logrus.Error(common.Render(template.TestFAIL, report))
 		mt.Error.PrintReportMasterTest(report)
 		if mt.Fatal != "" {
 			logrus.Fatal(mt.Fatal)

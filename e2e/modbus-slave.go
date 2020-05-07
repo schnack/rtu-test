@@ -7,6 +7,7 @@ import (
 	"math"
 	"rtu-test/e2e/common"
 	"rtu-test/e2e/reports"
+	"rtu-test/e2e/template"
 	"strings"
 	"time"
 )
@@ -159,7 +160,7 @@ func (ms *ModbusSlave) expected(test *ModbusSlaveTest, reports reports.ReportSla
 		return
 	}
 
-	logrus.Warn(common.Render(TestSlaveRUN, reports))
+	logrus.Warn(common.Render(template.TestSlaveRUN, reports))
 
 	if v, ok := test.Expected[CoilsTable]; ok {
 		reports.ExpectedCoils, reports.Pass = ms.Expect1Bit(CoilsTable, v)
@@ -175,10 +176,10 @@ func (ms *ModbusSlave) expected(test *ModbusSlaveTest, reports reports.ReportSla
 	}
 
 	if reports.Pass {
-		logrus.Warn(common.Render(TestSlavePASS, reports))
+		logrus.Warn(common.Render(template.TestSlavePASS, reports))
 		(&Message{Message: test.Success}).PrintReportSlaveTest(reports)
 	} else {
-		logrus.Error(common.Render(TestSlaveFAIL, reports))
+		logrus.Error(common.Render(template.TestSlaveFAIL, reports))
 		(&Message{Message: test.Error}).PrintReportSlaveTest(reports)
 		if test.Fatal != "" {
 			logrus.Fatal(test.Fatal)
@@ -232,7 +233,7 @@ func (ms *ModbusSlave) ActionHandler(request mbslave.Request, response mbslave.R
 	if test != nil {
 		reports.Name = test.Name
 		if test.Skip != "" {
-			logrus.Warn(common.Render(TestSlaveSkip, reports))
+			logrus.Warn(common.Render(template.TestSlaveSkip, reports))
 		} else {
 			if test.Lifetime != nil {
 				*test.Lifetime--
