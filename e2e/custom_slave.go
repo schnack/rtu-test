@@ -13,7 +13,7 @@ const (
 	ActionError = "Error"
 )
 
-type Slave struct {
+type CustomSlave struct {
 	Port           string              `yaml:"port"`
 	BoundRate      int                 `yaml:"boundRate"`
 	DataBits       int                 `yaml:"dataBits"`
@@ -29,11 +29,11 @@ type Slave struct {
 	WriteFormat    []string            `yaml:"writeFormat"`
 	ReadFormat     []string            `yaml:"readFormat"`
 	ErrorFormat    []string            `yaml:"errorFormat"`
-	SlaveTest      []SlaveTest         `yaml:"test"`
+	SlaveTest      []CustomSlaveTest   `yaml:"test"`
 }
 
 // ParseReadFormat создает сплиттер для поиска фреймов в потоке данных rs
-func (s *Slave) ParseReadFormat() (start []byte, lenPosition, suffixLen int, end []byte) {
+func (s *CustomSlave) ParseReadFormat() (start []byte, lenPosition, suffixLen int, end []byte) {
 	prefixLen := 0
 	// позволяет собирать стартовые байты
 	findStart := true
@@ -111,7 +111,7 @@ func (s *Slave) ParseReadFormat() (start []byte, lenPosition, suffixLen int, end
 	return
 }
 
-func (s *Slave) Run() error {
+func (s *CustomSlave) Run() error {
 	port := NewSerialPort(&SerialPortConfig{
 		Port:     s.Port,
 		BaudRate: s.BoundRate,
@@ -126,8 +126,11 @@ func (s *Slave) Run() error {
 
 	// Включаем прослушку ком порта
 	for listen.Scan() {
-		listen.Bytes()
-		// TODO
+		for i := range s.SlaveTest {
+			if s.SlaveTest[i].Check(listen.Bytes()) {
+				//s.CustomSlaveTest[i].Exec(listen.Bytes(), )
+			}
+		}
 	}
 	return nil
 }
@@ -135,7 +138,7 @@ func (s *Slave) Run() error {
 // CalcCrc - Подсчитывает контрольную сумму согласно шаблону.
 // action - read, write, error
 // data - чистые данные из теста (writeError, expected, write) без staffing byte
-func (s *Slave) CalcCrc(action string, data []byte) []byte {
+func (s *CustomSlave) CalcCrc(action string, data []byte) []byte {
 	if s.Crc == nil {
 		logrus.Fatal("Crc is not specified in the configuration")
 	}
@@ -184,7 +187,7 @@ func (s *Slave) CalcCrc(action string, data []byte) []byte {
 // CalcLen - Подсчитывает длину согласно шаблону
 // action - read, write, error
 // data - чистые данные из теста (writeError, expected, write) без staffing byte
-func (s *Slave) CalcLen(action string, data []byte) (int, []byte) {
+func (s *CustomSlave) CalcLen(action string, data []byte) (int, []byte) {
 	if s.Len == nil {
 		logrus.Fatal("Length is not specified in the configuration")
 	}
@@ -254,7 +257,7 @@ func (s *Slave) CalcLen(action string, data []byte) (int, []byte) {
 }
 
 // AddStaffing -  Добавляет staffing byte к data
-func (s *Slave) AddStaffing(data []byte) (out []byte) {
+func (s *CustomSlave) AddStaffing(data []byte) (out []byte) {
 
 	if s.Staffing == nil || len(s.Staffing.Byte) == 0 || len(s.Staffing.Pattern) == 0 {
 		return data
@@ -315,7 +318,7 @@ func (s *Slave) AddStaffing(data []byte) (out []byte) {
 // lenPosition - позиция байтов длины
 // suffixLen - Длина окончания которое не входит в len
 // end - филированная концовка
-func (s *Slave) GetSplit(start []byte, lenPosition, suffixLen int, end []byte) bufio.SplitFunc {
+func (s *CustomSlave) GetSplit(start []byte, lenPosition, suffixLen int, end []byte) bufio.SplitFunc {
 	return func(data []byte, atEOF bool) (int, []byte, error) {
 
 		positionEnd := 0

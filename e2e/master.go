@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"go.bug.st/serial"
+	reports2 "rtu-test/e2e/reports"
 	"strings"
 )
 
@@ -60,7 +61,7 @@ func (m *Master) getPort() (serial.Port, error) {
 	})
 }
 
-func (m *Master) Run(ctx context.Context, reports *ReportGroups) error {
+func (m *Master) Run(ctx context.Context, reports *reports2.ReportGroups) error {
 	// TODO Доработать этот функционал
 	port, err := m.getPort()
 	if err != nil {
@@ -85,7 +86,7 @@ func (m *Master) Run(ctx context.Context, reports *ReportGroups) error {
 		if filterGroup != "" && filterGroup != "all" && filterGroup != group {
 			continue
 		}
-		report := ReportGroup{Name: group}
+		report := reports2.ReportGroup{Name: group}
 		logrus.Warnf(render(TestGROUP, report))
 		for _, test := range tests {
 			if filterTest != "" && filterTest != "all" && filterTest != test.Name {

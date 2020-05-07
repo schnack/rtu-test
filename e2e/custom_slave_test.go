@@ -5,16 +5,16 @@ import (
 	"testing"
 )
 
-func TestSlave(t *testing.T) {
-	suite.Run(t, new(SlaveTestSuit))
+func TestCustomSlave(t *testing.T) {
+	suite.Run(t, new(CustomSlaveTestSuit))
 }
 
-type SlaveTestSuit struct {
+type CustomSlaveTestSuit struct {
 	suite.Suite
 }
 
-func (s *SlaveTestSuit) TestParseReadFormat() {
-	v := Slave{
+func (s *CustomSlaveTestSuit) TestParseReadFormat() {
+	v := CustomSlave{
 		ByteOrder: "big",
 		Const: map[string][]string{
 			"start": {"0x01", "0x02"},
@@ -41,8 +41,8 @@ func (s *SlaveTestSuit) TestParseReadFormat() {
 	s.Equal([]byte{0x03, 0x04}, end)
 }
 
-func (s *SlaveTestSuit) TestGetSpkit() {
-	v := Slave{
+func (s *CustomSlaveTestSuit) TestGetSpkit() {
+	v := CustomSlave{
 		ByteOrder: "big",
 		MaxLen:    255,
 		Len: &LenBytes{
@@ -78,8 +78,8 @@ func (s *SlaveTestSuit) TestGetSpkit() {
 	s.NoError(err)
 }
 
-func (s *SlaveTestSuit) TestAddStaffing() {
-	v := Slave{
+func (s *CustomSlaveTestSuit) TestAddStaffing() {
+	v := CustomSlave{
 		ByteOrder: "big",
 		Const: map[string][]string{
 			"start": {"0xcf", "0xbf"},
@@ -94,8 +94,8 @@ func (s *SlaveTestSuit) TestAddStaffing() {
 	s.Equal([]byte{0x1, 0xcf, 0x0, 0x2, 0xbf, 0x0, 0x3, 0xff, 0x0, 0x4, 0xef, 0x0, 0x5}, v.AddStaffing([]byte{0x01, 0xcf, 0x02, 0xbf, 0x03, 0xff, 0x04, 0xef, 0x05}))
 }
 
-func (s *SlaveTestSuit) TestCalcLen() {
-	v := Slave{
+func (s *CustomSlaveTestSuit) TestCalcLen() {
+	v := CustomSlave{
 		ByteOrder: "big",
 		Const: map[string][]string{
 			"start": {"0xcf", "0xbf"},
@@ -132,8 +132,8 @@ func (s *SlaveTestSuit) TestCalcLen() {
 	s.Equal([]byte{0x0, 0x2}, b)
 }
 
-func (s *SlaveTestSuit) TestCalcCrc() {
-	v := Slave{
+func (s *CustomSlaveTestSuit) TestCalcCrc() {
+	v := CustomSlave{
 		ByteOrder: "big",
 		Const: map[string][]string{
 			"start": {"0xcf", "0xbf"},

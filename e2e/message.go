@@ -3,6 +3,7 @@ package e2e
 import (
 	"fmt"
 	"github.com/sirupsen/logrus"
+	"rtu-test/e2e/reports"
 	"time"
 )
 
@@ -11,7 +12,7 @@ type Message struct {
 	Pause   string `yaml:"pause"`
 }
 
-func (m *Message) PrintReportMasterTest(report ReportMasterTest) {
+func (m *Message) PrintReportMasterTest(report reports.ReportMasterTest) {
 	d := parseDuration(m.Pause)
 	report.Pause = d.String()
 
@@ -40,7 +41,7 @@ func (m *Message) PrintReportMasterTest(report ReportMasterTest) {
 	}
 }
 
-func (m *Message) PrintReportSlaveTest(report ReportSlaveTest) {
+func (m *Message) PrintReportSlaveTest(report reports.ReportSlaveTest) {
 	if m.Message != "" {
 		message := render(m.Message, report)
 		logrus.Info(message)
@@ -50,7 +51,7 @@ func (m *Message) PrintReportSlaveTest(report ReportSlaveTest) {
 	}
 }
 
-func (m *Message) PrintReportMasterGroup(report ReportGroup) {
+func (m *Message) PrintReportMasterGroup(report reports.ReportGroup) {
 	d := parseDuration(m.Pause)
 	report.Pause = d.String()
 
@@ -79,7 +80,7 @@ func (m *Message) PrintReportMasterGroup(report ReportGroup) {
 	}
 }
 
-func (m *Message) PrintReportMasterGroups(reports ReportGroups) {
+func (m *Message) PrintReportMasterGroups(reports reports.ReportGroups) {
 	d := parseDuration(m.Pause)
 
 	if m.Message != "" {

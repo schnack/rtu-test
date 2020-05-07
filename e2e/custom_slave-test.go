@@ -1,6 +1,8 @@
 package e2e
 
-type SlaveTest struct {
+import "rtu-test/e2e/reports"
+
+type CustomSlaveTest struct {
 	Name   string   `yaml:"name"`
 	Skip   string   `yaml:"skip"`
 	Before Message  `yaml:"before"`
@@ -19,18 +21,18 @@ type SlaveTest struct {
 }
 
 // Проверяем пакет принадлежит этому тесту или нет с использованием Pattern
-func (s *SlaveTest) Check(data []byte) bool {
+func (s *CustomSlaveTest) Check(data []byte) bool {
 
 	return false
 }
 
 // Запускает тест и поверяет значение
-func (s *SlaveTest) Exec(data []byte, report *ReportSlaveTest) {
+func (s *CustomSlaveTest) Exec(data []byte, report *reports.ReportSlaveTest) {
 
 	return
 }
 
 // Возвращает данны для записи в компорт
-func (s *SlaveTest) WriteData() []byte {
+func (s *CustomSlaveTest) WriteData() []byte {
 	return nil
 }

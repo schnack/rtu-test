@@ -5,6 +5,7 @@ import (
 	"github.com/schnack/mbslave"
 	"github.com/sirupsen/logrus"
 	"math"
+	"rtu-test/e2e/reports"
 	"strings"
 	"time"
 )
@@ -107,7 +108,7 @@ func (ms *ModbusSlave) autorun() {
 			timer := autorun[len(autorun)-1]
 			time.Sleep(parseDuration(delay))
 			tiker := time.NewTicker(parseDuration(timer))
-			reports := ReportSlaveTest{
+			reports := reports.ReportSlaveTest{
 				Name: t.Name,
 			}
 			for _ = range tiker.C {
@@ -128,7 +129,7 @@ func (ms *ModbusSlave) autorun() {
 	}
 }
 
-func (ms *ModbusSlave) before(test *ModbusSlaveTest, reports ReportSlaveTest) {
+func (ms *ModbusSlave) before(test *ModbusSlaveTest, reports reports.ReportSlaveTest) {
 	if test == nil || test.Skip != "" {
 		return
 	}
@@ -152,7 +153,7 @@ func (ms *ModbusSlave) before(test *ModbusSlaveTest, reports ReportSlaveTest) {
 	}
 }
 
-func (ms *ModbusSlave) expected(test *ModbusSlaveTest, reports ReportSlaveTest) {
+func (ms *ModbusSlave) expected(test *ModbusSlaveTest, reports reports.ReportSlaveTest) {
 	if test == nil || test.Skip != "" || test.Expected == nil {
 		return
 	}
@@ -184,7 +185,7 @@ func (ms *ModbusSlave) expected(test *ModbusSlaveTest, reports ReportSlaveTest) 
 	}
 }
 
-func (ms *ModbusSlave) after(test *ModbusSlaveTest, reports ReportSlaveTest) {
+func (ms *ModbusSlave) after(test *ModbusSlaveTest, reports reports.ReportSlaveTest) {
 	if test == nil || test.Skip != "" {
 		return
 	}
@@ -208,7 +209,7 @@ func (ms *ModbusSlave) after(test *ModbusSlaveTest, reports ReportSlaveTest) {
 }
 
 func (ms *ModbusSlave) ActionHandler(request mbslave.Request, response mbslave.Response) {
-	reports := ReportSlaveTest{}
+	reports := reports.ReportSlaveTest{}
 
 	var test *ModbusSlaveTest
 	max := 0
@@ -269,7 +270,7 @@ func (ms *ModbusSlave) ActionHandler(request mbslave.Request, response mbslave.R
 	return
 }
 
-func (ms *ModbusSlave) Expect1Bit(table string, v []*Value) (reports []ReportExpected, pass bool) {
+func (ms *ModbusSlave) Expect1Bit(table string, v []*Value) (reports []reports.ReportExpected, pass bool) {
 	pass = true
 	var address uint16 = 0
 
@@ -323,7 +324,7 @@ func (ms *ModbusSlave) Expect1Bit(table string, v []*Value) (reports []ReportExp
 	return
 }
 
-func (ms *ModbusSlave) Expect16Bit(table string, v []*Value) (reports []ReportExpected, pass bool) {
+func (ms *ModbusSlave) Expect16Bit(table string, v []*Value) (reports []reports.ReportExpected, pass bool) {
 	pass = true
 	var address uint16 = 0
 

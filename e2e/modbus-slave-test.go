@@ -3,6 +3,7 @@ package e2e
 import (
 	"encoding/binary"
 	"github.com/schnack/mbslave"
+	"rtu-test/e2e/reports"
 	"strconv"
 	"strings"
 )
@@ -63,7 +64,7 @@ func (ms *ModbusSlaveTest) Check(request mbslave.Request, nexts []string) (point
 	case WriteSingleCoil:
 		if ms.Data != nil {
 			countBit := 0
-			var expected ReportExpected
+			var expected reports.ReportExpected
 			for _, v := range ms.Data {
 				countBit, expected = v.Check(request.GetData(), 0, "", countBit, 8, binary.BigEndian)
 				if !expected.Pass {
@@ -76,7 +77,7 @@ func (ms *ModbusSlaveTest) Check(request mbslave.Request, nexts []string) (point
 	case WriteSingleRegister:
 		if ms.Data != nil {
 			countBit := 0
-			var expected ReportExpected
+			var expected reports.ReportExpected
 			for _, v := range ms.Data {
 				countBit, expected = v.Check(request.GetData(), 0, "", countBit, 16, binary.BigEndian)
 				if !expected.Pass {
@@ -96,7 +97,7 @@ func (ms *ModbusSlaveTest) Check(request mbslave.Request, nexts []string) (point
 		}
 		if ms.Data != nil {
 			countBit := 0
-			var expected ReportExpected
+			var expected reports.ReportExpected
 			for _, v := range ms.Data {
 				bitSize := 8
 				if ms.getFunction() == WriteMultipleRegisters {

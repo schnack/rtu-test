@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/goburrow/modbus"
 	"github.com/sirupsen/logrus"
+	"rtu-test/e2e/reports"
 	"strconv"
 	"strings"
 	"time"
@@ -40,12 +41,12 @@ type ModbusMasterTest struct {
 	Disconnect bool     `yaml:"disconnect"`
 }
 
-func (mt *ModbusMasterTest) Run(client modbus.Client) ReportMasterTest {
+func (mt *ModbusMasterTest) Run(client modbus.Client) reports.ReportMasterTest {
 	if err := mt.Validation(); err != nil {
 		logrus.Fatal(err)
 	}
 
-	report := ReportMasterTest{Name: mt.Name, Pass: true, Skip: mt.Skip}
+	report := reports.ReportMasterTest{Name: mt.Name, Pass: true, Skip: mt.Skip}
 	logrus.Warn(render(TestRUN, report))
 	if report.Skip != "" {
 		logrus.Warn(render(TestSKIP, report))
@@ -68,9 +69,9 @@ func (mt *ModbusMasterTest) Run(client modbus.Client) ReportMasterTest {
 	return report
 }
 
-func (mt *ModbusMasterTest) Check(report *ReportMasterTest) {
+func (mt *ModbusMasterTest) Check(report *reports.ReportMasterTest) {
 	countBit := 0
-	var expected ReportExpected
+	var expected reports.ReportExpected
 	for _, v := range mt.Expected {
 		bitSize := 8
 		switch mt.getFunction() {
@@ -85,7 +86,7 @@ func (mt *ModbusMasterTest) Check(report *ReportMasterTest) {
 	}
 }
 
-func (mt *ModbusMasterTest) Exec(client modbus.Client, report *ReportMasterTest) {
+func (mt *ModbusMasterTest) Exec(client modbus.Client, report *reports.ReportMasterTest) {
 	var err error
 	switch mt.getFunction() {
 	case ReadDiscreteInputs:
@@ -103,7 +104,7 @@ func (mt *ModbusMasterTest) Exec(client modbus.Client, report *ReportMasterTest)
 	case WriteSingleCoil:
 		// Special case when writing single coil
 		data := binary.BigEndian.Uint16(dataSingleCoil(valueToByte(mt.Write)))
-		report.Write = append(report.Write, ReportWrite{
+		report.Write = append(report.Write, reports.ReportWrite{
 			Name:    mt.Write[0].Name,
 			Type:    Bool.String(),
 			Data:    fmt.Sprintf("%t", data == 0),

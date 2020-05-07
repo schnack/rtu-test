@@ -7,6 +7,7 @@ import (
 	"github.com/shiena/ansicolor"
 	"github.com/sirupsen/logrus"
 	"os"
+	"rtu-test/e2e/reports"
 	"runtime"
 	"sync"
 )
@@ -35,7 +36,7 @@ type Device struct {
 	ExitMessage  Message       `yaml:"exitMessage"`
 	ModbusMaster *ModbusMaster `yaml:"modbusMaster"`
 	ModbusSlave  *ModbusSlave  `yaml:"modbusSlave"`
-	Slave        *Slave        `yaml:"slave"`
+	Slave        *CustomSlave  `yaml:"slave"`
 	Master       *Master       `yaml:"master"`
 }
 
@@ -104,7 +105,7 @@ func (d *Device) RunTest(ctx context.Context) {
 
 	switch {
 	case d.ModbusMaster != nil:
-		report := ReportGroups{
+		report := reports.ReportGroups{
 			Name:        d.Name,
 			Description: d.Description,
 		}
