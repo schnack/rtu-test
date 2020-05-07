@@ -2,7 +2,7 @@ package e2e
 
 import (
 	"github.com/stretchr/testify/suite"
-	"rtu-test/e2e/custom"
+	"rtu-test/e2e/custom/common"
 	"testing"
 )
 
@@ -26,7 +26,7 @@ func (s *CustomSlaveTestSuit) TestParseReadFormat() {
 			CountBytes: 1,
 			Read:       []string{"data#"},
 		},
-		Crc: &custom.Crc{
+		Crc: &common.Crc{
 			Algorithm: "mod256",
 		},
 		ReadFormat: []string{
@@ -86,7 +86,7 @@ func (s *CustomSlaveTestSuit) TestAddStaffing() {
 			"start": {"0xcf", "0xbf"},
 			"end":   {"0xff", "0xef"},
 		},
-		Staffing: &custom.Staffing{
+		Staffing: &common.Staffing{
 			Byte:    "0x00",
 			Pattern: []string{"start", "end"},
 		},
@@ -102,7 +102,7 @@ func (s *CustomSlaveTestSuit) TestCalcLen() {
 			"start": {"0xcf", "0xbf"},
 			"end":   {"0xff", "0xef"},
 		},
-		Staffing: &custom.Staffing{
+		Staffing: &common.Staffing{
 			Byte:    "0x00",
 			Pattern: []string{"start", "end"},
 		},
@@ -140,7 +140,7 @@ func (s *CustomSlaveTestSuit) TestCalcCrc() {
 			"start": {"0xcf", "0xbf"},
 			"end":   {"0xff", "0xef"},
 		},
-		Staffing: &custom.Staffing{
+		Staffing: &common.Staffing{
 			Byte:    "0x00",
 			Pattern: []string{"start", "end"},
 		},
@@ -151,7 +151,7 @@ func (s *CustomSlaveTestSuit) TestCalcCrc() {
 			Write:      []string{"data#"},
 			Error:      []string{"end"},
 		},
-		Crc: &custom.Crc{
+		Crc: &common.Crc{
 			Algorithm: "mod256",
 			Staffing:  false,
 			Read:      []string{"data#", "end"},

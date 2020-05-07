@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"github.com/sirupsen/logrus"
 	"rtu-test/e2e/common"
-	"rtu-test/e2e/custom"
+	common2 "rtu-test/e2e/custom/common"
 	"rtu-test/e2e/transport"
 	"strings"
 )
@@ -25,10 +25,10 @@ type CustomSlave struct {
 	SilentInterval string              `yaml:"silentInterval"`
 	ByteOrder      string              `yaml:"byteOrder"`
 	Const          map[string][]string `yaml:"const"`
-	Staffing       *custom.Staffing    `yaml:"staffing"`
+	Staffing       *common2.Staffing   `yaml:"staffing"`
 	MaxLen         int                 `yaml:"maxLen"`
 	Len            *LenBytes           `yaml:"len"`
-	Crc            *custom.Crc         `yaml:"crc"`
+	Crc            *common2.Crc        `yaml:"crc"`
 	WriteFormat    []string            `yaml:"writeFormat"`
 	ReadFormat     []string            `yaml:"readFormat"`
 	ErrorFormat    []string            `yaml:"errorFormat"`
