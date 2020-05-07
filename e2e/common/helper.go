@@ -1,4 +1,4 @@
-package e2e
+package common
 
 import (
 	"bytes"
@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func render(tmpl string, data interface{}) string {
+func Render(tmpl string, data interface{}) string {
 	t := template.Must(template.New("message").Parse(tmpl))
 	buff := new(bytes.Buffer)
 	if err := t.Execute(buff, data); err != nil {
@@ -19,8 +19,8 @@ func render(tmpl string, data interface{}) string {
 	return buff.String()
 }
 
-// parseStringByte - Превращает текстовое представления байт в настоящие байты
-func parseStringByte(sb string) ([]byte, error) {
+// ParseStringByte - Превращает текстовое представления байт в настоящие байты
+func ParseStringByte(sb string) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	byteClear := strings.ReplaceAll(strings.ReplaceAll(sb, " ", ""), "0x", "")
 	for i := range byteClear {
@@ -37,7 +37,7 @@ func parseStringByte(sb string) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func dataSingleCoil(data []byte) []byte {
+func DataSingleCoil(data []byte) []byte {
 	if len(data) > 1 && (data[0] == 0xff || data[0] == 0x00) && data[1] == 0x00 {
 		return data[:2]
 	} else if len(data) > 0 && data[0] == 0x01 || data[0] == 0x00 {
@@ -51,7 +51,7 @@ func dataSingleCoil(data []byte) []byte {
 	}
 }
 
-func countBit(v []*Value, is16bit bool) (bits uint16) {
+func CountBit(v []*Value, is16bit bool) (bits uint16) {
 	for _, w := range v {
 		if w.Type() == Bool {
 			bits++
@@ -73,7 +73,7 @@ func countBit(v []*Value, is16bit bool) (bits uint16) {
 	}
 }
 
-func valueToByte(v []*Value) (data []byte) {
+func ValueToByte(v []*Value) (data []byte) {
 	var i int
 	var vByte uint8
 	for _, w := range v {
@@ -108,7 +108,7 @@ func valueToByte(v []*Value) (data []byte) {
 // Есть особенность если указан в конфигурации
 //  int8 будет дополнен []{byte{int8, 0}} LittleEndian
 //  int16 #TODO Доделат!!!
-func valueToByte16(v []*Value) (data []byte) {
+func ValueToByte16(v []*Value) (data []byte) {
 	var i int
 	var vByte uint8
 	for _, w := range v {
@@ -154,7 +154,7 @@ func valueToByte16(v []*Value) (data []byte) {
 }
 
 // Получает таймер строкой и возвращает объект таймера
-func parseDuration(d string) time.Duration {
+func ParseDuration(d string) time.Duration {
 	switch {
 	case d == "":
 		return time.Duration(0)

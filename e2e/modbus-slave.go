@@ -5,6 +5,7 @@ import (
 	"github.com/schnack/mbslave"
 	"github.com/sirupsen/logrus"
 	"math"
+	"rtu-test/e2e/common"
 	"rtu-test/e2e/reports"
 	"strings"
 	"time"
@@ -26,10 +27,10 @@ type ModbusSlave struct {
 	StopBits       int    `yaml:"stopBits"`
 	SilentInterval string `yaml:"silentInterval"`
 
-	Coils            []*Value `yaml:"coils"`
-	DiscreteInput    []*Value `yaml:"discreteInput"`
-	HoldingRegisters []*Value `yaml:"holdingRegisters"`
-	InputRegisters   []*Value `yaml:"inputRegisters"`
+	Coils            []*common.Value `yaml:"coils"`
+	DiscreteInput    []*common.Value `yaml:"discreteInput"`
+	HoldingRegisters []*common.Value `yaml:"holdingRegisters"`
+	InputRegisters   []*common.Value `yaml:"inputRegisters"`
 
 	Tests []*ModbusSlaveTest `yaml:"tests"`
 
@@ -65,7 +66,7 @@ func (ms *ModbusSlave) getServer() *mbslave.Server {
 		DataBits:             ms.DataBits,
 		Parity:               parity,
 		StopBits:             stopBits,
-		SilentInterval:       parseDuration(ms.SilentInterval),
+		SilentInterval:       common.ParseDuration(ms.SilentInterval),
 		SlaveId:              ms.SlaveId,
 		SizeDiscreteInputs:   math.MaxUint16,
 		SizeCoils:            math.MaxUint16,
@@ -106,8 +107,8 @@ func (ms *ModbusSlave) autorun() {
 			autorun := strings.Split(t.AutoRun, "/")
 			delay := autorun[0]
 			timer := autorun[len(autorun)-1]
-			time.Sleep(parseDuration(delay))
-			tiker := time.NewTicker(parseDuration(timer))
+			time.Sleep(common.ParseDuration(delay))
+			tiker := time.NewTicker(common.ParseDuration(timer))
 			reports := reports.ReportSlaveTest{
 				Name: t.Name,
 			}
@@ -158,7 +159,7 @@ func (ms *ModbusSlave) expected(test *ModbusSlaveTest, reports reports.ReportSla
 		return
 	}
 
-	logrus.Warn(render(TestSlaveRUN, reports))
+	logrus.Warn(common.Render(TestSlaveRUN, reports))
 
 	if v, ok := test.Expected[CoilsTable]; ok {
 		reports.ExpectedCoils, reports.Pass = ms.Expect1Bit(CoilsTable, v)
@@ -174,10 +175,10 @@ func (ms *ModbusSlave) expected(test *ModbusSlaveTest, reports reports.ReportSla
 	}
 
 	if reports.Pass {
-		logrus.Warn(render(TestSlavePASS, reports))
+		logrus.Warn(common.Render(TestSlavePASS, reports))
 		(&Message{Message: test.Success}).PrintReportSlaveTest(reports)
 	} else {
-		logrus.Error(render(TestSlaveFAIL, reports))
+		logrus.Error(common.Render(TestSlaveFAIL, reports))
 		(&Message{Message: test.Error}).PrintReportSlaveTest(reports)
 		if test.Fatal != "" {
 			logrus.Fatal(test.Fatal)
@@ -231,7 +232,7 @@ func (ms *ModbusSlave) ActionHandler(request mbslave.Request, response mbslave.R
 	if test != nil {
 		reports.Name = test.Name
 		if test.Skip != "" {
-			logrus.Warn(render(TestSlaveSkip, reports))
+			logrus.Warn(common.Render(TestSlaveSkip, reports))
 		} else {
 			if test.Lifetime != nil {
 				*test.Lifetime--
@@ -265,12 +266,12 @@ func (ms *ModbusSlave) ActionHandler(request mbslave.Request, response mbslave.R
 
 	if test != nil && test.Skip == "" {
 		ms.currentTest = test
-		time.Sleep(parseDuration(test.TimeOut))
+		time.Sleep(common.ParseDuration(test.TimeOut))
 	}
 	return
 }
 
-func (ms *ModbusSlave) Expect1Bit(table string, v []*Value) (reports []reports.ReportExpected, pass bool) {
+func (ms *ModbusSlave) Expect1Bit(table string, v []*common.Value) (reports []reports.ReportExpected, pass bool) {
 	pass = true
 	var address uint16 = 0
 
@@ -291,7 +292,7 @@ func (ms *ModbusSlave) Expect1Bit(table string, v []*Value) (reports []reports.R
 
 	for i := range v {
 		if v[i].Address != "" {
-			rawAddress, err := parseStringByte(v[i].Address)
+			rawAddress, err := common.ParseStringByte(v[i].Address)
 			if err != nil {
 				logrus.Fatalf("parse address %s", err)
 			}
@@ -324,7 +325,7 @@ func (ms *ModbusSlave) Expect1Bit(table string, v []*Value) (reports []reports.R
 	return
 }
 
-func (ms *ModbusSlave) Expect16Bit(table string, v []*Value) (reports []reports.ReportExpected, pass bool) {
+func (ms *ModbusSlave) Expect16Bit(table string, v []*common.Value) (reports []reports.ReportExpected, pass bool) {
 	pass = true
 	var address uint16 = 0
 
@@ -345,9 +346,9 @@ func (ms *ModbusSlave) Expect16Bit(table string, v []*Value) (reports []reports.
 
 		if countBit != 0 {
 			switch v[i].Type() {
-			case Bool:
-			case Uint8, Int8:
-			case String, Byte:
+			case common.Bool:
+			case common.Uint8, common.Int8:
+			case common.String, common.Byte:
 				if len(v[i].Write(binary.BigEndian)) == 1 && countBit%8 != 0 {
 					countBit += 8 - (countBit % 8)
 				} else {
@@ -362,7 +363,7 @@ func (ms *ModbusSlave) Expect16Bit(table string, v []*Value) (reports []reports.
 		}
 
 		if v[i].Address != "" {
-			rawAddress, err := parseStringByte(v[i].Address)
+			rawAddress, err := common.ParseStringByte(v[i].Address)
 			if err != nil {
 				logrus.Fatalf("parse address %s", err)
 			}
@@ -397,13 +398,13 @@ func (ms *ModbusSlave) Expect16Bit(table string, v []*Value) (reports []reports.
 		_, report := v[i].Check(buf, 0, "", countBit, 16, binary.BigEndian)
 
 		switch v[i].Type() {
-		case Bool:
+		case common.Bool:
 			countBit++
 			if countBit >= 16 {
 				address++
 				countBit = 0
 			}
-		case Uint8, Int8:
+		case common.Uint8, common.Int8:
 			if countBit%8 != 0 {
 				countBit += 8 - (countBit % 8)
 			}
@@ -412,7 +413,7 @@ func (ms *ModbusSlave) Expect16Bit(table string, v []*Value) (reports []reports.
 				address++
 				countBit = 0
 			}
-		case String, Byte:
+		case common.String, common.Byte:
 			if len(v[i].Write(binary.BigEndian)) == 1 {
 				if countBit%8 != 0 {
 					countBit += 8 - (countBit % 8)
@@ -439,7 +440,7 @@ func (ms *ModbusSlave) Expect16Bit(table string, v []*Value) (reports []reports.
 	return
 }
 
-func (ms *ModbusSlave) Write1Bit(table string, v []*Value) {
+func (ms *ModbusSlave) Write1Bit(table string, v []*common.Value) {
 	var address uint16 = 0
 
 	var setFunc func(address uint16, value bool) error
@@ -459,7 +460,7 @@ func (ms *ModbusSlave) Write1Bit(table string, v []*Value) {
 
 	for i := range v {
 		if v[i].Address != "" {
-			rawAddress, err := parseStringByte(v[i].Address)
+			rawAddress, err := common.ParseStringByte(v[i].Address)
 			if err != nil {
 				logrus.Fatalf("parse address %s", err)
 			}
@@ -471,7 +472,7 @@ func (ms *ModbusSlave) Write1Bit(table string, v []*Value) {
 			if countRegisters <= int(address) {
 				logrus.Fatal("ModBus tables overflow")
 			}
-			if v[i].Type() == Bool {
+			if v[i].Type() == common.Bool {
 				if err := setFunc(address, b != 0); err != nil {
 					logrus.Fatalf("%s", err)
 				}
@@ -491,7 +492,7 @@ func (ms *ModbusSlave) Write1Bit(table string, v []*Value) {
 	}
 }
 
-func (ms *ModbusSlave) Write16Bit(table string, v []*Value) {
+func (ms *ModbusSlave) Write16Bit(table string, v []*common.Value) {
 	var address uint16 = 0
 
 	var setFunc func(address uint16, value uint16) error
@@ -527,7 +528,7 @@ func (ms *ModbusSlave) Write16Bit(table string, v []*Value) {
 				current = 0
 			}
 
-			rawAddress, err := parseStringByte(v[i].Address)
+			rawAddress, err := common.ParseStringByte(v[i].Address)
 			if err != nil {
 				logrus.Fatalf("parse address %s", err)
 			}
@@ -546,7 +547,7 @@ func (ms *ModbusSlave) Write16Bit(table string, v []*Value) {
 		}
 
 		switch v[i].Type() {
-		case Bool:
+		case common.Bool:
 			vBytes |= 1 << current
 			current++
 		default:

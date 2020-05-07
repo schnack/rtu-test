@@ -3,6 +3,7 @@ package e2e
 import (
 	"encoding/binary"
 	"github.com/schnack/mbslave"
+	"rtu-test/e2e/common"
 	"rtu-test/e2e/reports"
 	"strconv"
 	"strings"
@@ -16,24 +17,24 @@ const (
 )
 
 type ModbusSlaveTest struct {
-	Name        string              `yaml:"name"`
-	Skip        string              `yaml:"skip"`
-	Fatal       string              `yaml:"fatal"`
-	Before      string              `yaml:"before"`
-	Next        []string            `yaml:"next"`
-	Lifetime    *int                `yaml:"lifetime"`
-	TimeOut     string              `yaml:"timeout"`
-	AutoRun     string              `yaml:"autorun"`
-	Function    string              `yaml:"function"`
-	Address     *uint16             `yaml:"address"`
-	Quantity    *uint16             `yaml:"quantity"`
-	Data        []*Value            `yaml:"data"`
-	Expected    map[string][]*Value `yaml:"expected"`
-	AfterWrite  map[string][]*Value `yaml:"afterWrite"`
-	BeforeWrite map[string][]*Value `yaml:"beforeWrite"`
-	Success     string              `yaml:"success"`
-	Error       string              `yaml:"error"`
-	After       string              `yaml:"after"`
+	Name        string                     `yaml:"name"`
+	Skip        string                     `yaml:"skip"`
+	Fatal       string                     `yaml:"fatal"`
+	Before      string                     `yaml:"before"`
+	Next        []string                   `yaml:"next"`
+	Lifetime    *int                       `yaml:"lifetime"`
+	TimeOut     string                     `yaml:"timeout"`
+	AutoRun     string                     `yaml:"autorun"`
+	Function    string                     `yaml:"function"`
+	Address     *uint16                    `yaml:"address"`
+	Quantity    *uint16                    `yaml:"quantity"`
+	Data        []*common.Value            `yaml:"data"`
+	Expected    map[string][]*common.Value `yaml:"expected"`
+	AfterWrite  map[string][]*common.Value `yaml:"afterWrite"`
+	BeforeWrite map[string][]*common.Value `yaml:"beforeWrite"`
+	Success     string                     `yaml:"success"`
+	Error       string                     `yaml:"error"`
+	After       string                     `yaml:"after"`
 }
 
 // Для поиска нужного теста

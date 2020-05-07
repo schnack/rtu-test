@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/goburrow/modbus"
 	"github.com/sirupsen/logrus"
+	"rtu-test/e2e/common"
 	"rtu-test/e2e/reports"
 	"strconv"
 	"strings"
@@ -26,19 +27,19 @@ const (
 )
 
 type ModbusMasterTest struct {
-	Name       string   `yaml:"name"`
-	Skip       string   `yaml:"skip"`
-	Before     Message  `yaml:"before"`
-	Function   string   `yaml:"function"`
-	Address    *uint16  `yaml:"address"`
-	Quantity   *uint16  `yaml:"quantity"`
-	Write      []*Value `yaml:"write"`
-	Expected   []*Value `yaml:"expected"`
-	Success    Message  `yaml:"success"`
-	Error      Message  `yaml:"error"`
-	After      Message  `yaml:"after"`
-	Fatal      string   `yaml:"fatal"`
-	Disconnect bool     `yaml:"disconnect"`
+	Name       string          `yaml:"name"`
+	Skip       string          `yaml:"skip"`
+	Before     Message         `yaml:"before"`
+	Function   string          `yaml:"function"`
+	Address    *uint16         `yaml:"address"`
+	Quantity   *uint16         `yaml:"quantity"`
+	Write      []*common.Value `yaml:"write"`
+	Expected   []*common.Value `yaml:"expected"`
+	Success    Message         `yaml:"success"`
+	Error      Message         `yaml:"error"`
+	After      Message         `yaml:"after"`
+	Fatal      string          `yaml:"fatal"`
+	Disconnect bool            `yaml:"disconnect"`
 }
 
 func (mt *ModbusMasterTest) Run(client modbus.Client) reports.ReportMasterTest {
@@ -47,19 +48,19 @@ func (mt *ModbusMasterTest) Run(client modbus.Client) reports.ReportMasterTest {
 	}
 
 	report := reports.ReportMasterTest{Name: mt.Name, Pass: true, Skip: mt.Skip}
-	logrus.Warn(render(TestRUN, report))
+	logrus.Warn(common.Render(TestRUN, report))
 	if report.Skip != "" {
-		logrus.Warn(render(TestSKIP, report))
+		logrus.Warn(common.Render(TestSKIP, report))
 		return report
 	}
 	mt.Before.PrintReportMasterTest(report)
 	mt.Exec(client, &report)
 	mt.Check(&report)
 	if report.Pass {
-		logrus.Warn(render(TestPASS, report))
+		logrus.Warn(common.Render(TestPASS, report))
 		mt.Success.PrintReportMasterTest(report)
 	} else {
-		logrus.Error(render(TestFAIL, report))
+		logrus.Error(common.Render(TestFAIL, report))
 		mt.Error.PrintReportMasterTest(report)
 		if mt.Fatal != "" {
 			logrus.Fatal(mt.Fatal)
@@ -103,10 +104,10 @@ func (mt *ModbusMasterTest) Exec(client modbus.Client, report *reports.ReportMas
 		report.GotTime = time.Since(startTime)
 	case WriteSingleCoil:
 		// Special case when writing single coil
-		data := binary.BigEndian.Uint16(dataSingleCoil(valueToByte(mt.Write)))
+		data := binary.BigEndian.Uint16(common.DataSingleCoil(common.ValueToByte(mt.Write)))
 		report.Write = append(report.Write, reports.ReportWrite{
 			Name:    mt.Write[0].Name,
-			Type:    Bool.String(),
+			Type:    common.Bool.String(),
 			Data:    fmt.Sprintf("%t", data == 0),
 			DataHex: fmt.Sprintf("%04x", data),
 			DataBin: fmt.Sprintf("%08b", data),
@@ -121,7 +122,7 @@ func (mt *ModbusMasterTest) Exec(client modbus.Client, report *reports.ReportMas
 			report.Write = append(report.Write, w.ReportWrite(binary.BigEndian))
 		}
 		startTime := time.Now()
-		if report.GotByte, err = client.WriteMultipleCoils(*mt.Address, mt.getQuantity(), valueToByte(mt.Write)); err != nil {
+		if report.GotByte, err = client.WriteMultipleCoils(*mt.Address, mt.getQuantity(), common.ValueToByte(mt.Write)); err != nil {
 			report.GotError = err.Error()
 		}
 		report.GotTime = time.Since(startTime)
@@ -142,7 +143,7 @@ func (mt *ModbusMasterTest) Exec(client modbus.Client, report *reports.ReportMas
 			report.Write = append(report.Write, w.ReportWrite(binary.BigEndian))
 		}
 		startTime := time.Now()
-		if report.GotByte, err = client.WriteSingleRegister(*mt.Address, binary.BigEndian.Uint16(valueToByte16(mt.Write))); err != nil {
+		if report.GotByte, err = client.WriteSingleRegister(*mt.Address, binary.BigEndian.Uint16(common.ValueToByte16(mt.Write))); err != nil {
 			report.GotError = err.Error()
 		}
 		report.GotTime = time.Since(startTime)
@@ -151,7 +152,7 @@ func (mt *ModbusMasterTest) Exec(client modbus.Client, report *reports.ReportMas
 			report.Write = append(report.Write, w.ReportWrite(binary.BigEndian))
 		}
 		startTime := time.Now()
-		if report.GotByte, err = client.WriteMultipleRegisters(*mt.Address, mt.getQuantity(), valueToByte16(mt.Write)); err != nil {
+		if report.GotByte, err = client.WriteMultipleRegisters(*mt.Address, mt.getQuantity(), common.ValueToByte16(mt.Write)); err != nil {
 			report.GotError = err.Error()
 		}
 		report.GotTime = time.Since(startTime)
@@ -173,7 +174,7 @@ func (mt *ModbusMasterTest) Validation() error {
 
 	// переделываем формат ошибки
 	for _, v := range mt.Expected {
-		if v.Type() == Error {
+		if v.Type() == common.Error {
 			v.Error = mt.getError(*v.Error)
 		}
 	}
@@ -218,13 +219,13 @@ func (mt *ModbusMasterTest) getQuantity() uint16 {
 	// If it is not explicitly specified then we try to determine automatically
 	switch mt.getFunction() {
 	case ReadDiscreteInputs, ReadCoils:
-		return countBit(mt.Expected, false)
+		return common.CountBit(mt.Expected, false)
 	case WriteMultipleCoils:
-		return countBit(mt.Write, false)
+		return common.CountBit(mt.Write, false)
 	case ReadInputRegisters, ReadHoldingRegisters:
-		return countBit(mt.Expected, true)
+		return common.CountBit(mt.Expected, true)
 	case WriteMultipleRegisters:
-		return countBit(mt.Write, true)
+		return common.CountBit(mt.Write, true)
 	}
 	return 0
 }

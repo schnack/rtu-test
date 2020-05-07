@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/binary"
 	"github.com/sirupsen/logrus"
+	"rtu-test/e2e/common"
 	"strings"
 )
 
@@ -84,7 +85,7 @@ func (s *CustomSlave) ParseReadFormat() (start []byte, lenPosition, suffixLen in
 		// Ищем стартовые байты в константах
 		if constanta, ok := s.Const[data]; ok {
 			for _, stringBytes := range constanta {
-				data, err := parseStringByte(stringBytes)
+				data, err := common.ParseStringByte(stringBytes)
 				if err != nil {
 					logrus.Fatal(err)
 				}
@@ -170,7 +171,7 @@ func (s *CustomSlave) CalcCrc(action string, data []byte) []byte {
 		}
 		if constanta, ok := s.Const[name]; ok {
 			for _, stringBytes := range constanta {
-				dataConst, err := parseStringByte(stringBytes)
+				dataConst, err := common.ParseStringByte(stringBytes)
 				if err != nil {
 					logrus.Fatal(err)
 				}
@@ -221,7 +222,7 @@ func (s *CustomSlave) CalcLen(action string, data []byte) (int, []byte) {
 
 		if constanta, ok := s.Const[name]; ok {
 			for _, stringBytes := range constanta {
-				dataConst, err := parseStringByte(stringBytes)
+				dataConst, err := common.ParseStringByte(stringBytes)
 				if err != nil {
 					logrus.Fatal(err)
 				}
@@ -263,7 +264,7 @@ func (s *CustomSlave) AddStaffing(data []byte) (out []byte) {
 		return data
 	}
 
-	staffingByte, err := parseStringByte(s.Staffing.Byte)
+	staffingByte, err := common.ParseStringByte(s.Staffing.Byte)
 	if err != nil || len(staffingByte) == 0 {
 		logrus.Fatalf("Staffing byte error %s", err)
 	}
@@ -273,7 +274,7 @@ func (s *CustomSlave) AddStaffing(data []byte) (out []byte) {
 	for _, name := range s.Staffing.Pattern {
 		if constanta, ok := s.Const[name]; ok {
 			for _, stringBytes := range constanta {
-				dataConst, err := parseStringByte(stringBytes)
+				dataConst, err := common.ParseStringByte(stringBytes)
 				if err != nil {
 					logrus.Fatal(err)
 				}

@@ -1,16 +1,18 @@
 package e2e
 
+import "rtu-test/e2e/common"
+
 type CustomMasterTest struct {
-	Name       string   `yaml:"name"`
-	Skip       string   `yaml:"skip"`
-	Before     Message  `yaml:"before"`
-	Write      []*Value `yaml:"write"`
-	Expected   []*Value `yaml:"expected"`
-	Success    Message  `yaml:"success"`
-	Error      Message  `yaml:"error"`
-	After      Message  `yaml:"after"`
-	Fatal      string   `yaml:"fatal"`
-	Disconnect bool     `yaml:"disconnect"`
+	Name       string          `yaml:"name"`
+	Skip       string          `yaml:"skip"`
+	Before     Message         `yaml:"before"`
+	Write      []*common.Value `yaml:"write"`
+	Expected   []*common.Value `yaml:"expected"`
+	Success    Message         `yaml:"success"`
+	Error      Message         `yaml:"error"`
+	After      Message         `yaml:"after"`
+	Fatal      string          `yaml:"fatal"`
+	Disconnect bool            `yaml:"disconnect"`
 
 	// Заменяет глобальные настройки
 	Const       map[string][]string  `yaml:"const"`

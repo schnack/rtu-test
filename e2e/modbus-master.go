@@ -4,6 +4,7 @@ import (
 	"github.com/goburrow/modbus"
 	"github.com/sirupsen/logrus"
 	"log"
+	"rtu-test/e2e/common"
 	reports2 "rtu-test/e2e/reports"
 	"strings"
 )
@@ -36,8 +37,8 @@ func (mc *ModbusMaster) getHandler() *modbus.RTUClientHandler {
 	handler.Parity = mc.Parity
 	handler.StopBits = mc.StopBits
 	handler.SlaveId = mc.SlaveId
-	handler.Timeout = parseDuration(mc.Timeout)
-	handler.IdleTimeout = parseDuration(mc.Timeout)
+	handler.Timeout = common.ParseDuration(mc.Timeout)
+	handler.IdleTimeout = common.ParseDuration(mc.Timeout)
 	handler.Logger = log.New(&loger{}, "", 0)
 	return handler
 }
@@ -66,7 +67,7 @@ func (mc *ModbusMaster) Run(reports *reports2.ReportGroups) error {
 			continue
 		}
 		report := reports2.ReportGroup{Name: group}
-		logrus.Warnf(render(TestGROUP, report))
+		logrus.Warnf(common.Render(TestGROUP, report))
 		for _, test := range tests {
 			if filterTest != "" && filterTest != "all" && filterTest != test.Name {
 				continue

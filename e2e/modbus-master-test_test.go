@@ -2,6 +2,7 @@ package e2e
 
 import (
 	"github.com/schnack/gotest"
+	"rtu-test/e2e/common"
 	"rtu-test/e2e/reports"
 	"testing"
 	"time"
@@ -18,7 +19,7 @@ func TestModbusTest_Run(t *testing.T) {
 		Function: "ReadHoldingRegisters",
 		Address:  &Address,
 		Quantity: &Quantity,
-		Expected: []*Value{
+		Expected: []*common.Value{
 			{Name: "param", Uint16: &param},
 			{Name: "error", Error: &errorString},
 			{Name: "time", Time: &timeString},
@@ -57,7 +58,7 @@ func TestModbusTest_Check(t *testing.T) {
 	modbus := &ModbusMasterTest{
 		Name:     "Test",
 		Function: "ReadCoils",
-		Expected: []*Value{
+		Expected: []*common.Value{
 			{Name: "param", Uint8: &param},
 			{Name: "error", Error: &errorString},
 			{Name: "time", Time: &timeString},
@@ -235,7 +236,7 @@ func TestModbusTest_ExecWriteSingleCoil(t *testing.T) {
 		Name:     "Test",
 		Function: "Write Single Coil",
 		Address:  &Address,
-		Write: []*Value{
+		Write: []*common.Value{
 			{Name: "param1", Bool: &param1},
 		},
 	}
@@ -277,7 +278,7 @@ func TestModbusTest_ExecWriteSingleRegister(t *testing.T) {
 		Name:     "Test",
 		Function: "Write Single Register",
 		Address:  &Address,
-		Write: []*Value{
+		Write: []*common.Value{
 			{Name: "param1", Bool: &param1},
 			{Name: "param2", Uint8: &param2},
 		},
@@ -322,7 +323,7 @@ func TestModbusTest_ExecWriteMultipleCoils(t *testing.T) {
 		Function: "Write Multiple Coils",
 		Address:  &Address,
 		Quantity: &Quantity,
-		Write: []*Value{
+		Write: []*common.Value{
 			{Name: "param1", Bool: &param1},
 			{Name: "param2", Uint8: &param2},
 		},
@@ -367,7 +368,7 @@ func TestModbusTest_ExecWriteMultipleRegisters(t *testing.T) {
 		Function: "Write Multiple Registers",
 		Address:  &Address,
 		Quantity: &Quantity,
-		Write: []*Value{
+		Write: []*common.Value{
 			{Name: "param1", Bool: &param1},
 			{Name: "param2", Uint8: &param2},
 		},
@@ -457,11 +458,11 @@ func TestModbusTest_getQuantity(t *testing.T) {
 	}
 
 	var param1 int64 = 2
-	if err := gotest.Expect((&ModbusMasterTest{Function: "ReadCoils", Expected: []*Value{{Int64: &param1}}}).getQuantity()).Eq(uint16(64)); err != nil {
+	if err := gotest.Expect((&ModbusMasterTest{Function: "ReadCoils", Expected: []*common.Value{{Int64: &param1}}}).getQuantity()).Eq(uint16(64)); err != nil {
 		t.Error(err)
 	}
 
-	if err := gotest.Expect((&ModbusMasterTest{Function: "ReadInputRegisters", Expected: []*Value{{Int64: &param1}}}).getQuantity()).Eq(uint16(4)); err != nil {
+	if err := gotest.Expect((&ModbusMasterTest{Function: "ReadInputRegisters", Expected: []*common.Value{{Int64: &param1}}}).getQuantity()).Eq(uint16(4)); err != nil {
 		t.Error(err)
 	}
 

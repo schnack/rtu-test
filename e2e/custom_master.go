@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"go.bug.st/serial"
+	"rtu-test/e2e/common"
 	reports2 "rtu-test/e2e/reports"
 	"strings"
 )
@@ -87,7 +88,7 @@ func (m *CustomMaster) Run(ctx context.Context, reports *reports2.ReportGroups) 
 			continue
 		}
 		report := reports2.ReportGroup{Name: group}
-		logrus.Warnf(render(TestGROUP, report))
+		logrus.Warnf(common.Render(TestGROUP, report))
 		for _, test := range tests {
 			if filterTest != "" && filterTest != "all" && filterTest != test.Name {
 				continue

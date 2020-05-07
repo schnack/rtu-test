@@ -4,6 +4,7 @@ import (
 	"github.com/schnack/gotest"
 	"github.com/schnack/mbslave"
 	"math"
+	"rtu-test/e2e/common"
 	"testing"
 )
 
@@ -15,7 +16,7 @@ func TestModbusSlave_Expect1Bit(t *testing.T) {
 	var param5 uint32 = 0x17_17_17_17
 	var param6 uint64 = 0x17_17_17_17_17_17_17_17
 
-	values := []*Value{
+	values := []*common.Value{
 		{Name: "param1", Bool: &param1},
 		{Name: "param2", Address: "0x0002", Uint8: &param2},
 		{Name: "param3", Bool: &param3},
@@ -116,7 +117,7 @@ func TestModbusSlave_Expect16Bit(t *testing.T) {
 	var param6 uint32 = 0x17_00_00_17
 	var param7 uint64 = 0x17_00_00_00_00_00_00_17
 
-	values := []*Value{
+	values := []*common.Value{
 		{Name: "param1", Bool: &param1},
 		{Name: "param2", Address: "0x0002", Uint8: &param2},
 		{Name: "param3", Uint8: &param3},
@@ -230,7 +231,7 @@ func TestModbusSlave_Write1Bit(t *testing.T) {
 	var param5 uint32 = 0x17_17_17_17
 	var param6 uint64 = 0x17_17_17_17_17_17_17_17
 	slave := ModbusSlave{
-		Coils: []*Value{
+		Coils: []*common.Value{
 			{Name: "param1", Bool: &param1},
 			{Name: "param2", Address: "0x0002", Uint8: &param2},
 			{Name: "param3", Bool: &param3},
@@ -276,7 +277,7 @@ func TestModbusSlave_Write16Bit(t *testing.T) {
 	var param6 uint32 = 0x17_00_00_17
 	var param7 uint64 = 0x17_00_00_00_00_00_00_17
 	slave := ModbusSlave{
-		HoldingRegisters: []*Value{
+		HoldingRegisters: []*common.Value{
 			{Name: "param1", Bool: &param1},
 			{Name: "param2", Address: "0x0002", Uint8: &param2},
 			{Name: "param3", Uint8: &param3},

@@ -1,4 +1,4 @@
-package e2e
+package common
 
 import (
 	"bytes"
@@ -839,7 +839,7 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.Pass = got == *v.String
 
 	case Byte:
-		expected, err := parseStringByte(*v.Byte)
+		expected, err := ParseStringByte(*v.Byte)
 		if err != nil {
 			logrus.Fatal(err)
 		}
@@ -873,7 +873,7 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		}
 
 	case Time:
-		d := parseDuration(*v.Time)
+		d := ParseDuration(*v.Time)
 		if rawTime > d {
 			report.Pass = false
 		}
@@ -964,7 +964,7 @@ func (v *Value) ReportWrite(byteOrder binary.ByteOrder) reports.ReportWrite {
 		report.DataBin = fmt.Sprintf("%08b", b)
 
 	case Byte:
-		b, err := parseStringByte(*v.Byte)
+		b, err := ParseStringByte(*v.Byte)
 		if err != nil {
 			logrus.Fatal(err)
 		}
@@ -1037,7 +1037,7 @@ func (v *Value) Write(byteOrder binary.ByteOrder) (b []byte) {
 	case String:
 		buf.WriteString(*v.String)
 	case Byte:
-		b, err := parseStringByte(*v.Byte)
+		b, err := ParseStringByte(*v.Byte)
 		if err != nil {
 			logrus.Fatal(err)
 		}
