@@ -1,4 +1,4 @@
-package e2e
+package transport
 
 import (
 	"go.bug.st/serial"

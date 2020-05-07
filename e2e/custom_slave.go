@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"github.com/sirupsen/logrus"
 	"rtu-test/e2e/common"
+	"rtu-test/e2e/transport"
 	"strings"
 )
 
@@ -113,7 +114,7 @@ func (s *CustomSlave) ParseReadFormat() (start []byte, lenPosition, suffixLen in
 }
 
 func (s *CustomSlave) Run() error {
-	port := NewSerialPort(&SerialPortConfig{
+	port := transport.NewSerialPort(&transport.SerialPortConfig{
 		Port:     s.Port,
 		BaudRate: s.BoundRate,
 		DataBits: s.DataBits,
