@@ -1,9 +1,8 @@
-package e2e
+package master
 
 import (
 	"rtu-test/e2e/common"
 	"rtu-test/e2e/display"
-	"rtu-test/e2e/modbus/master"
 	"time"
 )
 
@@ -20,6 +19,8 @@ func (m *Message) GetPause() time.Duration {
 	return common.ParseDuration(m.Pause)
 }
 
-func (m *Message) PrintReportMasterGroups(reports master.ReportGroups) {
-	display.Console().Print(m, reports)
+func (m *Message) PrintReportMasterTest(report ReportMasterTest) {
+	d := common.ParseDuration(m.Pause)
+	report.Pause = d.String()
+	display.Console().Print(m, report)
 }

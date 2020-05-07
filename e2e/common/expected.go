@@ -1,6 +1,6 @@
-package reports
+package common
 
-// Результат теста одного параметра
+// Отчет о результате тестирования
 type ReportExpected struct {
 	Name        string
 	Pass        bool

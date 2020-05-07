@@ -1,4 +1,4 @@
-package e2e
+package master
 
 import (
 	"encoding/binary"
@@ -6,7 +6,6 @@ import (
 	"github.com/goburrow/modbus"
 	"github.com/sirupsen/logrus"
 	"rtu-test/e2e/common"
-	"rtu-test/e2e/reports"
 	"rtu-test/e2e/template"
 	"strconv"
 	"strings"
@@ -43,12 +42,12 @@ type ModbusMasterTest struct {
 	Disconnect bool            `yaml:"disconnect"`
 }
 
-func (mt *ModbusMasterTest) Run(client modbus.Client) reports.ReportMasterTest {
+func (mt *ModbusMasterTest) Run(client modbus.Client) ReportMasterTest {
 	if err := mt.Validation(); err != nil {
 		logrus.Fatal(err)
 	}
 
-	report := reports.ReportMasterTest{Name: mt.Name, Pass: true, Skip: mt.Skip}
+	report := ReportMasterTest{Name: mt.Name, Pass: true, Skip: mt.Skip}
 	logrus.Warn(common.Render(template.TestRUN, report))
 	if report.Skip != "" {
 		logrus.Warn(common.Render(template.TestSKIP, report))
@@ -71,9 +70,9 @@ func (mt *ModbusMasterTest) Run(client modbus.Client) reports.ReportMasterTest {
 	return report
 }
 
-func (mt *ModbusMasterTest) Check(report *reports.ReportMasterTest) {
+func (mt *ModbusMasterTest) Check(report *ReportMasterTest) {
 	countBit := 0
-	var expected reports.ReportExpected
+	var expected common.ReportExpected
 	for _, v := range mt.Expected {
 		bitSize := 8
 		switch mt.getFunction() {
@@ -88,7 +87,7 @@ func (mt *ModbusMasterTest) Check(report *reports.ReportMasterTest) {
 	}
 }
 
-func (mt *ModbusMasterTest) Exec(client modbus.Client, report *reports.ReportMasterTest) {
+func (mt *ModbusMasterTest) Exec(client modbus.Client, report *ReportMasterTest) {
 	var err error
 	switch mt.getFunction() {
 	case ReadDiscreteInputs:
@@ -106,7 +105,7 @@ func (mt *ModbusMasterTest) Exec(client modbus.Client, report *reports.ReportMas
 	case WriteSingleCoil:
 		// Special case when writing single coil
 		data := binary.BigEndian.Uint16(common.DataSingleCoil(common.ValueToByte(mt.Write)))
-		report.Write = append(report.Write, reports.ReportWrite{
+		report.Write = append(report.Write, common.ReportWrite{
 			Name:    mt.Write[0].Name,
 			Type:    common.Bool.String(),
 			Data:    fmt.Sprintf("%t", data == 0),

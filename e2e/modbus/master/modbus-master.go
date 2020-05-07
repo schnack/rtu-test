@@ -1,11 +1,10 @@
-package e2e
+package master
 
 import (
 	"github.com/goburrow/modbus"
 	"github.com/sirupsen/logrus"
 	"log"
 	"rtu-test/e2e/common"
-	reports2 "rtu-test/e2e/reports"
 	"rtu-test/e2e/template"
 	"strings"
 )
@@ -45,7 +44,7 @@ func (mc *ModbusMaster) getHandler() *modbus.RTUClientHandler {
 }
 
 // TODO Test
-func (mc *ModbusMaster) Run(reports *reports2.ReportGroups) error {
+func (mc *ModbusMaster) Run(reports *ReportGroups) error {
 	handler := mc.getHandler()
 	if err := handler.Connect(); err != nil {
 		return err
@@ -67,7 +66,7 @@ func (mc *ModbusMaster) Run(reports *reports2.ReportGroups) error {
 		if filterGroup != "" && filterGroup != "all" && filterGroup != group {
 			continue
 		}
-		report := reports2.ReportGroup{Name: group}
+		report := ReportGroup{Name: group}
 		logrus.Warnf(common.Render(template.TestGROUP, report))
 		for _, test := range tests {
 			if filterTest != "" && filterTest != "all" && filterTest != test.Name {

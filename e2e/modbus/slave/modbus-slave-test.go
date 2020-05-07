@@ -1,10 +1,10 @@
-package e2e
+package slave
 
 import (
 	"encoding/binary"
 	"github.com/schnack/mbslave"
 	"rtu-test/e2e/common"
-	"rtu-test/e2e/reports"
+	"rtu-test/e2e/modbus/master"
 	"strconv"
 	"strings"
 )
@@ -20,7 +20,7 @@ type ModbusSlaveTest struct {
 	Name        string                     `yaml:"name"`
 	Skip        string                     `yaml:"skip"`
 	Fatal       string                     `yaml:"fatal"`
-	Before      string                     `yaml:"before"`
+	Before      Message                    `yaml:"before"`
 	Next        []string                   `yaml:"next"`
 	Lifetime    *int                       `yaml:"lifetime"`
 	TimeOut     string                     `yaml:"timeout"`
@@ -32,9 +32,9 @@ type ModbusSlaveTest struct {
 	Expected    map[string][]*common.Value `yaml:"expected"`
 	AfterWrite  map[string][]*common.Value `yaml:"afterWrite"`
 	BeforeWrite map[string][]*common.Value `yaml:"beforeWrite"`
-	Success     string                     `yaml:"success"`
-	Error       string                     `yaml:"error"`
-	After       string                     `yaml:"after"`
+	Success     Message                    `yaml:"success"`
+	Error       Message                    `yaml:"error"`
+	After       Message                    `yaml:"after"`
 }
 
 // Для поиска нужного теста
@@ -44,7 +44,7 @@ func (ms *ModbusSlaveTest) Check(request mbslave.Request, nexts []string) (point
 		return
 	}
 
-	if ms.getFunction() == NilFunction || ms.getFunction() != ModbusFunction(request.GetFunction()) {
+	if ms.getFunction() == master.NilFunction || ms.getFunction() != master.ModbusFunction(request.GetFunction()) {
 		return 0
 	}
 
@@ -53,7 +53,7 @@ func (ms *ModbusSlaveTest) Check(request mbslave.Request, nexts []string) (point
 	}
 
 	switch ms.getFunction() {
-	case ReadDiscreteInputs, ReadCoils, ReadInputRegisters, ReadHoldingRegisters:
+	case master.ReadDiscreteInputs, master.ReadCoils, master.ReadInputRegisters, master.ReadHoldingRegisters:
 		if ms.Quantity != nil {
 			if *ms.Quantity == request.GetQuantity() {
 				points += DataPoint + QuantityPoint
@@ -62,10 +62,10 @@ func (ms *ModbusSlaveTest) Check(request mbslave.Request, nexts []string) (point
 			}
 		}
 		points += FunctionAndAddressPoint
-	case WriteSingleCoil:
+	case master.WriteSingleCoil:
 		if ms.Data != nil {
 			countBit := 0
-			var expected reports.ReportExpected
+			var expected common.ReportExpected
 			for _, v := range ms.Data {
 				countBit, expected = v.Check(request.GetData(), 0, "", countBit, 8, binary.BigEndian)
 				if !expected.Pass {
@@ -75,10 +75,10 @@ func (ms *ModbusSlaveTest) Check(request mbslave.Request, nexts []string) (point
 			points += DataPoint
 		}
 		points += FunctionAndAddressPoint
-	case WriteSingleRegister:
+	case master.WriteSingleRegister:
 		if ms.Data != nil {
 			countBit := 0
-			var expected reports.ReportExpected
+			var expected common.ReportExpected
 			for _, v := range ms.Data {
 				countBit, expected = v.Check(request.GetData(), 0, "", countBit, 16, binary.BigEndian)
 				if !expected.Pass {
@@ -88,7 +88,7 @@ func (ms *ModbusSlaveTest) Check(request mbslave.Request, nexts []string) (point
 			points += DataPoint
 		}
 		points += FunctionAndAddressPoint
-	case WriteMultipleCoils, WriteMultipleRegisters:
+	case master.WriteMultipleCoils, master.WriteMultipleRegisters:
 		if ms.Quantity != nil {
 			if *ms.Quantity == request.GetQuantity() {
 				points += QuantityPoint
@@ -98,10 +98,10 @@ func (ms *ModbusSlaveTest) Check(request mbslave.Request, nexts []string) (point
 		}
 		if ms.Data != nil {
 			countBit := 0
-			var expected reports.ReportExpected
+			var expected common.ReportExpected
 			for _, v := range ms.Data {
 				bitSize := 8
-				if ms.getFunction() == WriteMultipleRegisters {
+				if ms.getFunction() == master.WriteMultipleRegisters {
 					bitSize = 16
 				}
 				countBit, expected = v.Check(request.GetData(), 0, "", countBit, bitSize, binary.BigEndian)
@@ -127,7 +127,7 @@ func (ms *ModbusSlaveTest) Check(request mbslave.Request, nexts []string) (point
 	return
 }
 
-func (ms *ModbusSlaveTest) getFunction() ModbusFunction {
+func (ms *ModbusSlaveTest) getFunction() master.ModbusFunction {
 	mFunc := strings.ReplaceAll(strings.ToLower(ms.Function), " ", "")
 	if strings.HasPrefix(mFunc, "0x") {
 		if a, err := strconv.ParseInt(strings.TrimPrefix(mFunc, "0x"), 16, 8); err == nil {
@@ -136,22 +136,22 @@ func (ms *ModbusSlaveTest) getFunction() ModbusFunction {
 	}
 	switch mFunc {
 	case "readdiscreteinputs", "2":
-		return ReadDiscreteInputs
+		return master.ReadDiscreteInputs
 	case "readcoils", "1":
-		return ReadCoils
+		return master.ReadCoils
 	case "writesinglecoil", "5":
-		return WriteSingleCoil
+		return master.WriteSingleCoil
 	case "writemultiplecoils", "15":
-		return WriteMultipleCoils
+		return master.WriteMultipleCoils
 	case "readinputregisters", "4":
-		return ReadInputRegisters
+		return master.ReadInputRegisters
 	case "readholdingregisters", "3":
-		return ReadHoldingRegisters
+		return master.ReadHoldingRegisters
 	case "writesingleregister", "6":
-		return WriteSingleRegister
+		return master.WriteSingleRegister
 	case "writemultipleregisters", "16":
-		return WriteMultipleRegisters
+		return master.WriteMultipleRegisters
 	default:
-		return NilFunction
+		return master.NilFunction
 	}
 }

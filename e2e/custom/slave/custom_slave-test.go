@@ -1,8 +1,8 @@
-package e2e
+package slave
 
 import (
 	"rtu-test/e2e/common"
-	"rtu-test/e2e/reports"
+	"rtu-test/e2e/modbus/slave"
 )
 
 type CustomSlaveTest struct {
@@ -30,7 +30,7 @@ func (s *CustomSlaveTest) Check(data []byte) bool {
 }
 
 // Запускает тест и поверяет значение
-func (s *CustomSlaveTest) Exec(data []byte, report *reports.ReportSlaveTest) {
+func (s *CustomSlaveTest) Exec(data []byte, report *slave.ReportSlaveTest) {
 
 	return
 }

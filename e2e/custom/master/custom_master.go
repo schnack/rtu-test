@@ -1,4 +1,4 @@
-package e2e
+package master
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"go.bug.st/serial"
 	"rtu-test/e2e/common"
 	"rtu-test/e2e/custom/module"
-	reports2 "rtu-test/e2e/reports"
+	"rtu-test/e2e/modbus/master"
 	"rtu-test/e2e/template"
 	"strings"
 )
@@ -64,7 +64,7 @@ func (m *CustomMaster) getPort() (serial.Port, error) {
 	})
 }
 
-func (m *CustomMaster) Run(ctx context.Context, reports *reports2.ReportGroups) error {
+func (m *CustomMaster) Run(ctx context.Context, reports *master.ReportGroups) error {
 	// TODO Доработать этот функционал
 	port, err := m.getPort()
 	if err != nil {
@@ -89,7 +89,7 @@ func (m *CustomMaster) Run(ctx context.Context, reports *reports2.ReportGroups) 
 		if filterGroup != "" && filterGroup != "all" && filterGroup != group {
 			continue
 		}
-		report := reports2.ReportGroup{Name: group}
+		report := master.ReportGroup{Name: group}
 		logrus.Warnf(common.Render(template.TestGROUP, report))
 		for _, test := range tests {
 			if filterTest != "" && filterTest != "all" && filterTest != test.Name {

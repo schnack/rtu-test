@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"math"
-	"rtu-test/e2e/reports"
 	"time"
 )
 
@@ -201,7 +200,7 @@ func (v *Value) cursor(currentBit, bitSize, basicBitSize int, byteOrder binary.B
 // currentBit - курсор бита
 // minBitSize - размер данных хранимых в табличке модбас 8 до 64 (дополняет нулями если тип например bool)
 // orderByte - порядок байт
-func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, currentBit int, minBitSize int, byteOrder binary.ByteOrder) (offsetBit int, report reports.ReportExpected) {
+func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, currentBit int, minBitSize int, byteOrder binary.ByteOrder) (offsetBit int, report ReportExpected) {
 	report.Name = v.Name
 	report.Pass = true
 	report.Type = v.Type().String()
@@ -899,8 +898,8 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 }
 
 // ReportWrite - возвращает отчет о записанных данных
-func (v *Value) ReportWrite(byteOrder binary.ByteOrder) reports.ReportWrite {
-	report := reports.ReportWrite{Name: v.Name, Type: v.Type().String()}
+func (v *Value) ReportWrite(byteOrder binary.ByteOrder) ReportWrite {
+	report := ReportWrite{Name: v.Name, Type: v.Type().String()}
 	b := v.Write(byteOrder)
 	switch v.Type() {
 	case Int8:

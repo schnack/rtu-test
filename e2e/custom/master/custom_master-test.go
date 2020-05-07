@@ -1,4 +1,4 @@
-package e2e
+package master
 
 import (
 	"rtu-test/e2e/common"

@@ -1,6 +1,6 @@
-package reports
+package common
 
-// Записанный параметр
+// Отчет о исходящих данных
 type ReportWrite struct {
 	Name    string
 	Type    string

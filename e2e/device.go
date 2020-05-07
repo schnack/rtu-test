@@ -7,7 +7,11 @@ import (
 	"github.com/shiena/ansicolor"
 	"github.com/sirupsen/logrus"
 	"os"
-	"rtu-test/e2e/reports"
+	master2 "rtu-test/e2e/custom/master"
+	slave2 "rtu-test/e2e/custom/slave"
+	"rtu-test/e2e/display"
+	"rtu-test/e2e/modbus/master"
+	"rtu-test/e2e/modbus/slave"
 	"runtime"
 	"sync"
 )
@@ -28,16 +32,16 @@ func Init() *Device {
 }
 
 type Device struct {
-	Version      string        `yaml:"version"`
-	Name         string        `yaml:"name"`
-	Log          string        `yaml:"log"`
-	LogLvl       string        `yaml:"logLvl"`
-	Description  string        `yaml:"description"`
-	ExitMessage  Message       `yaml:"exitMessage"`
-	ModbusMaster *ModbusMaster `yaml:"modbusMaster"`
-	ModbusSlave  *ModbusSlave  `yaml:"modbusSlave"`
-	Slave        *CustomSlave  `yaml:"slave"`
-	Master       *CustomMaster `yaml:"master"`
+	Version      string                `yaml:"version"`
+	Name         string                `yaml:"name"`
+	Log          string                `yaml:"log"`
+	LogLvl       string                `yaml:"logLvl"`
+	Description  string                `yaml:"description"`
+	ExitMessage  Message               `yaml:"exitMessage"`
+	ModbusMaster *master.ModbusMaster  `yaml:"modbusMaster"`
+	ModbusSlave  *slave.ModbusSlave    `yaml:"modbusSlave"`
+	Slave        *slave2.CustomSlave   `yaml:"slave"`
+	Master       *master2.CustomMaster `yaml:"master"`
 }
 
 // Load - загружает конфигурацию лога
@@ -81,6 +85,7 @@ func (d *Device) RunTest(ctx context.Context) {
 		logrus.SetOutput(os.Stderr)
 		logrus.SetLevel(logrus.PanicLevel)
 	case LogStdout:
+		display.Console().SetOutput(os.Stdout)
 		if runtime.GOOS == "windows" {
 			format.ForceColors = true
 			logrus.SetOutput(ansicolor.NewAnsiColorWriter(os.Stdout))
@@ -105,7 +110,7 @@ func (d *Device) RunTest(ctx context.Context) {
 
 	switch {
 	case d.ModbusMaster != nil:
-		report := reports.ReportGroups{
+		report := master.ReportGroups{
 			Name:        d.Name,
 			Description: d.Description,
 		}
@@ -117,6 +122,7 @@ func (d *Device) RunTest(ctx context.Context) {
 			logrus.Fatalf("Exit app modbus master: %s", err)
 		}
 	case d.ModbusSlave != nil:
+		// TODO Добавить групповой отчет
 		if err := d.ModbusSlave.Run(); err != nil {
 			logrus.Fatalf("Exit app modbus slave: %s", err)
 		}

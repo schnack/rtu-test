@@ -1,4 +1,4 @@
-package e2e
+package slave
 
 import (
 	"encoding/binary"
@@ -6,7 +6,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"math"
 	"rtu-test/e2e/common"
-	"rtu-test/e2e/reports"
+	"rtu-test/e2e/modbus/master"
 	"rtu-test/e2e/template"
 	"strings"
 	"time"
@@ -110,7 +110,7 @@ func (ms *ModbusSlave) autorun() {
 			timer := autorun[len(autorun)-1]
 			time.Sleep(common.ParseDuration(delay))
 			tiker := time.NewTicker(common.ParseDuration(timer))
-			reports := reports.ReportSlaveTest{
+			reports := ReportSlaveTest{
 				Name: t.Name,
 			}
 			for _ = range tiker.C {
@@ -131,12 +131,12 @@ func (ms *ModbusSlave) autorun() {
 	}
 }
 
-func (ms *ModbusSlave) before(test *ModbusSlaveTest, reports reports.ReportSlaveTest) {
+func (ms *ModbusSlave) before(test *ModbusSlaveTest, reports ReportSlaveTest) {
 	if test == nil || test.Skip != "" {
 		return
 	}
 
-	(&Message{Message: test.Before}).PrintReportSlaveTest(reports)
+	test.Before.PrintReportSlaveTest(reports)
 
 	if test.BeforeWrite == nil {
 		return
@@ -155,7 +155,7 @@ func (ms *ModbusSlave) before(test *ModbusSlaveTest, reports reports.ReportSlave
 	}
 }
 
-func (ms *ModbusSlave) expected(test *ModbusSlaveTest, reports reports.ReportSlaveTest) {
+func (ms *ModbusSlave) expected(test *ModbusSlaveTest, reports ReportSlaveTest) {
 	if test == nil || test.Skip != "" || test.Expected == nil {
 		return
 	}
@@ -177,17 +177,17 @@ func (ms *ModbusSlave) expected(test *ModbusSlaveTest, reports reports.ReportSla
 
 	if reports.Pass {
 		logrus.Warn(common.Render(template.TestSlavePASS, reports))
-		(&Message{Message: test.Success}).PrintReportSlaveTest(reports)
+		test.Success.PrintReportSlaveTest(reports)
 	} else {
 		logrus.Error(common.Render(template.TestSlaveFAIL, reports))
-		(&Message{Message: test.Error}).PrintReportSlaveTest(reports)
+		test.Error.PrintReportSlaveTest(reports)
 		if test.Fatal != "" {
 			logrus.Fatal(test.Fatal)
 		}
 	}
 }
 
-func (ms *ModbusSlave) after(test *ModbusSlaveTest, reports reports.ReportSlaveTest) {
+func (ms *ModbusSlave) after(test *ModbusSlaveTest, reports ReportSlaveTest) {
 	if test == nil || test.Skip != "" {
 		return
 	}
@@ -207,11 +207,11 @@ func (ms *ModbusSlave) after(test *ModbusSlaveTest, reports reports.ReportSlaveT
 		}
 	}
 
-	(&Message{Message: test.After}).PrintReportSlaveTest(reports)
+	test.After.PrintReportSlaveTest(reports)
 }
 
 func (ms *ModbusSlave) ActionHandler(request mbslave.Request, response mbslave.Response) {
-	reports := reports.ReportSlaveTest{}
+	reports := ReportSlaveTest{}
 
 	var test *ModbusSlaveTest
 	max := 0
@@ -243,22 +243,22 @@ func (ms *ModbusSlave) ActionHandler(request mbslave.Request, response mbslave.R
 
 	ms.before(test, reports)
 
-	switch ModbusFunction(request.GetFunction()) {
-	case ReadCoils:
+	switch master.ModbusFunction(request.GetFunction()) {
+	case master.ReadCoils:
 		ms.DataModel.ReadCoils(request, response)
-	case ReadDiscreteInputs:
+	case master.ReadDiscreteInputs:
 		ms.DataModel.ReadDiscreteInputs(request, response)
-	case ReadHoldingRegisters:
+	case master.ReadHoldingRegisters:
 		ms.DataModel.ReadHoldingRegisters(request, response)
-	case ReadInputRegisters:
+	case master.ReadInputRegisters:
 		ms.DataModel.ReadInputRegisters(request, response)
-	case WriteSingleCoil:
+	case master.WriteSingleCoil:
 		ms.DataModel.WriteSingleCoil(request, response)
-	case WriteSingleRegister:
+	case master.WriteSingleRegister:
 		ms.DataModel.WriteSingleRegister(request, response)
-	case WriteMultipleCoils:
+	case master.WriteMultipleCoils:
 		ms.DataModel.WriteMultipleCoils(request, response)
-	case WriteMultipleRegisters:
+	case master.WriteMultipleRegisters:
 		ms.DataModel.WriteMultipleRegisters(request, response)
 	}
 
@@ -272,7 +272,7 @@ func (ms *ModbusSlave) ActionHandler(request mbslave.Request, response mbslave.R
 	return
 }
 
-func (ms *ModbusSlave) Expect1Bit(table string, v []*common.Value) (reports []reports.ReportExpected, pass bool) {
+func (ms *ModbusSlave) Expect1Bit(table string, v []*common.Value) (reports []common.ReportExpected, pass bool) {
 	pass = true
 	var address uint16 = 0
 
@@ -326,7 +326,7 @@ func (ms *ModbusSlave) Expect1Bit(table string, v []*common.Value) (reports []re
 	return
 }
 
-func (ms *ModbusSlave) Expect16Bit(table string, v []*common.Value) (reports []reports.ReportExpected, pass bool) {
+func (ms *ModbusSlave) Expect16Bit(table string, v []*common.Value) (reports []common.ReportExpected, pass bool) {
 	pass = true
 	var address uint16 = 0
 

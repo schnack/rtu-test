@@ -1,8 +1,9 @@
-package e2e
+package slave
 
 import (
 	"github.com/schnack/gotest"
 	"github.com/schnack/mbslave"
+	"rtu-test/e2e/modbus/master"
 	"testing"
 )
 
@@ -32,7 +33,7 @@ func TestModbusSlaveTest_getFunction(t *testing.T) {
 		Function: "0x02",
 	}
 
-	if err := gotest.Expect(mt.getFunction()).Eq(ReadDiscreteInputs); err != nil {
+	if err := gotest.Expect(mt.getFunction()).Eq(master.ReadDiscreteInputs); err != nil {
 		t.Error(err)
 	}
 }
