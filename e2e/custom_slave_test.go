@@ -2,7 +2,7 @@ package e2e
 
 import (
 	"github.com/stretchr/testify/suite"
-	"rtu-test/e2e/custom/common"
+	"rtu-test/e2e/custom/module"
 	"testing"
 )
 
@@ -21,12 +21,12 @@ func (s *CustomSlaveTestSuit) TestParseReadFormat() {
 			"start": {"0x01", "0x02"},
 			"end":   {"0x03", "0x04"},
 		},
-		Len: &LenBytes{
+		Len: &module.LenBytes{
 			Staffing:   true,
 			CountBytes: 1,
 			Read:       []string{"data#"},
 		},
-		Crc: &common.Crc{
+		Crc: &module.Crc{
 			Algorithm: "mod256",
 		},
 		ReadFormat: []string{
@@ -46,7 +46,7 @@ func (s *CustomSlaveTestSuit) TestGetSpkit() {
 	v := CustomSlave{
 		ByteOrder: "big",
 		MaxLen:    255,
-		Len: &LenBytes{
+		Len: &module.LenBytes{
 			Staffing:   true,
 			CountBytes: 1,
 			Read:       []string{"data#"},
@@ -86,7 +86,7 @@ func (s *CustomSlaveTestSuit) TestAddStaffing() {
 			"start": {"0xcf", "0xbf"},
 			"end":   {"0xff", "0xef"},
 		},
-		Staffing: &common.Staffing{
+		Staffing: &module.Staffing{
 			Byte:    "0x00",
 			Pattern: []string{"start", "end"},
 		},
@@ -102,11 +102,11 @@ func (s *CustomSlaveTestSuit) TestCalcLen() {
 			"start": {"0xcf", "0xbf"},
 			"end":   {"0xff", "0xef"},
 		},
-		Staffing: &common.Staffing{
+		Staffing: &module.Staffing{
 			Byte:    "0x00",
 			Pattern: []string{"start", "end"},
 		},
-		Len: &LenBytes{
+		Len: &module.LenBytes{
 			Staffing:   true,
 			CountBytes: 2,
 			Read:       []string{"data#", "end"},
@@ -140,18 +140,18 @@ func (s *CustomSlaveTestSuit) TestCalcCrc() {
 			"start": {"0xcf", "0xbf"},
 			"end":   {"0xff", "0xef"},
 		},
-		Staffing: &common.Staffing{
+		Staffing: &module.Staffing{
 			Byte:    "0x00",
 			Pattern: []string{"start", "end"},
 		},
-		Len: &LenBytes{
+		Len: &module.LenBytes{
 			Staffing:   true,
 			CountBytes: 2,
 			Read:       []string{"data#", "end"},
 			Write:      []string{"data#"},
 			Error:      []string{"end"},
 		},
-		Crc: &common.Crc{
+		Crc: &module.Crc{
 			Algorithm: "mod256",
 			Staffing:  false,
 			Read:      []string{"data#", "end"},

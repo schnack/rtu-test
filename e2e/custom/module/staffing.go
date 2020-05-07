@@ -1,4 +1,4 @@
-package common
+package module
 
 type Staffing struct {
 	Byte    string   `yaml:"byte"`

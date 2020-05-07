@@ -1,4 +1,4 @@
-package e2e
+package module
 
 import (
 	"github.com/stretchr/testify/suite"

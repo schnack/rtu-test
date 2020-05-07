@@ -2,7 +2,7 @@ package e2e
 
 import (
 	"rtu-test/e2e/common"
-	common2 "rtu-test/e2e/custom/common"
+	"rtu-test/e2e/custom/module"
 )
 
 type CustomMasterTest struct {
@@ -18,13 +18,13 @@ type CustomMasterTest struct {
 	Disconnect bool            `yaml:"disconnect"`
 
 	// Заменяет глобальные настройки
-	Const       map[string][]string     `yaml:"const"`
-	Staffing    *common2.Staffing       `yaml:"staffing"`
-	Len         map[string]*LenBytes    `yaml:"len"`
-	Crc         map[string]*common2.Crc `yaml:"crc"`
-	WriteFormat []string                `yaml:"writeFormat"`
-	ReadFormat  []string                `yaml:"readFormat"`
-	ErrorFormat []string                `yaml:"errorFormat"`
+	Const       map[string][]string         `yaml:"const"`
+	Staffing    *module.Staffing            `yaml:"staffing"`
+	Len         map[string]*module.LenBytes `yaml:"len"`
+	Crc         map[string]*module.Crc      `yaml:"crc"`
+	WriteFormat []string                    `yaml:"writeFormat"`
+	ReadFormat  []string                    `yaml:"readFormat"`
+	ErrorFormat []string                    `yaml:"errorFormat"`
 }
 
 //func (mt *CustomMasterTest) Run(port serial.Port) ReportMasterTest {
