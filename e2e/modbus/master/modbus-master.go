@@ -1,6 +1,7 @@
 package master
 
 import (
+	"fmt"
 	"github.com/goburrow/modbus"
 	"github.com/sirupsen/logrus"
 	"log"
@@ -47,7 +48,7 @@ func (mc *ModbusMaster) getHandler() *modbus.RTUClientHandler {
 func (mc *ModbusMaster) Run(reports *ReportGroups) error {
 	handler := mc.getHandler()
 	if err := handler.Connect(); err != nil {
-		return err
+		return fmt.Errorf("open %s: %s", handler.Address, err)
 	}
 	defer handler.Close()
 	client := modbus.NewClient(handler)
