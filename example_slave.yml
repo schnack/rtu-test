@@ -138,9 +138,9 @@ slave:
 
       writeError:
         - name: "param1"
-            uint16: 1
+          uint16: 1
         - name: "param2"
-            uint32: 2
+          uint32: 2
 
       expected:
         - name: no error

@@ -1,6 +1,7 @@
 package slave
 
 import (
+	"github.com/sirupsen/logrus"
 	"rtu-test/e2e/common"
 )
 
@@ -25,24 +26,26 @@ type CustomSlaveTest struct {
 // Проверяем пакет принадлежит этому тесту или нет с использованием Pattern
 func (s *CustomSlaveTest) Check(data []byte) bool {
 	// TODO проверим принадлежит ли пакет этому тесту
+	logrus.Infof("Check: %02x", data)
 	return false
 }
 
 // Запускает тест и поверяет значение
 func (s *CustomSlaveTest) Exec(data []byte, report *ReportCustomSlaveTest) {
 	//TODO Выполнение самого теста
+	logrus.Infof("Exec: %02x", data)
 	return
 }
 
 // Возвращает данны для записи в компорт
 func (s *CustomSlaveTest) ReturnData() []byte {
 	// TODO подготовка данных для ответа устройству
-	return nil
+	return []byte{0xff, 0xfe, 0xfd}
 }
 
 func (s *CustomSlaveTest) ReturnError() []byte {
 	// TODO подготовка ошибки для устройства
-	return nil
+	return []byte{0x01, 0x02, 0x03, 0x04, 0x05}
 }
 
 // Генерирует объект отчета для этого теста. Начальные данные можно использовать в сообщении before

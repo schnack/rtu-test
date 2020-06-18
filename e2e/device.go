@@ -107,7 +107,6 @@ func (d *Device) RunTest(ctx context.Context) {
 		defer file.Close()
 		logrus.SetOutput(file)
 	}
-
 	switch {
 	case d.ModbusMaster != nil:
 		report := master.ReportGroups{

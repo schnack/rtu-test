@@ -109,7 +109,7 @@ func (s *CustomSlave) ParseReadFormat() (start []byte, lenPosition, suffixLen in
 		logrus.Fatal("Start byte not found")
 	}
 	// Если не найден шаблон конца пакета или хотябы длина
-	if lenPosition == 0 || len(end) == 0 {
+	if lenPosition == 0 && len(end) == 0 {
 		logrus.Fatal("end byte or len not found")
 	}
 	return
@@ -358,7 +358,6 @@ func (s *CustomSlave) AddStaffing(data []byte) (out []byte) {
 // end - филированная концовка
 func (s *CustomSlave) GetSplit(start []byte, lenPosition, suffixLen int, end []byte) bufio.SplitFunc {
 	return func(data []byte, atEOF bool) (int, []byte, error) {
-
 		positionEnd := 0
 		// Если мы можем определить длину пакета
 		if lenPosition > 0 {

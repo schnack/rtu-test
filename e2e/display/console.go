@@ -50,7 +50,7 @@ func (c *ConsoleRender) Print(message Message, report interface{}) {
 	if message.GetMessage() != "" {
 		resultText := c.renderTxt(message.GetMessage(), report)
 		if message.GetPause() < 0 {
-			resultText = fmt.Sprintf("%s [Enter]", message)
+			resultText = fmt.Sprintf("%s [Enter]", resultText)
 			logrus.Info(resultText)
 
 			if c.output != nil {
