@@ -1,7 +1,8 @@
 package module
 
 type LenBytes struct {
-	Staffing bool `yaml:"staffing"`
+	Staffing      bool `yaml:"staffing"`
+	CountStaffing bool `yaml:"countStaffing"`
 	// от 1 до 8
 	CountBytes int      `yaml:"coundBytes"`
 	Read       []string `yaml:"read"`

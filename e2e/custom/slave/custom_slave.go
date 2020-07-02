@@ -2,6 +2,7 @@ package slave
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/binary"
 	"github.com/sirupsen/logrus"
 	"rtu-test/e2e/common"
@@ -36,85 +37,6 @@ type CustomSlave struct {
 	CustomSlaveTest []CustomSlaveTest   `yaml:"test"`
 }
 
-// ParseReadFormat создает сплиттер для поиска фреймов в потоке данных rs
-func (s *CustomSlave) ParseReadFormat() (start []byte, lenPosition, suffixLen int, end []byte) {
-	prefixLen := 0
-	// позволяет собирать стартовые байты
-	findStart := true
-	// Если суффикс сработал перед len то фаталка
-	suffixTrigger := false
-	for _, data := range s.ReadFormat {
-		// Если нет специальной вставки то определяем всю строку как стартовые байты
-		if strings.Contains(data, "#") {
-			// =======  Собирается хедер с фиксированной длиной  ===========
-			// Должен прибавлять к переменной prefixLen
-			// ============================
-
-			// Длина данные позволяет определить длину фрейма без стоповых бит
-			// #len должен быть первым после констант или типов с фиксированной длиной
-			if strings.HasPrefix(data, "len#") {
-				if suffixTrigger {
-					logrus.Fatal("the suffix was used before len")
-				}
-				if s.Len == nil {
-					logrus.Fatal("Data len not found in config")
-				}
-				lenPosition += len(start) + prefixLen
-			}
-
-			// ======== Собирается суфикс ============
-			if strings.HasPrefix(data, "data#") {
-				suffixTrigger = true
-				if !s.Len.Contains(ActionRead, "data#") {
-					suffixLen += 0
-				}
-			}
-
-			if strings.HasPrefix(data, "crc#") {
-				suffixTrigger = true
-				if !s.Len.Contains(ActionRead, "crc#") {
-					suffixLen += s.Crc.Len()
-				}
-			}
-			// ===========================
-
-			// Отменяем дальнейшую сборку стартовых битов
-			findStart = false
-			// Если конец пакета не константа то пытаемся ориентироваться по длине пакета
-			end = []byte{}
-
-			continue
-		}
-		// Ищем стартовые байты в константах
-		if constanta, ok := s.Const[data]; ok {
-			for _, stringBytes := range constanta {
-				data, err := common.ParseStringByte(stringBytes)
-				if err != nil {
-					logrus.Fatal(err)
-				}
-				if findStart {
-					start = append(start, data...)
-				} else {
-					end = append(end, data...)
-				}
-			}
-		} else {
-			logrus.Fatalf("Constant not found %s", constanta)
-		}
-
-	}
-
-	// Если не надйен шаблон начала пакета
-	if len(start) == 0 {
-		logrus.Fatal("Start byte not found")
-	}
-	// Если не найден шаблон конца пакета или хотябы длина
-	if lenPosition == 0 && len(end) == 0 {
-		logrus.Fatal("end byte or len not found")
-	}
-	return
-}
-
 // Запускает тест на выполнение
 func (s *CustomSlave) Run() error {
 	port := transport.NewSerialPort(&transport.SerialPortConfig{
@@ -126,8 +48,13 @@ func (s *CustomSlave) Run() error {
 	})
 	listen := bufio.NewScanner(port)
 	// Собираем сканер пакетов,
-	start, lenPosition, suffixLen, end := s.ParseReadFormat()
-	listen.Split(s.GetSplit(start, lenPosition, suffixLen, end))
+	start, lenPosition, suffix, end := s.ParseReadFormat()
+	// Определяем парсер пакетов по длине или по стартовым и стоповым байтам
+	if lenPosition == 0 {
+		listen.Split(s.GetSplitStartEnd(start, end))
+	} else {
+		listen.Split(s.GetSplitLen(start, lenPosition, suffix))
+	}
 
 	// Включаем прослушку ком порта
 	for listen.Scan() {
@@ -249,7 +176,7 @@ func (s *CustomSlave) CalcLen(action string, data []byte) (int, []byte) {
 			// Подсчитываем шаблоны
 			if strings.HasPrefix(name, "data#") {
 				if s.Len.Staffing {
-					countByte += len(s.AddStaffing(data))
+					countByte += len(s.StaffingProcessing(true, data))
 				} else {
 					countByte += len(data)
 				}
@@ -294,8 +221,87 @@ func (s *CustomSlave) CalcLen(action string, data []byte) (int, []byte) {
 	return countByte, b
 }
 
-// AddStaffing -  Добавляет staffing byte к data
-func (s *CustomSlave) AddStaffing(data []byte) (out []byte) {
+// ParseReadFormat создает сплиттер для поиска фреймов в потоке данных rs
+func (s *CustomSlave) ParseReadFormat() (start []byte, lenPosition int, suffix []string, end []byte) {
+	prefixLen := 0
+	// позволяет собирать стартовые байты
+	findStart := true
+	// Если суффикс сработал перед len то фаталка
+	suffixTrigger := false
+	for _, templ := range s.ReadFormat {
+		// Если нет специальной вставки то определяем всю строку как стартовые байты
+		if strings.Contains(templ, "#") {
+			// =======  Собирается хедер с фиксированной длиной  ===========
+			// Должен прибавлять к переменной prefixLen
+			// ============================
+
+			// Длина данные позволяет определить длину фрейма без стоповых бит
+			// #len должен быть первым после констант или типов с фиксированной длиной
+			if strings.HasPrefix(templ, "len#") {
+				if suffixTrigger {
+					logrus.Fatal("the suffix was used before len")
+				}
+				if s.Len == nil {
+					logrus.Fatal("Data len not found in config")
+				}
+				lenPosition += len(start) + prefixLen
+			}
+
+			// ======== Собирается суфикс ============
+			if strings.HasPrefix(templ, "data#") {
+				suffixTrigger = true
+				if !s.Len.Contains(ActionRead, "data#") {
+					suffix = append(suffix, "data#")
+				}
+			}
+
+			if strings.HasPrefix(templ, "crc#") {
+				suffixTrigger = true
+				if !s.Len.Contains(ActionRead, "crc#") {
+					suffix = append(suffix, "crc#")
+				}
+			}
+			// ===========================
+
+			// Отменяем дальнейшую сборку стартовых битов
+			findStart = false
+			// Если конец пакета не константа то пытаемся ориентироваться по длине пакета
+			end = []byte{}
+
+			continue
+		}
+		// Ищем стартовые байты в константах
+		if constanta, ok := s.Const[templ]; ok {
+			for _, stringBytes := range constanta {
+				data, err := common.ParseStringByte(stringBytes)
+				if err != nil {
+					logrus.Fatal(err)
+				}
+				if findStart {
+					start = append(start, data...)
+				} else {
+					end = append(end, data...)
+				}
+			}
+		} else {
+			logrus.Fatalf("Constant not found %s", constanta)
+		}
+
+	}
+
+	// Если не надйен шаблон начала пакета
+	if len(start) == 0 {
+		logrus.Fatal("Start byte not found")
+	}
+	// Если не найден шаблон конца пакета или хотябы длина
+	if lenPosition == 0 && len(end) == 0 {
+		logrus.Fatal("end byte or len not found")
+	}
+	return
+}
+
+// StaffingProcessing - Добавляет staffing byte к data
+func (s *CustomSlave) StaffingProcessing(isInsert bool, data []byte) []byte {
 
 	if s.Staffing == nil || len(s.Staffing.Byte) == 0 || len(s.Staffing.Pattern) == 0 {
 		return data
@@ -303,41 +309,38 @@ func (s *CustomSlave) AddStaffing(data []byte) (out []byte) {
 
 	staffingByte, err := common.ParseStringByte(s.Staffing.Byte)
 	if err != nil || len(staffingByte) == 0 {
-		logrus.Fatalf("Staffing byte error %s", err)
+		logrus.Fatalf("StaffingProcessing byte error %s", err)
 	}
 
 	// Собираем шаблоны которые надо экранировать
-	var staffingPatterns []byte
+	staffingPatterns := make(map[byte]struct{})
 	for _, name := range s.Staffing.Pattern {
 		if constanta, ok := s.Const[name]; ok {
 			for _, stringBytes := range constanta {
 				dataConst, err := common.ParseStringByte(stringBytes)
 				if err != nil {
-					logrus.Fatal(err)
+					logrus.Fatalf("StaffingProcessing parse const %s", err)
 				}
-				staffingPatterns = append(staffingPatterns, dataConst...)
+				for _, c := range dataConst {
+					staffingPatterns[c] = struct{}{}
+				}
 			}
 		} else {
-			logrus.Fatalf("Constant not found %s", constanta)
+			logrus.Fatalf("StaffingProcessing Constant not found %s", constanta)
 		}
 	}
 
-	// Добавляем стаффинг байт если попался символ из шаблона
-	for _, d := range data {
-		isAddStuffing := false
-		for _, p := range staffingPatterns {
-			if d == p {
-				isAddStuffing = true
-				break
-			}
-		}
-		if isAddStuffing {
-			out = append(out, d, staffingByte[0])
+	out := make([]byte, len(data))
+	copy(out, data)
+	for p := range staffingPatterns {
+		b := []byte{p}
+		if isInsert {
+			out = bytes.ReplaceAll(out, b, append(b, staffingByte...))
 		} else {
-			out = append(out, d)
+			out = bytes.ReplaceAll(out, append(b, staffingByte...), b)
 		}
 	}
-	return
+	return out
 }
 
 //func (rt *RtuTransport) SilentInterval() (frameDelay time.Duration) {
@@ -351,129 +354,153 @@ func (s *CustomSlave) AddStaffing(data []byte) (out []byte) {
 //	return
 //}
 
-// GetSplit - Функция пытается собрать фрейм на основе данных из ReadFormat
-// Start - фиксированные байты
-// lenPosition - позиция байтов длины
-// suffixLen - Длина окончания которое не входит в len
-// end - филированная концовка
-func (s *CustomSlave) GetSplit(start []byte, lenPosition, suffixLen int, end []byte) bufio.SplitFunc {
+// GetSplitLen - parses packets with a fixed length
+func (s *CustomSlave) GetSplitLen(start []byte, lenPosition int, suffix []string) bufio.SplitFunc {
 	return func(data []byte, atEOF bool) (int, []byte, error) {
-		positionEnd := 0
-		// Если мы можем определить длину пакета
-		if lenPosition > 0 {
-			if len(data) < lenPosition+s.Len.CountBytes {
-				// Если отсуствуют данные для чтения
-				if atEOF {
-					return 0, data[:0], bufio.ErrFinalToken
-				}
-				return 0, nil, nil
-			}
-			// определяем порядок байт
-			var order binary.ByteOrder = binary.BigEndian
-			if s.ByteOrder == "little" {
-				order = binary.LittleEndian
-			}
-			// TODO надо тестировать возможно ошибся в размерах
-			// Определяем длину
-			length := 0
+		lenLen := 1
+		if s.Len != nil && s.Len.CountBytes != 0 {
+			lenLen = s.Len.CountBytes
+		}
+		// Если отсутствуют данные для чтения
+		var err error
+		if atEOF {
+			err = bufio.ErrFinalToken
+		}
 
-			if s.Len.Staffing {
-				// TODO тут нужно убить stafing byte перед определением длины
+		// Поиск стартовый байтов пакетов
+		startIndex := bytes.Index(data, start)
+		if startIndex < 0 {
+			// Если начало пакета не найдено
+			return len(data) - len(start), nil, err
+		}
+
+		// offset
+		lenPosition += startIndex
+
+		tail := lenPosition + lenLen
+		// Waiting for the position length and size
+		if len(data) < tail {
+			return 0, nil, err
+		}
+
+		// Учитываем Staffing байт в длине
+		lenCountStaffing := 0
+		if s.Len != nil && s.Len.Staffing {
+			lenCountStaffing = lenLen - len(s.StaffingProcessing(false, data[lenPosition:lenPosition+lenLen]))
+		}
+		tail += lenCountStaffing
+		if len(data) < tail {
+			return 0, nil, err
+		}
+
+		// Defining the byte order
+		var order binary.ByteOrder = binary.BigEndian
+		if s.ByteOrder == "little" {
+			order = binary.LittleEndian
+		}
+
+		// Парсим длину пакета
+		lengthData := 0
+		switch lenLen {
+		case 2:
+			if s.Len != nil && s.Len.Staffing {
+				lengthData = int(order.Uint16(s.StaffingProcessing(false, data[lenPosition:])[:lenLen]))
+			} else {
+				lengthData = int(order.Uint16(data[lenPosition : lenPosition+lenLen]))
 			}
-			switch s.Len.CountBytes {
-			case 2:
-				length = int(order.Uint16(data[lenPosition : lenPosition+s.Len.CountBytes]))
-			case 4:
-				length = int(order.Uint32(data[lenPosition : lenPosition+s.Len.CountBytes]))
-			case 8:
-				length = int(order.Uint64(data[lenPosition : lenPosition+s.Len.CountBytes]))
+		case 4:
+			if s.Len != nil && s.Len.Staffing {
+				lengthData = int(order.Uint32(s.StaffingProcessing(false, data[lenPosition:])[:lenLen]))
+			} else {
+				lengthData = int(order.Uint32(data[lenPosition : lenPosition+lenLen]))
+			}
+		case 8:
+			if s.Len != nil && s.Len.Staffing {
+				lengthData = int(order.Uint64(s.StaffingProcessing(false, data[lenPosition:])[:lenLen]))
+			} else {
+				lengthData = int(order.Uint64(data[lenPosition : lenPosition+lenLen]))
+			}
+		default:
+			lengthData = int(uint8(data[lenPosition]))
+		}
+
+		// Учитываем стаффинг байт в данных
+		dataCountStaffing := 0
+		if s.Len != nil && s.Len.CountStaffing {
+			dataCountStaffing = lengthData - len(s.StaffingProcessing(false, data[lenPosition+lenLen+lenCountStaffing:lenPosition+lenLen+lenCountStaffing+lengthData]))
+		}
+		tail += lengthData + dataCountStaffing
+		if len(data) < tail {
+			return 0, nil, err
+		}
+
+		// Учитываем стаффинг байт Crc и конечных констант
+		for _, suff := range suffix {
+			switch suff {
+			case "crc#":
+				lenCrc := s.Crc.Len()
+				tail += lenCrc
+				if len(data) < tail {
+					return 0, nil, err
+				}
+				tail += lenCrc - len(s.StaffingProcessing(false, data[lenPosition+lenLen+lenCountStaffing+lengthData+dataCountStaffing:lenPosition+lenLen+lenCountStaffing+lengthData+dataCountStaffing+lenCrc]))
 			default:
-				length = int(uint8(data[lenPosition]))
-			}
-
-			if len(data) < length+suffixLen+len(end) {
-				// Если отсуствуют данные для чтения
-				if atEOF {
-					return 0, data[:0], bufio.ErrFinalToken
-				}
-				return 0, nil, nil
-			}
-			positionEnd = lenPosition + length + suffixLen + 1
-		}
-
-		// Проверяем что в буфере достаточно данных для начала пакета
-		if len(data) < len(start)+len(end) {
-			// Если отсуствуют данные для чтения
-			if atEOF {
-				return 0, data[:0], bufio.ErrFinalToken
-			}
-			return 0, nil, nil
-		}
-
-		// Проверяем начало пакета
-		for i := range start {
-			if data[i] != start[i] {
-				// Если отсуствуют данные для чтения
-				if atEOF {
-					return 0, data[:0], bufio.ErrFinalToken
-				}
-				return i + 1, nil, nil
-			}
-		}
-
-		// Мы незнаем где точно должна быть финальная константа
-		if positionEnd == 0 {
-			// курсор end
-			pos := 0
-			for i := len(start); i < len(data) && i < s.MaxLen; i++ {
-				if data[i] == end[pos] {
-					// если есть совпадения то плюсуем
-					pos++
-				} else {
-					// если не совпало то возможно это данные -> двигаемся дальше
-					pos = 0
-				}
-				// нашли последний финальный хвост -> возвращаем фрейм
-				if pos == len(end) {
-					// Фрейм полностью собран
-					if atEOF {
-						return i, data[:i], bufio.ErrFinalToken
+				if constanta, ok := s.Const[suff]; ok {
+					for _, stringBytes := range constanta {
+						dataConst, err := common.ParseStringByte(stringBytes)
+						if err != nil {
+							logrus.Fatalf("StaffingProcessing parse const %s", err)
+						}
+						tail += len(dataConst)
 					}
-					return i, data[:i], nil
+				} else {
+					logrus.Fatalf("StaffingProcessing Constant not found %s", constanta)
 				}
 			}
+		}
+
+		// Возвращаем результат
+		if len(data) < tail {
+			// if this maximum packet length is exceeded
+			if len(data) > s.MaxLen {
+				return len(start), nil, err
+			}
+			return 0, nil, err
+		} else {
+			return tail, data[startIndex:tail], err
+		}
+	}
+}
+
+// Сплиттер пакета по стартовым и конечным байтам
+func (s *CustomSlave) GetSplitStartEnd(start []byte, end []byte) bufio.SplitFunc {
+	return func(data []byte, atEOF bool) (int, []byte, error) {
+		// Если отсутствуют данные для чтения
+		var err error
+		if atEOF {
+			err = bufio.ErrFinalToken
+		}
+
+		// Поиск стартовый байтов пакетов
+		startIndex := bytes.Index(data, start)
+		if startIndex < 0 {
+			// Если начало пакета не найдено
+			return len(data) - len(start), nil, err
+		}
+
+		// Поиск финальных байтов пакета
+		endIndex := bytes.Index(data[len(start):], end)
+		if endIndex < 0 {
 			// Если данные превысили верхнюю планку пакета
 			if len(data) > s.MaxLen {
-				// Если отсуствуют данные для чтения
-				if atEOF {
-					return 0, data[:0], bufio.ErrFinalToken
-				}
-				return 1, nil, nil
+				return len(start), nil, err
 			}
-			// Если отсуствуют данные для чтения
-			if atEOF {
-				return 0, data[:0], bufio.ErrFinalToken
-			}
-			// Пока не нашли конец пакета... ждем продолжения
-			return 0, nil, nil
+			// Ждем конца пакета
+			return 0, nil, err
 		} else {
-			// Знаем точное наступление end остается только сверить корректность end
-			for i := range end {
-				// Ошибка в окончании пытаемся сдвинуться на 1 байт дальше
-				if data[positionEnd+i] != end[i] {
-					// Если отсуствуют данные для чтения
-					if atEOF {
-						return 0, data[:0], bufio.ErrFinalToken
-					}
-					return 1, nil, nil
-				}
-			}
-
-			// Фрейм полностью собран
-			if atEOF {
-				return positionEnd + len(end), data[:positionEnd+len(end)], bufio.ErrFinalToken
-			}
-			return positionEnd + len(end), data[:positionEnd+len(end)], nil
+			tail := (len(start) + endIndex) + len(end)
+			// Отбрасываем мусор перед стартовыми байтами
+			return tail, data[startIndex:tail], err
 		}
 
 	}

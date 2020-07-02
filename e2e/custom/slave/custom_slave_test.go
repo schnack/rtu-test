@@ -34,52 +34,77 @@ func (s *CustomSlaveTestSuit) TestParseReadFormat() {
 		},
 	}
 
-	start, lenPosition, suffixLen, end := v.ParseReadFormat()
+	start, lenPosition, suffix, end := v.ParseReadFormat()
 
 	s.Equal([]byte{0x01, 0x02}, start)
 	s.Equal(2, lenPosition)
-	s.Equal(1, suffixLen)
+	s.Equal([]string{"crc#"}, suffix)
 	s.Equal([]byte{0x03, 0x04}, end)
 }
 
-func (s *CustomSlaveTestSuit) TestGetSpkit() {
+func (s *CustomSlaveTestSuit) TestGetSplitStartEnd() {
 	v := CustomSlave{
 		ByteOrder: "big",
 		MaxLen:    255,
-		Len: &module.LenBytes{
-			Staffing:   true,
-			CountBytes: 1,
-			Read:       []string{"data#"},
-		},
 	}
-	split := v.GetSplit([]byte{1, 2}, 2, 1, []byte{3, 4})
 
+	split := v.GetSplitStartEnd([]byte{1, 2}, []byte{3, 4})
 	// Один полный пакет
 	offset, data, err := split([]byte{1, 2, 0, 1, 3, 4}, true)
 	s.Equal(6, offset)
 	s.Equal([]byte{0x1, 0x2, 0x0, 0x1, 0x3, 0x4}, data)
 	s.EqualError(err, "final token")
 
-	// Один полный пакет с данными
-	offset, data, err = split([]byte{1, 2, 2, 0xDD, 0xDD, 1, 3, 4}, false)
-	s.Equal(8, offset)
-	s.Equal([]byte{0x1, 0x2, 0x2, 0xDD, 0xDD, 0x1, 0x3, 0x4}, data)
-	s.NoError(err)
+	offset, data, err = split([]byte{0, 1, 0, 2, 1, 2, 0, 1, 3, 4, 4, 3, 4}, true)
+	s.Equal(10, offset)
+	s.Equal([]byte{0x1, 0x2, 0x0, 0x1, 0x3, 0x4}, data)
+	s.EqualError(err, "final token")
 
-	// получен пакет с мусорным началом
-	offset, data, err = split([]byte{56, 1, 2, 0, 1, 3, 4}, false)
-	s.Equal(1, offset)
-	s.Nil(data)
-	s.NoError(err)
-
-	// получен пакет с мусорным концом
-	offset, data, err = split([]byte{1, 2, 0, 1, 3, 5}, false)
-	s.Equal(1, offset)
-	s.Nil(data)
-	s.NoError(err)
 }
 
-func (s *CustomSlaveTestSuit) TestAddStaffing() {
+func (s *CustomSlaveTestSuit) TestGetSplitLen() {
+	v := CustomSlave{
+		ByteOrder: "big",
+		MaxLen:    255,
+		Len: &module.LenBytes{
+			CountBytes: 2,
+		},
+		Const: map[string][]string{
+			"end": {
+				"0x01", "0x02",
+			},
+		},
+	}
+
+	split := v.GetSplitLen([]byte{1, 2}, 2, []string{"end"})
+	// Один полный пакет
+	offset, data, err := split([]byte{1, 2, 0, 1, 6, 3, 4}, true)
+	s.Equal(7, offset)
+	s.Equal([]byte{0x1, 0x2, 0x0, 0x1, 0x6, 0x3, 0x4}, data)
+	s.EqualError(err, "final token")
+
+	offset, data, err = split([]byte{0, 1, 0, 2, 1, 2, 0, 1, 6, 3, 4, 4, 3, 4}, true)
+	s.Equal(11, offset)
+	s.Equal([]byte{0x1, 0x2, 0x0, 0x1, 0x6, 0x3, 0x4}, data)
+	s.EqualError(err, "final token")
+
+	v = CustomSlave{
+		ByteOrder: "big",
+		MaxLen:    255,
+		Crc: &module.Crc{
+			Algorithm: module.Mod256,
+			Staffing:  false,
+		},
+	}
+
+	split = v.GetSplitLen([]byte{1, 2}, 2, []string{"crc#"})
+	offset, data, err = split([]byte{1, 2, 1, 6, 3, 4}, true)
+	s.Equal(5, offset)
+	s.Equal([]byte{0x1, 0x2, 0x1, 0x6, 0x3}, data)
+	s.EqualError(err, "final token")
+}
+
+func (s *CustomSlaveTestSuit) TestStaffingProcessing() {
 	v := CustomSlave{
 		ByteOrder: "big",
 		Const: map[string][]string{
@@ -92,7 +117,8 @@ func (s *CustomSlaveTestSuit) TestAddStaffing() {
 		},
 	}
 
-	s.Equal([]byte{0x1, 0xcf, 0x0, 0x2, 0xbf, 0x0, 0x3, 0xff, 0x0, 0x4, 0xef, 0x0, 0x5}, v.AddStaffing([]byte{0x01, 0xcf, 0x02, 0xbf, 0x03, 0xff, 0x04, 0xef, 0x05}))
+	s.Equal([]byte{0x1, 0xcf, 0x0, 0x2, 0xbf, 0x0, 0x3, 0xff, 0x0, 0x4, 0xef, 0x0, 0x5}, v.StaffingProcessing(true, []byte{0x01, 0xcf, 0x02, 0xbf, 0x03, 0xff, 0x04, 0xef, 0x05}))
+	s.Equal([]byte{0x01, 0xcf, 0x02, 0xbf, 0x03, 0xff, 0x04, 0xef, 0x05}, v.StaffingProcessing(false, []byte{0x1, 0xcf, 0x0, 0x2, 0xbf, 0x0, 0x3, 0xff, 0x0, 0x4, 0xef, 0x0, 0x5}))
 }
 
 func (s *CustomSlaveTestSuit) TestCalcLen() {
