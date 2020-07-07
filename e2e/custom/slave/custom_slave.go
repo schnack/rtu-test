@@ -56,31 +56,47 @@ func (s *CustomSlave) Run() error {
 		listen.Split(s.GetSplitLen(start, lenPosition, suffix))
 	}
 
+	previousTest := ""
 	// Включаем прослушку ком порта
 	for listen.Scan() {
 		for i := range s.CustomSlaveTest {
-			if s.CustomSlaveTest[i].Check(listen.Bytes()) {
+			// Достаем только данные
+			data := s.ParseReadData(listen.Bytes())
+
+			if s.CustomSlaveTest[i].Check(data, previousTest) {
+				// Запоминаем текущий тест
+				previousTest = s.CustomSlaveTest[i].Name
 
 				// Получаем отчет для использования в сообщениях
 				report := s.CustomSlaveTest[i].GetReport()
 				report.GotByte = listen.Bytes()
 
 				// Проверяем результат
-				s.CustomSlaveTest[i].Exec(listen.Bytes(), report)
+				s.CustomSlaveTest[i].Exec(data, report)
 				//
 
 				// Сообщение перед тестом
 				display.Console().Print(&s.CustomSlaveTest[i].Before, report)
 
+				// определяем порядок байт
+				var order binary.ByteOrder = binary.BigEndian
+				if s.ByteOrder == "little" {
+					order = binary.LittleEndian
+				}
+
 				// Готовим ответ для устройства. Ошибка в приоритете
 				if len(s.CustomSlaveTest[i].WriteError) > 0 {
 					// Отвечаем тестируемому устройству
-					if _, err := port.Write(s.CustomSlaveTest[i].ReturnError()); err != nil {
+					out := s.GenerateAnswer(ActionError, s.CustomSlaveTest[i].ReturnError(order))
+					logrus.Debugf("Send error: % 02x", out)
+					if _, err := port.Write(out); err != nil {
 						logrus.Fatalf("write answer error: %s", err.Error())
 					}
 				} else if len(s.CustomSlaveTest[i].Write) > 0 {
 					// Отвечаем тестируемому устройству
-					if _, err := port.Write(s.CustomSlaveTest[i].ReturnData()); err != nil {
+					out := s.GenerateAnswer(ActionWrite, s.CustomSlaveTest[i].ReturnData(order))
+					logrus.Debugf("Send answer: % 02x", out)
+					if _, err := port.Write(out); err != nil {
 						logrus.Fatalf("write answer error: %s", err.Error())
 					}
 				}
@@ -113,11 +129,11 @@ func (s *CustomSlave) CalcCrc(action string, data []byte) []byte {
 
 	switch action {
 	case ActionRead:
-		format = s.Len.Read
+		format = s.ReadFormat
 	case ActionWrite:
-		format = s.Len.Write
+		format = s.WriteFormat
 	case ActionError:
-		format = s.Len.Error
+		format = s.ErrorFormat
 	default:
 		logrus.Fatalf("Action not found %s", action)
 	}
@@ -228,6 +244,116 @@ func (s *CustomSlave) CalcLen(action string, data []byte) (int, []byte) {
 	}
 
 	return countByte, b
+}
+
+// data - чистая без стаффинг байтов
+func (s *CustomSlave) GenerateAnswer(action string, data []byte) (out []byte) {
+	var format []string
+	switch action {
+	case ActionRead:
+		format = s.ReadFormat
+	case ActionWrite:
+		format = s.WriteFormat
+	case ActionError:
+		format = s.ErrorFormat
+	default:
+		logrus.Fatalf("Action not found %s", action)
+	}
+	for _, templ := range format {
+		if strings.Contains(templ, "#") {
+			if strings.HasPrefix(templ, "len#") {
+				_, l := s.CalcLen(action, data)
+				if s.Len.Staffing {
+					out = append(out, s.StaffingProcessing(true, l)...)
+				} else {
+					out = append(out, l...)
+				}
+				continue
+			}
+
+			// ======== Собирается суфикс ============
+			if strings.HasPrefix(templ, "data#") {
+				out = append(out, s.StaffingProcessing(true, data)...)
+				continue
+			}
+
+			if strings.HasPrefix(templ, "crc#") {
+				out = append(out, s.StaffingProcessing(true, s.CalcCrc(action, data))...)
+				continue
+			}
+		}
+
+		// Ищем стартовые байты в константах
+		if constanta, ok := s.Const[templ]; ok {
+			for _, stringBytes := range constanta {
+				data, err := common.ParseStringByte(stringBytes)
+				if err != nil {
+					logrus.Fatal(err)
+				}
+				out = append(out, data...)
+			}
+		} else {
+			logrus.Fatalf("Constant not found %s", constanta)
+		}
+	}
+	return
+}
+
+// Возвращает чистую дату без staffing
+func (s *CustomSlave) ParseReadData(adu []byte) []byte {
+	adu = s.StaffingProcessing(false, adu)
+	prefix := 0
+	suffix := 0
+	header := true
+	for _, templ := range s.ReadFormat {
+		if strings.Contains(templ, "#") {
+			if strings.HasPrefix(templ, "len#") {
+				if header {
+					prefix += s.Len.CountBytes
+				} else {
+					suffix += s.Len.CountBytes
+				}
+				continue
+			}
+
+			// ======== Собирается суфикс ============
+			if strings.HasPrefix(templ, "data#") {
+				header = false
+				continue
+			}
+
+			if strings.HasPrefix(templ, "crc#") {
+				if header {
+					prefix += s.Crc.Len()
+				} else {
+					suffix += s.Crc.Len()
+				}
+				continue
+			}
+		}
+		// Ищем стартовые байты в константах
+		if constanta, ok := s.Const[templ]; ok {
+			for _, stringBytes := range constanta {
+				data, err := common.ParseStringByte(stringBytes)
+				if err != nil {
+					logrus.Fatal(err)
+				}
+				// считаем количество байт в начале или конце пакета
+				if header {
+					prefix += len(data)
+				} else {
+					suffix += len(data)
+				}
+			}
+		} else {
+			logrus.Fatalf("Constant not found %s", constanta)
+		}
+	}
+
+	if suffix == 0 {
+		return adu[prefix:]
+	}
+	return adu[prefix:(len(adu) - suffix)]
 }
 
 // ParseReadFormat создает сплиттер для поиска фреймов в потоке данных rs
@@ -497,6 +623,7 @@ func (s *CustomSlave) GetSplitStartEnd(start []byte, end []byte) bufio.SplitFunc
 			if s < 0 {
 				return 0, nil, err
 			}
+			logrus.Debugf("Search for start. Drop the trash: % 02x", data[:len(data)-len(start)])
 			// Если начало пакета не найдено
 			return len(data) - len(start), nil, err
 		}
@@ -506,6 +633,7 @@ func (s *CustomSlave) GetSplitStartEnd(start []byte, end []byte) bufio.SplitFunc
 		if endIndex < 0 {
 			// Если данные превысили верхнюю планку пакета
 			if len(data) > s.MaxLen {
+				logrus.Debugf("Buffer is full. Drop the trash: % 02x", data[:len(start)])
 				return len(start), nil, err
 			}
 			// Ждем конца пакета
@@ -513,8 +641,11 @@ func (s *CustomSlave) GetSplitStartEnd(start []byte, end []byte) bufio.SplitFunc
 		} else {
 			tail := (len(start) + endIndex) + len(end)
 			// Отбрасываем мусор перед стартовыми байтами
+			if startIndex != 0 {
+				logrus.Debugf("Drop the trash: % 02x", data[:startIndex])
+			}
+			logrus.Debugf("Found a new package: % 02x", data[startIndex:tail])
 			return tail, data[startIndex:tail], err
 		}
-
 	}
 }

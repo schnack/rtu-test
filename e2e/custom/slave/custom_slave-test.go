@@ -3,6 +3,7 @@ package slave
 import (
 	"encoding/binary"
 	"github.com/sirupsen/logrus"
+	"math"
 	"rtu-test/e2e/common"
 	"strconv"
 )
@@ -26,25 +27,59 @@ type CustomSlaveTest struct {
 }
 
 // Проверяем пакет принадлежит этому тесту или нет с использованием Pattern
-func (s *CustomSlaveTest) Check(data []byte) bool {
-	// TODO проверим принадлежит ли пакет этому тесту
-	logrus.Infof("Check: % 02x", data)
+func (s *CustomSlaveTest) Check(data []byte, previousTest string) bool {
+	// Если время жизни теста истекло
+	if s.LifeTime < 0 {
+		return false
+	}
+
+	// Соблюдаем порядок выполнения тестов
+	if len(s.Next) != 0 {
+		previosCheck := false
+		for i := range s.Next {
+			if s.Next[i] == previousTest {
+				previosCheck = true
+				break
+			}
+		}
+		if !previosCheck {
+			return false
+		}
+	}
+
+	result := true
+	var report common.ReportExpected
 	offsetBit := 0
 	for i := range s.Pattern {
 		if s.Pattern[i].Address != "" {
+			// Делаем смещение согласно заданному адресу
 			rawAddress, err := strconv.Atoi(s.Pattern[i].Address)
 			if err != nil {
 				logrus.Fatalf("parse address %s", err)
 			}
-			offsetBit = (rawAddress - 1) * 8
+			rawAddress = int(math.Abs(float64(rawAddress)))
+			if rawAddress != 0 {
+				offsetBit = (rawAddress - 1) * 8
+			}
 		}
-
-		var report common.ReportExpected
 		offsetBit, report = s.Pattern[i].Check(data, 0, "", offsetBit, 8, binary.LittleEndian)
-		logrus.Warn(offsetBit)
-		logrus.Warn(report)
+		if !report.Pass {
+			result = false
+		}
 	}
-	return false
+
+	// Если значение не установленно то тест выигрывает всегда
+	if s.LifeTime == 0 {
+		return result
+	}
+
+	s.LifeTime--
+	if s.LifeTime == 0 {
+		// Если значение по умолчанию = 0
+		s.LifeTime--
+	}
+
+	return result
 }
 
 // Запускает тест и поверяет значение
@@ -55,14 +90,20 @@ func (s *CustomSlaveTest) Exec(data []byte, report *ReportCustomSlaveTest) {
 }
 
 // Возвращает данны для записи в компорт
-func (s *CustomSlaveTest) ReturnData() []byte {
+func (s *CustomSlaveTest) ReturnData(order binary.ByteOrder) (out []byte) {
 	// TODO подготовка данных для ответа устройству
-	return []byte{0xff, 0xfe, 0xfd}
+	for i := range s.Write {
+		out = append(out, s.Write[i].Write(order)...)
+	}
+	return
 }
 
-func (s *CustomSlaveTest) ReturnError() []byte {
+func (s *CustomSlaveTest) ReturnError(order binary.ByteOrder) (out []byte) {
 	// TODO подготовка ошибки для устройства
-	return []byte{0x01, 0x02, 0x03, 0x04, 0x05}
+	for i := range s.WriteError {
+		out = append(out, s.WriteError[i].Write(order)...)
+	}
+	return
 }
 
 // Генерирует объект отчета для этого теста. Начальные данные можно использовать в сообщении before

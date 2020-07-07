@@ -19,7 +19,7 @@ slave:
   silentInterval: 50ms
 
   # Порядок байт
-  byteOrder: "big" # little
+  byteOrder: "little" # little
 
   # Не изменяемые параметры можно обращаться просто start
   const:
@@ -114,28 +114,25 @@ slave:
       #skip: пока пропустить
 
       # Сообщение перед тестом
-      before: "the message after the test"
+      #before: "the message before the test"
 
       # Строги порядок выполнения команд
-      next:
-        - TestName
+      #next:
+      #  - TestName
 
       fatal: exit
 
       # Количество запусков
-      lifetime: 1
+      lifetime: 0
 
       # Задержка перед ответом
       timeout: 2s
 
       # Определяет что запрос пришел для этого теста. Оценка происходит со всего пакет включая константы
       pattern:
-        - name: "address"
-          # начиная с какого бита это значение по умолчанию 0
-          address: 3
-          uint8: 0x06
         - name: "func"
-          address: 5
+          # начиная с какого бита это значение по умолчанию 0
+          address: 0
           uint8: 0x03
         - name: "Reg"
           uint16: 0x0002
@@ -147,10 +144,10 @@ slave:
           uint32: 2
 
       writeError:
-        - name: "param1"
-          uint16: 1
-        - name: "param2"
-          uint32: 2
+        - name: "address"
+          uint8: 0x0A
+        - name: "error"
+          uint16: 0x04
 
       expected:
         - name: no error
@@ -160,6 +157,6 @@ slave:
         - name: quantity
           uint16: 0xffff
 
-      success: "the message on successful completion of the test"
-      error: "the message about the failed test execution"
-      after: "the message after the test"
+      #success: "the message on successful completion of the test"
+      #error: "the message about the failed test execution"
+      #after: "the message after the test"

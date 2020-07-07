@@ -52,8 +52,10 @@ func (c *Crc) ModBusCRC(data []byte) (crc uint16) {
 // Len - возвращает длину данных crc
 func (c *Crc) Len() int {
 	switch c.Algorithm {
-	case "mod256":
+	case Mod256:
 		return 1
+	case ModBus:
+		return 2
 	default:
 		logrus.Fatalf("crc algorithm no support %s", c.Algorithm)
 	}
