@@ -24,86 +24,94 @@ slave:
   # Не изменяемые параметры можно обращаться просто start
   const:
     start:
-      - 0x7E
+      - 0xFE
+      - 0xFE
     addressMaster:
-      - 0x01
+      - 0x00
     addressSlave:
-      - 0xC9
+      - 0x06
+    end:
+      - 0xFC
+      - 0xFC
 
   # Параметры staffing байта и константы которые подлежат экранированию
   staffing:
     byte: 0x00
     pattern:
       - start
+      - end
 
   maxLen: 255
   # Обращение к значениям происходит с помощью len#write
   len:
     # Экранировать длину staffing байтом
-    staffing: true
+#    staffing: true
     # считает длину с установленным staffing
-    countStaffing: true
+#    countStaffing: true
     # Длина длины в байтах 1 2 4 8
-    coundBytes: 1
-    read:
-      - data#
-    write:
-      - data#
-    error:
-      - data#
+#    coundBytes: 1
+#    read:
+#      - data#
+#    write:
+#      - data#
+#    error:
+#      - data#
 
   # Обращение к значениям происходит с помощью crc#write
   crc:
     # Алгоритм crc
-    algorithm: mod256
+    algorithm: modBus
     # Экранировать данные staffing байтом перед подсчетом не влияет на длину
     staffing: true
     read:
+      - start
       - addressSlave
       - addressMaster
-      - len#
       - data#
+      - end
     write:
-      - addressMaster
+      - start
       - addressSlave
-      - len#
+      - addressMaster
       - data#
+      - end
     error:
-      - addressMaster
+      - start
       - addressSlave
-      - len#
+      - addressMaster
       - data#
+      - end
 
   # Тут происходит не явное обработка staffing. Поля что входят в pattern не экранируются
   writeFormat:
     - start
     - addressMaster
     - addressSlave
-    - len#
     - data#
     - crc#
+    - end
 
   # Тут происходит не явное удаление staffing. Поля что входят в pattern не преобразуются
   readFormat:
     - start
     - addressSlave
     - addressMaster
-    - len#
     - data#
     - crc#
+    - end
 
   # Тут происходит не явное удаление staffing. Поля что входят в pattern не преобразуются
   errorFormat:
     - start
     - addressMaster
     - addressSlave
-    - len#
     - data#
     - crc#
+    - end
 
-  tests:
+  test:
     - name: TestName  # Test Name
-      skip: пока пропустить
+      #skip: пока пропустить
 
       # Сообщение перед тестом
       before: "the message after the test"
@@ -111,7 +119,6 @@ slave:
       # Строги порядок выполнения команд
       next:
         - TestName
-
 
       fatal: exit
 
@@ -121,12 +128,17 @@ slave:
       # Задержка перед ответом
       timeout: 2s
 
-      # Определяет что запрос пришел для этого теста. Подставляется в поле test#expected
+      # Определяет что запрос пришел для этого теста. Оценка происходит со всего пакет включая константы
       pattern:
-        - name: "param1"
+        - name: "address"
           # начиная с какого бита это значение по умолчанию 0
-          address: 0x00
-          uint8: 8
+          address: 3
+          uint8: 0x06
+        - name: "func"
+          address: 5
+          uint8: 0x03
+        - name: "Reg"
+          uint16: 0x0002
 
       write:
         - name: "param1"

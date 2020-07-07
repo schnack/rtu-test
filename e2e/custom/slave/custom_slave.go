@@ -65,6 +65,10 @@ func (s *CustomSlave) Run() error {
 				report := s.CustomSlaveTest[i].GetReport()
 				report.GotByte = listen.Bytes()
 
+				// Проверяем результат
+				s.CustomSlaveTest[i].Exec(listen.Bytes(), report)
+				//
+
 				// Сообщение перед тестом
 				display.Console().Print(&s.CustomSlaveTest[i].Before, report)
 
@@ -80,10 +84,6 @@ func (s *CustomSlave) Run() error {
 						logrus.Fatalf("write answer error: %s", err.Error())
 					}
 				}
-
-				// Проверяем результат
-				s.CustomSlaveTest[i].Exec(listen.Bytes(), report)
-				//
 
 				// отчет о проделанном тесте
 				if report.Pass {
@@ -126,10 +126,13 @@ func (s *CustomSlave) CalcCrc(action string, data []byte) []byte {
 		if strings.Contains(name, "#") {
 			if strings.HasPrefix(name, "len#") {
 				_, l := s.CalcLen(action, data)
+				if s.Crc.Staffing {
+					l = s.StaffingProcessing(true, l)
+				}
 				tmpData = append(tmpData, l...)
 			}
 			if strings.HasPrefix(name, "data#") {
-				tmpData = append(tmpData, data...)
+				tmpData = append(tmpData, s.StaffingProcessing(true, data)...)
 			}
 			continue
 		}
@@ -146,12 +149,18 @@ func (s *CustomSlave) CalcCrc(action string, data []byte) []byte {
 		}
 	}
 
-	return s.Crc.Calc(tmpData)
+	// определяем порядок байт
+	var order binary.ByteOrder = binary.BigEndian
+	if s.ByteOrder == "little" {
+		order = binary.LittleEndian
+	}
+
+	return s.Crc.Calc(order, tmpData)
 }
 
 // CalcLen - Подсчитывает длину согласно шаблону
 // action - read, write, error
-// data - чистые данные из теста (writeError, expected, write) без staffing byte
+// data - Длина в byte
 func (s *CustomSlave) CalcLen(action string, data []byte) (int, []byte) {
 	if s.Len == nil {
 		logrus.Fatal("Length is not specified in the configuration")
@@ -175,7 +184,7 @@ func (s *CustomSlave) CalcLen(action string, data []byte) (int, []byte) {
 		if strings.Contains(name, "#") {
 			// Подсчитываем шаблоны
 			if strings.HasPrefix(name, "data#") {
-				if s.Len.Staffing {
+				if s.Len.CountStaffing {
 					countByte += len(s.StaffingProcessing(true, data))
 				} else {
 					countByte += len(data)
@@ -250,14 +259,14 @@ func (s *CustomSlave) ParseReadFormat() (start []byte, lenPosition int, suffix [
 			// ======== Собирается суфикс ============
 			if strings.HasPrefix(templ, "data#") {
 				suffixTrigger = true
-				if !s.Len.Contains(ActionRead, "data#") {
+				if s.Len != nil && !s.Len.Contains(ActionRead, "data#") {
 					suffix = append(suffix, "data#")
 				}
 			}
 
 			if strings.HasPrefix(templ, "crc#") {
 				suffixTrigger = true
-				if !s.Len.Contains(ActionRead, "crc#") {
+				if s.Len != nil && !s.Len.Contains(ActionRead, "crc#") {
 					suffix = append(suffix, "crc#")
 				}
 			}
@@ -484,6 +493,10 @@ func (s *CustomSlave) GetSplitStartEnd(start []byte, end []byte) bufio.SplitFunc
 		// Поиск стартовый байтов пакетов
 		startIndex := bytes.Index(data, start)
 		if startIndex < 0 {
+			s := len(data) - len(start)
+			if s < 0 {
+				return 0, nil, err
+			}
 			// Если начало пакета не найдено
 			return len(data) - len(start), nil, err
 		}

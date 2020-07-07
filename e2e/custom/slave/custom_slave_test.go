@@ -133,11 +133,12 @@ func (s *CustomSlaveTestSuit) TestCalcLen() {
 			Pattern: []string{"start", "end"},
 		},
 		Len: &module.LenBytes{
-			Staffing:   true,
-			CountBytes: 2,
-			Read:       []string{"data#", "end"},
-			Write:      []string{"data#"},
-			Error:      []string{"end"},
+			Staffing:      true,
+			CountStaffing: true,
+			CountBytes:    2,
+			Read:          []string{"data#", "end"},
+			Write:         []string{"data#"},
+			Error:         []string{"end"},
 		},
 	}
 

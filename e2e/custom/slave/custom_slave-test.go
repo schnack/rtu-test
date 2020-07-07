@@ -1,8 +1,10 @@
 package slave
 
 import (
+	"encoding/binary"
 	"github.com/sirupsen/logrus"
 	"rtu-test/e2e/common"
+	"strconv"
 )
 
 type CustomSlaveTest struct {
@@ -26,7 +28,22 @@ type CustomSlaveTest struct {
 // Проверяем пакет принадлежит этому тесту или нет с использованием Pattern
 func (s *CustomSlaveTest) Check(data []byte) bool {
 	// TODO проверим принадлежит ли пакет этому тесту
-	logrus.Infof("Check: %02x", data)
+	logrus.Infof("Check: % 02x", data)
+	offsetBit := 0
+	for i := range s.Pattern {
+		if s.Pattern[i].Address != "" {
+			rawAddress, err := strconv.Atoi(s.Pattern[i].Address)
+			if err != nil {
+				logrus.Fatalf("parse address %s", err)
+			}
+			offsetBit = (rawAddress - 1) * 8
+		}
+
+		var report common.ReportExpected
+		offsetBit, report = s.Pattern[i].Check(data, 0, "", offsetBit, 8, binary.LittleEndian)
+		logrus.Warn(offsetBit)
+		logrus.Warn(report)
+	}
 	return false
 }
 

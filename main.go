@@ -25,8 +25,8 @@ func main() {
 	fileNames := flag.Args()
 
 	if len(fileNames) == 0 {
-		fileNames = append(fileNames, "test.yml")
-		//fileNames = append(fileNames, "C:/Users/schnack/Documents/workspace/go/rtu-test/slave.yml")
+		//fileNames = append(fileNames, "test.yml")
+		fileNames = append(fileNames, "C:/Users/schnack/Documents/workspace/go/rtu-test/slave.yml")
 	}
 
 	// Загружаем конфигурацию

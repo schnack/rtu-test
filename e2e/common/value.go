@@ -165,9 +165,18 @@ func (v *Value) LengthBit() int {
 // startBit - индекс массива байтов
 // endBit - конечный индекс массива байтов
 // offsetBit - смещение в битах
-func (v *Value) cursor(currentBit, bitSize, basicBitSize int, byteOrder binary.ByteOrder) (startBit, endBit, offsetBit int) {
-	if currentBit%bitSize != 0 {
-		currentBit += bitSize - (currentBit % bitSize)
+func (v *Value) cursorByte(currentBit, byteSize, basicBitSize int, byteOrder binary.ByteOrder) (startIndex, endIndex, offsetBit int) {
+	// Выравниваем до целого байта
+	if currentBit%8 != 0 {
+		currentBit = 8 - (currentBit % 8)
+	}
+
+	bitSize := byteSize * 8
+
+	// Дополняем до следующего блока если запрошенные данные не влезли
+	ending := currentBit % basicBitSize
+	if ending != 0 && ending < bitSize {
+		currentBit = basicBitSize - (ending)
 	}
 
 	offsetBit = currentBit + bitSize
@@ -177,19 +186,36 @@ func (v *Value) cursor(currentBit, bitSize, basicBitSize int, byteOrder binary.B
 		size = bitSize
 	}
 
-	// корректировка подсчета данных для типа bool
-	if bitSize == 1 {
-		bitSize = 8
-	}
-
 	index := (currentBit % size) / bitSize
 	if byteOrder == binary.BigEndian {
 		index = ((size / bitSize) - 1) - index
 	}
-	endIndex := bitSize / 8
 
-	startBit = (currentBit-(currentBit%size))/8 + index
-	endBit = startBit + endIndex
+	startIndex = (currentBit-(currentBit%basicBitSize))/8 + index
+	endIndex = startIndex + (bitSize / 8)
+	return
+}
+
+// Отслеживаем текущую позицию курсора
+// currentBit - текущий бит
+// basicBitSize - размер слова
+// byteOrder - порядок байт
+// Возвращает индекс байта и смещение
+func (v *Value) cursorBit(currentBit, basicBitSize int, byteOrder binary.ByteOrder) (startIndex, offsetBit int) {
+	offsetBit = currentBit + 1
+
+	// Выравниваем, так как минимальная единица 8
+	if basicBitSize < 8 {
+		basicBitSize = 8
+	}
+
+	// Выбираем согласно порядку байт
+	index := (currentBit % basicBitSize) / 8
+	if byteOrder == binary.BigEndian {
+		index = ((basicBitSize / 8) - 1) - index
+	}
+
+	startIndex = (currentBit-(currentBit%basicBitSize))/8 + index
 	return
 }
 
@@ -213,7 +239,7 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf("%02x", *v.Int8)
 		report.ExpectedBin = fmt.Sprintf("[%08b]", *v.Int8)
 
-		start, _, offset := v.cursor(currentBit, 8, minBitSize, byteOrder)
+		start, _, offset := v.cursorByte(currentBit, 1, minBitSize, byteOrder)
 		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
@@ -245,7 +271,7 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf(FormatRange, minHex, maxHex)
 		report.ExpectedBin = fmt.Sprintf(FormatRange, minBin, maxBin)
 
-		start, _, offset := v.cursor(currentBit, 8, minBitSize, byteOrder)
+		start, _, offset := v.cursorByte(currentBit, 1, minBitSize, byteOrder)
 		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
@@ -267,7 +293,7 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf("%04x", b)
 		report.ExpectedBin = fmt.Sprintf("%08b", b)
 
-		start, end, offset := v.cursor(currentBit, 16, minBitSize, byteOrder)
+		start, end, offset := v.cursorByte(currentBit, 2, minBitSize, byteOrder)
 		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
@@ -303,7 +329,7 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf(FormatRange, minHex, maxHex)
 		report.ExpectedBin = fmt.Sprintf(FormatRange, minBin, maxBin)
 
-		start, end, offset := v.cursor(currentBit, 16, minBitSize, byteOrder)
+		start, end, offset := v.cursorByte(currentBit, 2, minBitSize, byteOrder)
 		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
@@ -326,7 +352,7 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf("%08x", b)
 		report.ExpectedBin = fmt.Sprintf("%08b", b)
 
-		start, end, offset := v.cursor(currentBit, 32, minBitSize, byteOrder)
+		start, end, offset := v.cursorByte(currentBit, 4, minBitSize, byteOrder)
 		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
@@ -362,7 +388,7 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf(FormatRange, minHex, maxHex)
 		report.ExpectedBin = fmt.Sprintf(FormatRange, minBin, maxBin)
 
-		start, end, offset := v.cursor(currentBit, 32, minBitSize, byteOrder)
+		start, end, offset := v.cursorByte(currentBit, 4, minBitSize, byteOrder)
 		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
@@ -384,7 +410,7 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf("%016x", b)
 		report.ExpectedBin = fmt.Sprintf("%08b", b)
 
-		start, end, offset := v.cursor(currentBit, 64, minBitSize, byteOrder)
+		start, end, offset := v.cursorByte(currentBit, 8, minBitSize, byteOrder)
 		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
@@ -420,7 +446,7 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf(FormatRange, minHex, maxHex)
 		report.ExpectedBin = fmt.Sprintf(FormatRange, minBin, maxBin)
 
-		start, end, offset := v.cursor(currentBit, 64, minBitSize, byteOrder)
+		start, end, offset := v.cursorByte(currentBit, 8, minBitSize, byteOrder)
 		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
@@ -441,7 +467,7 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf("%02x", *v.Uint8)
 		report.ExpectedBin = fmt.Sprintf("[%08b]", *v.Uint8)
 
-		start, _, offset := v.cursor(currentBit, 8, minBitSize, byteOrder)
+		start, _, offset := v.cursorByte(currentBit, 1, minBitSize, byteOrder)
 		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
@@ -473,7 +499,7 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf(FormatRange, minHex, maxHex)
 		report.ExpectedBin = fmt.Sprintf(FormatRange, minBin, maxBin)
 
-		start, _, offset := v.cursor(currentBit, 8, minBitSize, byteOrder)
+		start, _, offset := v.cursorByte(currentBit, 1, minBitSize, byteOrder)
 		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
@@ -494,7 +520,7 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf("%04x", b)
 		report.ExpectedBin = fmt.Sprintf("%08b", b)
 
-		start, end, offset := v.cursor(currentBit, 16, minBitSize, byteOrder)
+		start, end, offset := v.cursorByte(currentBit, 2, minBitSize, byteOrder)
 		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
@@ -530,7 +556,7 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf(FormatRange, minHex, maxHex)
 		report.ExpectedBin = fmt.Sprintf(FormatRange, minBin, maxBin)
 
-		start, end, offset := v.cursor(currentBit, 16, minBitSize, byteOrder)
+		start, end, offset := v.cursorByte(currentBit, 2, minBitSize, byteOrder)
 		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
@@ -552,7 +578,7 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf("%08x", b)
 		report.ExpectedBin = fmt.Sprintf("%08b", b)
 
-		start, end, offset := v.cursor(currentBit, 32, minBitSize, byteOrder)
+		start, end, offset := v.cursorByte(currentBit, 4, minBitSize, byteOrder)
 		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
@@ -588,7 +614,7 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf(FormatRange, minHex, maxHex)
 		report.ExpectedBin = fmt.Sprintf(FormatRange, minBin, maxBin)
 
-		start, end, offset := v.cursor(currentBit, 32, minBitSize, byteOrder)
+		start, end, offset := v.cursorByte(currentBit, 4, minBitSize, byteOrder)
 		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
@@ -611,7 +637,7 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf("%016x", b)
 		report.ExpectedBin = fmt.Sprintf("%08b", b)
 
-		start, end, offset := v.cursor(currentBit, 64, minBitSize, byteOrder)
+		start, end, offset := v.cursorByte(currentBit, 8, minBitSize, byteOrder)
 		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
@@ -647,7 +673,7 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf(FormatRange, minHex, maxHex)
 		report.ExpectedBin = fmt.Sprintf(FormatRange, minBin, maxBin)
 
-		start, end, offset := v.cursor(currentBit, 64, minBitSize, byteOrder)
+		start, end, offset := v.cursorByte(currentBit, 8, minBitSize, byteOrder)
 		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
@@ -670,7 +696,7 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf("%08x", b)
 		report.ExpectedBin = fmt.Sprintf("%08b", b)
 
-		start, end, offset := v.cursor(currentBit, 32, minBitSize, byteOrder)
+		start, end, offset := v.cursorByte(currentBit, 4, minBitSize, byteOrder)
 		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
@@ -707,7 +733,7 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf(FormatRange, minHex, maxHex)
 		report.ExpectedBin = fmt.Sprintf(FormatRange, minBin, maxBin)
 
-		start, end, offset := v.cursor(currentBit, 32, minBitSize, byteOrder)
+		start, end, offset := v.cursorByte(currentBit, 4, minBitSize, byteOrder)
 		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
@@ -731,7 +757,7 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf("%016x", b)
 		report.ExpectedBin = fmt.Sprintf("%08b", b)
 
-		start, end, offset := v.cursor(currentBit, 64, minBitSize, byteOrder)
+		start, end, offset := v.cursorByte(currentBit, 8, minBitSize, byteOrder)
 		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
@@ -768,7 +794,7 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf(FormatRange, minHex, maxHex)
 		report.ExpectedBin = fmt.Sprintf(FormatRange, minBin, maxBin)
 
-		start, end, offset := v.cursor(currentBit, 64, minBitSize, byteOrder)
+		start, end, offset := v.cursorByte(currentBit, 8, minBitSize, byteOrder)
 		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
@@ -796,7 +822,7 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 			report.ExpectedBin = fmt.Sprint("0")
 		}
 
-		start, _, offset := v.cursor(currentBit, 1, minBitSize, byteOrder)
+		start, offset := v.cursorBit(currentBit, minBitSize, byteOrder)
 		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
@@ -822,7 +848,7 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf("%x", []byte(*v.String))
 		report.ExpectedBin = fmt.Sprintf("%b", []byte(*v.String))
 
-		start, end, offset := v.cursor(currentBit, len(*v.String)*8, minBitSize, byteOrder)
+		start, end, offset := v.cursorByte(currentBit, len(*v.String), minBitSize, byteOrder)
 		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false
@@ -846,7 +872,7 @@ func (v *Value) Check(rawBite []byte, rawTime time.Duration, rawError string, cu
 		report.ExpectedHex = fmt.Sprintf("%02x", expected)
 		report.ExpectedBin = fmt.Sprintf("%08b", expected)
 
-		start, end, offset := v.cursor(currentBit, len(expected)*8, minBitSize, byteOrder)
+		start, end, offset := v.cursorByte(currentBit, len(expected), minBitSize, byteOrder)
 		offsetBit = offset
 		if len(rawBite) < offsetBit/8 {
 			report.Pass = false

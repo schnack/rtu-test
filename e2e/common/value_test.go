@@ -17,18 +17,171 @@ type ValueTestSuit struct {
 	suite.Suite
 }
 
-func (s *ValueTestSuit) TestCursor() {
+func (s *ValueTestSuit) TestCursorByte() {
 	v := Value{}
 
-	start, end, offset := v.cursor(0, 1, 16, binary.LittleEndian)
+	start, end, offset := v.cursorByte(0, 1, 8, binary.LittleEndian)
 	s.Equal(0, start)
 	s.Equal(1, end)
-	s.Equal(1, offset)
+	s.Equal(8, offset)
 
-	start, end, offset = v.cursor(0, 1, 64, binary.BigEndian)
+	start, end, offset = v.cursorByte(offset, 1, 8, binary.LittleEndian)
+	s.Equal(1, start)
+	s.Equal(2, end)
+	s.Equal(16, offset)
+
+	start, end, offset = v.cursorByte(0, 1, 64, binary.BigEndian)
 	s.Equal(7, start)
 	s.Equal(8, end)
+	s.Equal(8, offset)
+
+	start, end, offset = v.cursorByte(offset, 1, 64, binary.BigEndian)
+	s.Equal(6, start)
+	s.Equal(7, end)
+	s.Equal(16, offset)
+
+}
+
+func (s *ValueTestSuit) TestCursor1Bit() {
+	v := Value{}
+
+	start, offset := v.cursorBit(0, 1, binary.LittleEndian)
+	s.Equal(0, start)
 	s.Equal(1, offset)
+
+	start, offset = v.cursorBit(offset, 1, binary.LittleEndian)
+	s.Equal(0, start)
+	s.Equal(2, offset)
+
+	start, offset = v.cursorBit(8, 1, binary.LittleEndian)
+	s.Equal(1, start)
+	s.Equal(9, offset)
+
+	//========
+
+	start, offset = v.cursorBit(0, 8, binary.LittleEndian)
+	s.Equal(0, start)
+	s.Equal(1, offset)
+
+	start, offset = v.cursorBit(offset, 8, binary.LittleEndian)
+	s.Equal(0, start)
+	s.Equal(2, offset)
+
+	start, offset = v.cursorBit(8, 8, binary.LittleEndian)
+	s.Equal(1, start)
+	s.Equal(9, offset)
+
+	//========
+
+	start, offset = v.cursorBit(0, 16, binary.LittleEndian)
+	s.Equal(0, start)
+	s.Equal(1, offset)
+
+	start, offset = v.cursorBit(offset, 16, binary.LittleEndian)
+	s.Equal(0, start)
+	s.Equal(2, offset)
+
+	start, offset = v.cursorBit(8, 16, binary.LittleEndian)
+	s.Equal(1, start)
+	s.Equal(9, offset)
+
+	//======
+
+	start, offset = v.cursorBit(0, 32, binary.LittleEndian)
+	s.Equal(0, start)
+	s.Equal(1, offset)
+
+	start, offset = v.cursorBit(offset, 32, binary.LittleEndian)
+	s.Equal(0, start)
+	s.Equal(2, offset)
+
+	start, offset = v.cursorBit(8, 32, binary.LittleEndian)
+	s.Equal(1, start)
+	s.Equal(9, offset)
+
+	//======
+
+	start, offset = v.cursorBit(0, 64, binary.LittleEndian)
+	s.Equal(0, start)
+	s.Equal(1, offset)
+
+	start, offset = v.cursorBit(offset, 64, binary.LittleEndian)
+	s.Equal(0, start)
+	s.Equal(2, offset)
+
+	start, offset = v.cursorBit(8, 64, binary.LittleEndian)
+	s.Equal(1, start)
+	s.Equal(9, offset)
+
+	// ======
+
+	start, offset = v.cursorBit(0, 1, binary.BigEndian)
+	s.Equal(0, start)
+	s.Equal(1, offset)
+
+	start, offset = v.cursorBit(offset, 1, binary.BigEndian)
+	s.Equal(0, start)
+	s.Equal(2, offset)
+
+	start, offset = v.cursorBit(8, 1, binary.BigEndian)
+	s.Equal(1, start)
+	s.Equal(9, offset)
+
+	// =====
+
+	start, offset = v.cursorBit(0, 8, binary.BigEndian)
+	s.Equal(0, start)
+	s.Equal(1, offset)
+
+	start, offset = v.cursorBit(offset, 8, binary.BigEndian)
+	s.Equal(0, start)
+	s.Equal(2, offset)
+
+	start, offset = v.cursorBit(8, 8, binary.BigEndian)
+	s.Equal(1, start)
+	s.Equal(9, offset)
+
+	//======
+
+	start, offset = v.cursorBit(0, 16, binary.BigEndian)
+	s.Equal(1, start)
+	s.Equal(1, offset)
+
+	start, offset = v.cursorBit(offset, 16, binary.BigEndian)
+	s.Equal(1, start)
+	s.Equal(2, offset)
+
+	start, offset = v.cursorBit(8, 16, binary.BigEndian)
+	s.Equal(0, start)
+	s.Equal(9, offset)
+
+	//======
+
+	start, offset = v.cursorBit(0, 32, binary.BigEndian)
+	s.Equal(3, start)
+	s.Equal(1, offset)
+
+	start, offset = v.cursorBit(offset, 32, binary.BigEndian)
+	s.Equal(3, start)
+	s.Equal(2, offset)
+
+	start, offset = v.cursorBit(8, 32, binary.BigEndian)
+	s.Equal(2, start)
+	s.Equal(9, offset)
+
+	//======
+
+	start, offset = v.cursorBit(0, 64, binary.BigEndian)
+	s.Equal(7, start)
+	s.Equal(1, offset)
+
+	start, offset = v.cursorBit(offset, 64, binary.BigEndian)
+	s.Equal(7, start)
+	s.Equal(2, offset)
+
+	start, offset = v.cursorBit(8, 64, binary.BigEndian)
+	s.Equal(6, start)
+	s.Equal(9, offset)
 
 }
 
