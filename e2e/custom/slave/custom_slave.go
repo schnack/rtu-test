@@ -39,6 +39,8 @@ type CustomSlave struct {
 	CustomSlaveTest []CustomSlaveTest   `yaml:"test"`
 }
 
+// TODO Сделать проверку контрольной суммы
+
 // Запускает тест на выполнение
 // TODO тесты
 func (s *CustomSlave) Run() error {
