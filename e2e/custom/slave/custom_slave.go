@@ -208,6 +208,11 @@ func (s *CustomSlave) CalcCrc(action string, data []byte) []byte {
 	return s.Crc.Calc(order, tmpData)
 }
 
+func (s *CustomSlave) CheckCrc(action string, adu []byte) bool {
+	// TODO
+	return true
+}
+
 // CalcLen - Подсчитывает длину согласно шаблону
 // action - read, write, error
 // data - Длина в byte
@@ -386,6 +391,9 @@ func (s *CustomSlave) ParseReadData(adu []byte) []byte {
 		}
 	}
 
+	if len(adu) == 0 || (len(adu)-suffix) < 0 {
+		return []byte{}
+	}
 	if suffix == 0 {
 		return adu[prefix:]
 	}
@@ -527,6 +535,7 @@ func (s *CustomSlave) StaffingProcessing(isInsert bool, data []byte) []byte {
 //}
 
 // GetSplitLen - parses packets with a fixed length
+// TODO Отладка
 func (s *CustomSlave) GetSplitLen(start []byte, lenPosition int, suffix []string) bufio.SplitFunc {
 	return func(data []byte, atEOF bool) (int, []byte, error) {
 		lenLen := 1
@@ -681,6 +690,13 @@ func (s *CustomSlave) GetSplitStartEnd(start []byte, end []byte) bufio.SplitFunc
 			if startIndex != 0 {
 				logrus.Debugf("Drop the trash: % 02x", data[:startIndex])
 			}
+
+			// Если crc не прошел проверку
+			if !s.CheckCrc(ActionRead, data[startIndex:tail]) {
+				logrus.Debugf("Crc fail. Drop the trash: % 02x", data[:len(start)])
+				return len(start), nil, err
+			}
+
 			logrus.Debugf("Found a new package: % 02x", data[startIndex:tail])
 			return tail, data[startIndex:tail], err
 		}
