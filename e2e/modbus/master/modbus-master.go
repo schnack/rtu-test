@@ -68,7 +68,7 @@ func (mc *ModbusMaster) Run(reports *ReportGroups) error {
 			continue
 		}
 		report := ReportGroup{Name: group}
-		logrus.Warnf(common.Render(template.TestGROUP, report))
+		logrus.Warnf(common.Render(template.TestMasterModBusGROUP, report))
 		for _, test := range tests {
 			if filterTest != "" && filterTest != "all" && filterTest != test.Name {
 				continue

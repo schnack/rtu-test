@@ -126,6 +126,8 @@ func (d *Device) RunTest(ctx context.Context) {
 			logrus.Fatalf("Exit app modbus slave: %s", err)
 		}
 	case d.Slave != nil:
+		// Вывод отчета в конце выполнения программы
+		logrus.RegisterExitHandler(func() { display.Console().Print(&d.ExitMessage, nil) })
 		if err := d.Slave.Run(); err != nil {
 			logrus.Fatalf("Exit app slave: %s", err)
 		}

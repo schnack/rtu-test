@@ -84,23 +84,42 @@ func (s *CustomSlaveTest) Check(data []byte, previousTest string) bool {
 
 // Запускает тест и поверяет значение
 func (s *CustomSlaveTest) Exec(data []byte, report *ReportCustomSlaveTest) {
-	//TODO Выполнение самого теста
-	logrus.Infof("Exec: %02x", data)
+	offsetBit := 0
+	report.Pass = true
+	for i := range s.Expected {
+		if s.Expected[i].Address != "" {
+			// Делаем смещение согласно заданному адресу
+			rawAddress, err := strconv.Atoi(s.Expected[i].Address)
+			if err != nil {
+				logrus.Fatalf("parse address %s", err)
+			}
+			rawAddress = int(math.Abs(float64(rawAddress)))
+			if rawAddress != 0 {
+				offsetBit = (rawAddress - 1) * 8
+			}
+		}
+		offset, reportTest := s.Expected[i].Check(data, 0, "", offsetBit, 8, binary.LittleEndian)
+		offsetBit = offset
+		report.Expected = append(report.Expected, reportTest)
+		if !reportTest.Pass {
+			report.Pass = false
+		}
+	}
 	return
 }
 
 // Возвращает данны для записи в компорт
-func (s *CustomSlaveTest) ReturnData(order binary.ByteOrder) (out []byte) {
-	// TODO подготовка данных для ответа устройству
+func (s *CustomSlaveTest) ReturnData(order binary.ByteOrder) (out []byte, report []common.ReportWrite) {
 	for i := range s.Write {
+		report = append(report, s.Write[i].ReportWrite(order))
 		out = append(out, s.Write[i].Write(order)...)
 	}
 	return
 }
 
-func (s *CustomSlaveTest) ReturnError(order binary.ByteOrder) (out []byte) {
-	// TODO подготовка ошибки для устройства
+func (s *CustomSlaveTest) ReturnError(order binary.ByteOrder) (out []byte, report []common.ReportWrite) {
 	for i := range s.WriteError {
+		report = append(report, s.WriteError[i].ReportWrite(order))
 		out = append(out, s.WriteError[i].Write(order)...)
 	}
 	return

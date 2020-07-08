@@ -7,7 +7,7 @@ log: stdout        # "off", stdout, stderr, /path/to/file
 logLvl: debug        # trace | debug | info | warn | error | fatal | panic
 
 exitMessage:
-  message: Для выхода нажмите {{ .Pause}}
+  message: Для выхода нажмите
   pause: Enter
 
 slave:
@@ -68,19 +68,16 @@ slave:
       - addressSlave
       - addressMaster
       - data#
-      - end
     write:
       - start
       - addressSlave
       - addressMaster
       - data#
-      - end
     error:
       - start
       - addressSlave
       - addressMaster
       - data#
-      - end
 
   # Тут происходит не явное обработка staffing. Поля что входят в pattern не экранируются
   writeFormat:
@@ -110,7 +107,7 @@ slave:
     - end
 
   test:
-    - name: TestName  # Test Name
+    - name: Start  # Test Name
       #skip: пока пропустить
 
       # Сообщение перед тестом
@@ -150,13 +147,62 @@ slave:
           uint16: 0x04
 
       expected:
-        - name: no error
-          error:
-        - name: execution time
-          time: 1s
-        - name: quantity
-          uint16: 0xffff
+        - name: func
+          address: 0
+          uint8: 0x03
+        - name: addr
+          uint16: 0x0003
 
-      #success: "the message on successful completion of the test"
-      #error: "the message about the failed test execution"
+      success: "the message on successful completion of the test"
+      error: "the message about the failed test execution"
+      #after: "the message after the test"
+
+    - name: Test2  # Test Name
+      skip:
+
+      # Сообщение перед тестом
+      before: "the message before the test"
+
+      # Строги порядок выполнения команд
+      next:
+        - Start
+
+      fatal: exit
+
+      # Количество запусков
+      lifetime: 0
+
+      # Задержка перед ответом
+      timeout: 2s
+
+      # Определяет что запрос пришел для этого теста. Оценка происходит со всего пакет включая константы
+      pattern:
+        - name: "func"
+          # начиная с какого бита это значение по умолчанию 0
+          address: 0
+          uint8: 0x03
+        - name: "Reg"
+          uint16: 0x0002
+
+      write:
+        - name: "param1"
+          uint16: 1
+        - name: "param2"
+          uint32: 2
+
+      writeError:
+        - name: "address"
+          uint8: 0x0A
+        - name: "error"
+          uint16: 0x04
+
+      expected:
+        - name: func
+          address: 0
+          uint8: 0x03
+        - name: addr
+          uint16: 0x0002
+
+      success: "the message on successful completion of the test"
+      error: "the message about the failed test execution"
       #after: "the message after the test"

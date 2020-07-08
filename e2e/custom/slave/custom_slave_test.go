@@ -178,6 +178,9 @@ func (s *CustomSlaveTestSuit) TestCalcCrc() {
 			Write:      []string{"data#"},
 			Error:      []string{"end"},
 		},
+		ReadFormat:  []string{"data#", "end"},
+		WriteFormat: []string{"data#"},
+		ErrorFormat: []string{"end"},
 		Crc: &module.Crc{
 			Algorithm: "mod256",
 			Staffing:  false,

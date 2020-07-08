@@ -8,8 +8,10 @@ import (
 	"rtu-test/e2e/common"
 	"rtu-test/e2e/custom/module"
 	"rtu-test/e2e/display"
+	"rtu-test/e2e/template"
 	"rtu-test/e2e/transport"
 	"strings"
+	"time"
 )
 
 const (
@@ -38,6 +40,7 @@ type CustomSlave struct {
 }
 
 // Запускает тест на выполнение
+// TODO тесты
 func (s *CustomSlave) Run() error {
 	port := transport.NewSerialPort(&transport.SerialPortConfig{
 		Port:     s.Port,
@@ -71,6 +74,13 @@ func (s *CustomSlave) Run() error {
 				report := s.CustomSlaveTest[i].GetReport()
 				report.GotByte = listen.Bytes()
 
+				logrus.Warn(common.Render(template.TestSlaveCustomRUN, report))
+
+				if report.Skip != "" {
+					logrus.Warn(common.Render(template.TestSlaveCustomSKIP, report))
+					continue
+				}
+
 				// Проверяем результат
 				s.CustomSlaveTest[i].Exec(data, report)
 				//
@@ -84,17 +94,32 @@ func (s *CustomSlave) Run() error {
 					order = binary.LittleEndian
 				}
 
+				// Задержка перед ответом
+				duration := common.ParseDuration(s.CustomSlaveTest[i].Timeout)
+
 				// Готовим ответ для устройства. Ошибка в приоритете
 				if len(s.CustomSlaveTest[i].WriteError) > 0 {
 					// Отвечаем тестируемому устройству
-					out := s.GenerateAnswer(ActionError, s.CustomSlaveTest[i].ReturnError(order))
+					out := make([]byte, 0)
+					out, report.Write = s.CustomSlaveTest[i].ReturnError(order)
+					out = s.GenerateAnswer(ActionError, out)
+					if duration > 0 {
+						logrus.Debugf("Timeout %s", duration)
+						time.Sleep(duration)
+					}
 					logrus.Debugf("Send error: % 02x", out)
 					if _, err := port.Write(out); err != nil {
 						logrus.Fatalf("write answer error: %s", err.Error())
 					}
 				} else if len(s.CustomSlaveTest[i].Write) > 0 {
 					// Отвечаем тестируемому устройству
-					out := s.GenerateAnswer(ActionWrite, s.CustomSlaveTest[i].ReturnData(order))
+					out := make([]byte, 0)
+					out, report.Write = s.CustomSlaveTest[i].ReturnData(order)
+					out = s.GenerateAnswer(ActionWrite, out)
+					if duration > 0 {
+						logrus.Debugf("Timeout %s", duration)
+						time.Sleep(duration)
+					}
 					logrus.Debugf("Send answer: % 02x", out)
 					if _, err := port.Write(out); err != nil {
 						logrus.Fatalf("write answer error: %s", err.Error())
@@ -103,9 +128,16 @@ func (s *CustomSlave) Run() error {
 
 				// отчет о проделанном тесте
 				if report.Pass {
+					logrus.Warn(common.Render(template.TestSlaveCustomPASS, report))
 					display.Console().Print(&s.CustomSlaveTest[i].Success, report)
+
 				} else {
+					logrus.Warn(common.Render(template.TestSlaveCustomFAIL, report))
 					display.Console().Print(&s.CustomSlaveTest[i].Error, report)
+					if s.CustomSlaveTest[i].Fatal != "" {
+						logrus.Error(common.Render(template.TestSlaveCustomFATAL, report))
+						return nil
+					}
 				}
 
 				// Сообщение после теста
@@ -247,6 +279,7 @@ func (s *CustomSlave) CalcLen(action string, data []byte) (int, []byte) {
 }
 
 // data - чистая без стаффинг байтов
+// TODO тесты
 func (s *CustomSlave) GenerateAnswer(action string, data []byte) (out []byte) {
 	var format []string
 	switch action {
@@ -300,6 +333,7 @@ func (s *CustomSlave) GenerateAnswer(action string, data []byte) (out []byte) {
 }
 
 // Возвращает чистую дату без staffing
+// TODO тесты
 func (s *CustomSlave) ParseReadData(adu []byte) []byte {
 	adu = s.StaffingProcessing(false, adu)
 	prefix := 0
@@ -436,6 +470,7 @@ func (s *CustomSlave) ParseReadFormat() (start []byte, lenPosition int, suffix [
 }
 
 // StaffingProcessing - Добавляет staffing byte к data
+// TODO тесты
 func (s *CustomSlave) StaffingProcessing(isInsert bool, data []byte) []byte {
 
 	if s.Staffing == nil || len(s.Staffing.Byte) == 0 || len(s.Staffing.Pattern) == 0 {

@@ -160,7 +160,7 @@ func (ms *ModbusSlave) expected(test *ModbusSlaveTest, reports ReportSlaveTest) 
 		return
 	}
 
-	logrus.Warn(common.Render(template.TestSlaveRUN, reports))
+	logrus.Warn(common.Render(template.TestSlaveModBusRUN, reports))
 
 	if v, ok := test.Expected[CoilsTable]; ok {
 		reports.ExpectedCoils, reports.Pass = ms.Expect1Bit(CoilsTable, v)
@@ -176,10 +176,10 @@ func (ms *ModbusSlave) expected(test *ModbusSlaveTest, reports ReportSlaveTest) 
 	}
 
 	if reports.Pass {
-		logrus.Warn(common.Render(template.TestSlavePASS, reports))
+		logrus.Warn(common.Render(template.TestSlaveModBusPASS, reports))
 		test.Success.PrintReportSlaveTest(reports)
 	} else {
-		logrus.Error(common.Render(template.TestSlaveFAIL, reports))
+		logrus.Error(common.Render(template.TestSlaveModBusFAIL, reports))
 		test.Error.PrintReportSlaveTest(reports)
 		if test.Fatal != "" {
 			logrus.Fatal(test.Fatal)
@@ -233,7 +233,7 @@ func (ms *ModbusSlave) ActionHandler(request mbslave.Request, response mbslave.R
 	if test != nil {
 		reports.Name = test.Name
 		if test.Skip != "" {
-			logrus.Warn(common.Render(template.TestSlaveSkip, reports))
+			logrus.Warn(common.Render(template.TestSlaveModBusSKIP, reports))
 		} else {
 			if test.Lifetime != nil {
 				*test.Lifetime--

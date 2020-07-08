@@ -90,7 +90,7 @@ func (m *CustomMaster) Run(ctx context.Context, reports *master.ReportGroups) er
 			continue
 		}
 		report := master.ReportGroup{Name: group}
-		logrus.Warnf(common.Render(template.TestGROUP, report))
+		logrus.Warnf(common.Render(template.TestMasterModBusGROUP, report))
 		for _, test := range tests {
 			if filterTest != "" && filterTest != "all" && filterTest != test.Name {
 				continue
