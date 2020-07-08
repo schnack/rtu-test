@@ -14,6 +14,7 @@ const (
 type Crc struct {
 	Algorithm string   `yaml:"algorithm"`
 	Staffing  bool     `yaml:"staffing"`
+	ByteOrder string   `yaml:"byteOrder"`
 	Read      []string `yaml:"read"`
 	Write     []string `yaml:"write"`
 	Error     []string `yaml:"error"`
@@ -26,7 +27,13 @@ func (c *Crc) Calc(order binary.ByteOrder, data []byte) []byte {
 		return []byte{c.CrcMod256(data)}
 	case ModBus:
 		b := make([]byte, 2)
-		order.PutUint16(b, c.ModBusCRC(data))
+		if c.ByteOrder == "" {
+			order.PutUint16(b, c.ModBusCRC(data))
+		} else if c.ByteOrder == "little" {
+			binary.LittleEndian.PutUint16(b, c.ModBusCRC(data))
+		} else {
+			binary.BigEndian.PutUint16(b, c.ModBusCRC(data))
+		}
 		return b
 	}
 	return nil

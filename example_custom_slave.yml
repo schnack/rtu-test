@@ -63,6 +63,8 @@ slave:
     algorithm: modBus
     # Экранировать данные staffing байтом перед подсчетом не влияет на длину
     staffing: true
+    # Порядок байт для crc по умолчанию используется общий
+    byteOrder: "little"
     read:
       - start
       - addressSlave
