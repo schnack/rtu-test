@@ -40,8 +40,8 @@ type Device struct {
 	ExitMessage  Message               `yaml:"exitMessage"`
 	ModbusMaster *master.ModbusMaster  `yaml:"modbusMaster"`
 	ModbusSlave  *slave.ModbusSlave    `yaml:"modbusSlave"`
-	Slave        *slave2.CustomSlave   `yaml:"slave"`
-	Master       *master2.CustomMaster `yaml:"master"`
+	CustomSlave  *slave2.CustomSlave   `yaml:"slave"`
+	CustomMaster *master2.CustomMaster `yaml:"master"`
 }
 
 // Load - загружает конфигурацию лога
@@ -116,23 +116,31 @@ func (d *Device) RunTest(ctx context.Context) {
 		// Вывод отчета в конце выполнения программы
 		logrus.RegisterExitHandler(func() { d.ExitMessage.PrintReportMasterGroups(report) })
 
+		fmt.Printf("Open port: %s\n", d.ModbusMaster.Port)
 		// Запуск тестов
 		if err := d.ModbusMaster.Run(&report); err != nil {
 			logrus.Fatalf("Exit app modbus master: %s", err)
 		}
 	case d.ModbusSlave != nil:
 		// TODO Добавить групповой отчет
+
+		fmt.Printf("Open port: %s\n", d.ModbusSlave.Port)
+
 		if err := d.ModbusSlave.Run(); err != nil {
 			logrus.Fatalf("Exit app modbus slave: %s", err)
 		}
-	case d.Slave != nil:
+	case d.CustomSlave != nil:
 		// Вывод отчета в конце выполнения программы
 		logrus.RegisterExitHandler(func() { display.Console().Print(&d.ExitMessage, nil) })
-		if err := d.Slave.Run(); err != nil {
+
+		fmt.Printf("Open port: %s\n", d.CustomSlave.Port)
+
+		if err := d.CustomSlave.Run(); err != nil {
 			logrus.Fatalf("Exit app slave: %s", err)
 		}
-	case d.Master != nil:
+	case d.CustomMaster != nil:
 		// TODO
+		logrus.Fatal("not support")
 	default:
 		logrus.Fatal("configuration file not found")
 	}

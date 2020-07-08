@@ -3,12 +3,16 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"github.com/sirupsen/logrus"
 	"os"
 	"rtu-test/e2e"
 )
 
 func main() {
+
+	fmt.Printf("Welcome to RTU-TEST v%s\n", Version)
+
 	var comport = flag.String("p", "", "serial port")
 	var filter = flag.String("f", "", "filter")
 	var logs = flag.String("l", "", "log")
@@ -31,7 +35,10 @@ func main() {
 	// Загружаем конфигурацию
 	for _, fileName := range fileNames {
 		if err := d.Load(fileName); err != nil {
-			logrus.Fatal(err)
+			fmt.Printf("Loading configuration: %s\nError: %s", fileName, err)
+			return
+		} else {
+			fmt.Printf("Loading configuration: %s\n", fileName)
 		}
 	}
 
@@ -47,12 +54,14 @@ func main() {
 
 	// Заменяем comport
 	if *comport != "" {
-		if d.ModbusMaster != nil {
+		switch {
+		case d.ModbusMaster != nil:
 			d.ModbusMaster.Port = *comport
-		} else if d.ModbusSlave != nil {
+		case d.ModbusSlave != nil:
 			d.ModbusSlave.Port = *comport
+		case d.CustomSlave != nil:
+			d.CustomSlave.Port = *comport
 		}
-
 	}
 
 	// Заменяем фильтр
