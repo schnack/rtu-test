@@ -202,4 +202,31 @@ func (s *CustomSlaveTestSuit) TestCalcCrc() {
 
 	b = v.CalcCrc(ActionError, []byte{1, 2, 3, 4})
 	s.Equal([]byte{0xee}, b)
+
+	v = CustomSlave{
+		ByteOrder: "little",
+		Const: map[string][]string{
+			"start":         {"0xFE", "0xFE"},
+			"addressMaster": {"0x00"},
+			"addressSlave":  {"0x06"},
+			"end":           {"0xFC", "0xFC"},
+		},
+		Staffing: &module.Staffing{
+			Byte:    "0x00",
+			Pattern: []string{"start", "end"},
+		},
+		ReadFormat:  []string{"data#", "end"},
+		WriteFormat: []string{"start", "addressMaster", "addressSlave", "data#", "crc#", "end"},
+		ErrorFormat: []string{"end"},
+		Crc: &module.Crc{
+			Algorithm: "modBus",
+			Staffing:  false,
+			Read:      []string{"data#", "end"},
+			Write:     []string{"start", "addressMaster", "addressSlave", "data#"},
+			Error:     []string{"end"},
+		},
+	}
+
+	b = v.CalcCrc(ActionWrite, []byte{0x04, 0x09, 0x00, 0x00, 0x21, 0x00, 0x00})
+	s.Equal([]byte{0xc0, 0x40}, b)
 }

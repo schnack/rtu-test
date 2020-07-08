@@ -163,11 +163,11 @@ func (s *CustomSlave) CalcCrc(action string, data []byte) []byte {
 
 	switch action {
 	case ActionRead:
-		format = s.ReadFormat
+		format = s.Crc.Read
 	case ActionWrite:
-		format = s.WriteFormat
+		format = s.Crc.Write
 	case ActionError:
-		format = s.ErrorFormat
+		format = s.Crc.Error
 	default:
 		logrus.Fatalf("Action not found %s", action)
 	}
