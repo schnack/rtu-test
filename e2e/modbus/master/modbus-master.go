@@ -73,7 +73,15 @@ func (mc *ModbusMaster) Run(reports *ReportGroups) error {
 			if filterTest != "" && filterTest != "all" && filterTest != test.Name {
 				continue
 			}
+			// Подменяем адрес, если он переопределен в тесте
+			// Необходимо для управления несколькими устройствами на 1 шине
+			if test.SlaveId != 0 {
+				handler.SlaveId = test.SlaveId
+			}
 			report.Tests = append(report.Tests, test.Run(client))
+			// Возвращаем адрес по умолчанию
+			handler.SlaveId = mc.SlaveId
+
 			// При необходимости закрываем порт
 			if test.Disconnect {
 				handler.Close()

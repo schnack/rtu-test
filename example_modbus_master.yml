@@ -24,6 +24,8 @@ modbusMaster:
 
     Default:
       - name: TestName  # Test Name
+        # Переопределить адрес устройства, если на одной шине несколько блоков
+        slaveId: 0x01
         before:
           message: "the message before the test"
           pause: 1s # ns, us ms, s, m, h, enter

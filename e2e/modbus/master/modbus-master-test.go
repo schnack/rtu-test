@@ -27,9 +27,11 @@ const (
 )
 
 type ModbusMasterTest struct {
-	Name       string          `yaml:"name"`
-	Skip       string          `yaml:"skip"`
-	Before     Message         `yaml:"before"`
+	Name   string  `yaml:"name"`
+	Skip   string  `yaml:"skip"`
+	Before Message `yaml:"before"`
+	// Переопределить адрес устройства, если на одной шине несколько блоков
+	SlaveId    uint8           `yaml:"slaveId"`
 	Function   string          `yaml:"function"`
 	Address    *uint16         `yaml:"address"`
 	Quantity   *uint16         `yaml:"quantity"`
