@@ -3,8 +3,9 @@ version: 1.0.0
 
 name: New Device
 description: "My new Device"
+console: stdout    # "off", stdout, stderr, /path/to/file
 log: stdout        # "off", stdout, stderr, /path/to/file
-logLvl: debug        # trace | debug | info | warn | error | fatal | panic
+logLvl: debug      # trace | debug | info | warn | error | fatal | panic
 
 exitMessage:
   message: Для выхода нажмите

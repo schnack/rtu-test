@@ -34,6 +34,7 @@ func Init() *Device {
 type Device struct {
 	Version      string                `yaml:"version"`
 	Name         string                `yaml:"name"`
+	Console      string                `yaml:"console"`
 	Log          string                `yaml:"log"`
 	LogLvl       string                `yaml:"logLvl"`
 	Description  string                `yaml:"description"`
@@ -80,12 +81,29 @@ func (d *Device) RunTest(ctx context.Context) {
 		logrus.SetLevel(logrus.PanicLevel)
 	}
 
+	// Вывод пользовательских сообщений
+	switch d.Console {
+	case "", "off":
+		display.Console().SetOutput(nil)
+	case LogStdout:
+		display.Console().SetOutput(os.Stdout)
+	case LogStderr:
+		display.Console().SetOutput(os.Stderr)
+	default:
+		file, err := os.OpenFile(d.Log, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0666)
+		if err != nil {
+			logrus.Fatal(err)
+		}
+		defer file.Close()
+		display.Console().SetOutput(file)
+	}
+
+	// Вывод технической информации
 	switch d.Log {
 	case "", "off":
 		logrus.SetOutput(os.Stderr)
 		logrus.SetLevel(logrus.PanicLevel)
 	case LogStdout:
-		display.Console().SetOutput(os.Stdout)
 		if runtime.GOOS == "windows" {
 			format.ForceColors = true
 			logrus.SetOutput(ansicolor.NewAnsiColorWriter(os.Stdout))
