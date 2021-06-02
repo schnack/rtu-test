@@ -3,9 +3,9 @@ package e2e
 import (
 	"context"
 	"fmt"
-	"github.com/go-yaml/yaml"
 	"github.com/shiena/ansicolor"
 	"github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v3"
 	"os"
 	master2 "rtu-test/e2e/custom/master"
 	slave2 "rtu-test/e2e/custom/slave"
