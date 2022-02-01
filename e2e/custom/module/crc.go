@@ -27,6 +27,7 @@ func (c *Crc) Calc(order binary.ByteOrder, data []byte) []byte {
 		return []byte{c.CrcMod256(data)}
 	case ModBus:
 		b := make([]byte, 2)
+		// Значит используется параметр по умолчанию
 		if c.ByteOrder == "" {
 			order.PutUint16(b, c.ModBusCRC(data))
 		} else if c.ByteOrder == "little" {

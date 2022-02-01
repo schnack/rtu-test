@@ -229,4 +229,32 @@ func (s *CustomSlaveTestSuit) TestCalcCrc() {
 
 	b = v.CalcCrc(ActionWrite, []byte{0x04, 0x09, 0x00, 0x00, 0x21, 0x00, 0x00})
 	s.Equal([]byte{0xc0, 0x40}, b)
+
+	v = CustomSlave{
+		ByteOrder: "little",
+		Const: map[string][]string{
+			"start":         {"0xFE", "0xFE"},
+			"addressMaster": {"0x00"},
+			"addressSlave":  {"0x06"},
+			"end":           {"0xFC", "0xFC"},
+		},
+		Staffing: &module.Staffing{
+			Byte:    "0x00",
+			Pattern: []string{"start", "end"},
+		},
+		ReadFormat:  []string{"start", "addressSlave", "addressMaster", "data#", "crc#", "end"},
+		WriteFormat: []string{"start", "addressMaster", "addressSlave", "data#", "crc#", "end"},
+		ErrorFormat: []string{"start", "addressMaster", "addressSlave", "data#", "crc#", "end"},
+		Crc: &module.Crc{
+			ByteOrder: "little",
+			Algorithm: "modBus",
+			Staffing:  false,
+			Read:      []string{"start", "addressSlave", "addressMaster", "data#"},
+			Write:     []string{"start", "addressMaster", "addressSlave", "data#"},
+			Error:     []string{"start", "addressMaster", "addressSlave", "data#"},
+		},
+	}
+
+	b = v.CalcCrc(ActionWrite, []byte{0x06, 0xE8, 0x03, 0x00, 0x00, 0xC8, 0x42, 0x00, 0x00, 0x34, 0x42})
+	s.Equal([]byte{0xB8, 0xBB}, b)
 }

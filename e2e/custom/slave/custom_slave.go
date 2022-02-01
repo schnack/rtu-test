@@ -176,13 +176,10 @@ func (s *CustomSlave) CalcCrc(action string, data []byte) []byte {
 		if strings.Contains(name, "#") {
 			if strings.HasPrefix(name, "len#") {
 				_, l := s.CalcLen(action, data)
-				if s.Crc.Staffing {
-					l = s.StaffingProcessing(true, l)
-				}
-				tmpData = append(tmpData, l...)
+				tmpData = append(tmpData, s.StaffingProcessing(s.Crc.Staffing, l)...)
 			}
 			if strings.HasPrefix(name, "data#") {
-				tmpData = append(tmpData, s.StaffingProcessing(true, data)...)
+				tmpData = append(tmpData, s.StaffingProcessing(s.Crc.Staffing, data)...)
 			}
 			continue
 		}
